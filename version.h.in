@@ -1,0 +1,7 @@
+// Version Information from git 
+#ifndef F_VERSION_H
+#define F_VERSION_H
+#define GIT_VERSION_STRING "@VERSION_STRING@"
+#define GIT_BRANCH "@GIT_BRANCH@"
+#define PROJECT_VERSION "@PROJECT_VERSION@"
+#endif

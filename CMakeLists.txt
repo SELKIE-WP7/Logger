@@ -1,0 +1,70 @@
+cmake_minimum_required(VERSION 3.12...3.17)
+
+project(SELKIELogger LANGUAGES C)
+
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+add_compile_options(-Wall -pedantic -Werror -g)
+
+#find_package(Git)
+if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
+	execute_process(COMMAND ${GIT_EXECUTABLE} describe --always --dirty=X --tags OUTPUT_VARIABLE GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+	execute_process(COMMAND ${GIT_EXECUTABLE} symbolic-ref -q --short HEAD OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+	string(REGEX MATCH "^v([0-9]+)\.([0-9]+)-([0-9]+)-(.*)$" RM ${GIT_VERSION})
+	project(${PROJECT_NAME} VERSION ${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3})
+
+	string(COMPARE EQUAL ${GIT_BRANCH} "master" ON_MASTER)
+	if (${ON_MASTER})
+		string(CONCAT ver ${GIT_VERSION})
+	else()
+		string(CONCAT ver ${GIT_VERSION} "-" ${GIT_BRANCH})
+	endif()
+	set(VERSION_STRING ${ver} CACHE STRING "Project version information" FORCE)
+
+else()
+	message(WARNING "Unable to extract version from git")
+	set(VERSION_STRING "unversioned" CACHE STRING "Project version information" FORCE)
+endif()
+
+# generate version.h
+configure_file("${CMAKE_SOURCE_DIR}/version.h.in" "${CMAKE_BINARY_DIR}/version.h" @ONLY)
+include_directories(${CMAKE_BINARY_DIR})
+
+add_subdirectory(GPS)
+
+enable_testing()
+add_subdirectory(tests)
+
+# list(APPEND EXECUTABLES rtcmd rtdownload rtlog rtmon rtstate rtstats rtextractlog rtsplit rtdump rtgetconfig rtsetconfig)
+
+find_library(MATH_LIBRARY m)
+
+foreach(exe IN LISTS EXECUTABLES)
+	string(CONCAT src ${exe} ".c")
+	add_executable(${exe} ${src})
+#	target_link_libraries(${exe} PRIVATE libSELKIELoggerGPS libSELKIELoggerMsgs)
+#	target_include_directories(${exe} PRIVATE "${PROJECT_BINARY_DIR}")
+	target_compile_features(${exe} PRIVATE c_std_99)
+	target_compile_definitions(${exe} PRIVATE -D_GNU_SOURCE)
+endforeach(exe)
+
+#target_link_libraries(rtstats PUBLIC ${MATH_LIBRARY})
+#target_link_libraries(rtdownload PUBLIC libFatFs)
+
+include(GNUInstallDirs)
+#install(TARGETS ${EXECUTABLES} libSELKIELoggerGPS libSELKIELoggerMsg EXPORT SELKIELoggerExports)
+
+set(CPACK_PACKAGE_VENDOR "Swansea University")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SELKIE Datalogger core software")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+#set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENCE")
+#set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+
+set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
+set(CPACK_SOURCE_IGNORE_FILES
+    /.git
+    /dist
+    /.*build.*
+    /\\\\.DS_Store
+)
+
+include(CPack)

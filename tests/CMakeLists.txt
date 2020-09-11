@@ -1,0 +1,3 @@
+add_executable(UBXChecksumTest UBXChecksumTest.c)
+target_link_libraries(UBXChecksumTest PUBLIC SELKIELoggerGPS)
+add_test(NAME UBXChecksumTests COMMAND UBXChecksumTest)

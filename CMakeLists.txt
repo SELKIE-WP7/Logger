@@ -30,6 +30,7 @@ configure_file("${CMAKE_SOURCE_DIR}/version.h.in" "${CMAKE_BINARY_DIR}/version.h
 include_directories(${CMAKE_BINARY_DIR})
 
 add_subdirectory(GPS)
+add_subdirectory(src)
 
 enable_testing()
 add_subdirectory(tests)

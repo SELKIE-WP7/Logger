@@ -4,6 +4,7 @@
 #include "GPSTypes.h"
 #include "GPSMessages.h"
 #include "GPSSerial.h"
+#include "version.h"
 
 int main(int argc, char *argv[]) {
 	char *gpsPort = "/dev/ttyS0";
@@ -17,6 +18,7 @@ int main(int argc, char *argv[]) {
 	}
 	if (argc > 3) {
 		fprintf(stderr, "Usage: %s [gpsPort [output file]]\n", argv[0]);
+		fprintf(stderr, "Version: %s\n\n", GIT_VERSION_STRING);
 		return -1;
 	}
 

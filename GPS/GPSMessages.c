@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 #include <stdio.h>
 
 #include "GPSMessages.h"
@@ -45,6 +47,31 @@ bool ubx_check_checksum(const ubx_message *msg) {
 	return false;
 }
 
+//! Flatten message into a single array
+ssize_t ubx_flat_array(const ubx_message *msg, uint8_t **out) {
+	ssize_t asize = 8 + msg->length;
+	uint8_t *outarray = calloc(asize, 1);
+	ssize_t ix = 0;
+	outarray[ix++] = msg->sync1;
+	outarray[ix++] = msg->sync2;
+	outarray[ix++] = msg->msgClass;
+	outarray[ix++] = msg->msgID;
+	outarray[ix++] = (uint8_t) (msg->length & 0xFF);
+	outarray[ix++] = (uint8_t) (msg->length >> 8);
+
+	if (msg->length <= 256) {
+		memcpy(outarray + ix, msg->data, msg->length);
+		ix += msg->length;
+	} else {
+		memcpy(outarray + ix, msg->extdata, msg->length);
+		ix += msg->length;
+	}
+	outarray[ix++] = msg->csumA;
+	outarray[ix++] = msg->csumB;
+
+	(*out) = outarray;
+	return ix;
+}
 
 char * ubx_string_hex(const ubx_message *msg) {
 	int strlength = 24 + 3 * msg->length;

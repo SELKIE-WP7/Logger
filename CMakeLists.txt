@@ -35,6 +35,14 @@ add_subdirectory(src)
 enable_testing()
 add_subdirectory(tests)
 
+option(BUILD_DOCUMENTATION "Build developer documentation with Doxygen" ON)
+if (BUILD_DOCUMENTATION)
+	find_package(Doxygen REQUIRED dot)
+	set(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/docs/")
+	set(DOXYGEN_EXTRACT_ALL YES)
+	doxygen_add_docs(doxygen ALL ${PROJECT_SOURCE_DIR} COMMENT "Generate developer documentation")
+endif()
+
 find_library(MATH_LIBRARY m)
 
 

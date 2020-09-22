@@ -2,6 +2,7 @@
 #define SELKIELoggerGPSSerial
 
 #include "GPSTypes.h"
+
 #define UBX_SERIAL_BUFF 4096
 
 int openConnection(const char *port);

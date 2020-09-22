@@ -13,6 +13,7 @@
 #include "GPSTypes.h"
 #include "GPSMessages.h"
 #include "GPSSerial.h"
+#include "GPSCommands.h"
 
 //! Set up a connection to the specified port
 int openConnection(const char *port) {
@@ -36,8 +37,9 @@ int openConnection(const char *port) {
 	// Get options, adjust baud and enable local control (cf. NoCTTY) and push to interface
 	tcgetattr(handle, &options);
 
-	cfsetispeed(&options, B115200);
-	cfsetospeed(&options, B115200);
+	// Assume operating in low speed after a reset, so connect at 9600 and command rate change
+	cfsetispeed(&options, B9600);
+	cfsetospeed(&options, B9600);
 	options.c_oflag &= ~OPOST; // Disable any post processin
 	options.c_cflag &= ~(PARENB|CSTOPB|CSIZE);
 	options.c_cflag |= (CLOCAL | CREAD);
@@ -49,6 +51,23 @@ int openConnection(const char *port) {
 	if(tcsetattr(handle, TCSANOW, &options)) {
 		fprintf(stderr, "tcsetattr() failed!\n");
 	}
+
+	if (!setBaudRate(handle, 115200)) {
+		fprintf(stderr, "Unable to command baud rate change");
+		perror("openConnection");
+		return -1;
+	}
+
+	cfsetispeed(&options, B115200);
+	cfsetospeed(&options, B115200);
+	if(tcsetattr(handle, TCSANOW, &options)) {
+		fprintf(stderr, "tcsetattr() failed!\n");
+	}
+
+	// The GPS module will stop listening for 1 second if the wrong baud rate is used
+	// i.e. It was already in high rate mode
+	sleep(1);
+
 	return handle;
 }
 

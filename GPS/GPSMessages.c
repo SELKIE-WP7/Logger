@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -48,10 +49,10 @@ bool ubx_check_checksum(const ubx_message *msg) {
 }
 
 //! Flatten message into a single array
-ssize_t ubx_flat_array(const ubx_message *msg, uint8_t **out) {
-	ssize_t asize = 8 + msg->length;
+size_t ubx_flat_array(const ubx_message *msg, uint8_t **out) {
+	size_t asize = 8 + msg->length;
 	uint8_t *outarray = calloc(asize, 1);
-	ssize_t ix = 0;
+	size_t ix = 0;
 	outarray[ix++] = msg->sync1;
 	outarray[ix++] = msg->sync2;
 	outarray[ix++] = msg->msgClass;

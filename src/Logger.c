@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 	bool saveLog = true;
 	bool rotateMonitor = true;
 
-        char *usage =  "Usage: %s [-v] [-g port] [-m file [-R]| -M] [-s file | -S] [-L]\n"
+        char *usage =  "Usage: %1$s [-v] [-g port] [-m file [-R]| -M] [-s file | -S] [-L]\n"
                 "\t-v\tIncrease verbosity\n"
                 "\t-g port\tSpecify GPS port\n"
                 "\t-m file\tMonitor file prefix\n"
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 		"\t-R\tDo not rotate monitor file\n"
                 "\nVersion: " GIT_VERSION_STRING "\n"
 		"Default options equivalent to:\n"
-		"\t-g" DEFAULT_GPS_PORT " -m " DEFAULT_MON_PREFIX "\n";
+		"\t%1$s -g " DEFAULT_GPS_PORT " -m " DEFAULT_MON_PREFIX "\n";
 
 /*****************************************************************************
 	Program Startup

@@ -31,3 +31,21 @@ bool setBaudRate(const int handle, const uint32_t baud) {
 	ubx_set_checksum(&setBaud);
 	return writeMessage(handle, &setBaud);
 }
+
+bool setMessageRate(const int handle, const uint8_t msgClass, const uint8_t msgID, const uint8_t rate) {
+	ubx_message setRate = {
+		0xB5, 0x62, 0x06, 0x01, // Header, CFG-MSG
+		0x0008, // 8 byte message
+		{
+			msgClass, msgID,
+			0x00, // Disable on I2C
+			rate, // Every "rate" updates on UART1
+			0x00, // Disable UART 2
+			0x00, // Disable on USB direct
+			0x00, // Disable on SPI
+			0x00  // Disable on port 5
+		},
+		0xFF, 0xFF};
+	ubx_set_checksum(&setRate);
+	return writeMessage(handle, &setRate);
+}

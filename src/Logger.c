@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	FILE *monitorFile = openSerialNumberedFile(monPrefix, ".dat");
+	FILE *monitorFile = openSerialNumberedFile(monPrefix, "dat");
 
 	if (monitorFile == NULL) {
 		perror("monitorFile");

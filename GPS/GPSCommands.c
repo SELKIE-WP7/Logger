@@ -5,7 +5,7 @@
 #include "GPSTypes.h"
 #include "GPSMessages.h"
 
-bool setBaudRate(int handle, uint32_t baud) {
+bool setBaudRate(const int handle, const uint32_t baud) {
 	ubx_message setBaud = {
 		0xB5, 0x62, // Header bytes
 		0x06, 0x00, // CFG-PRT

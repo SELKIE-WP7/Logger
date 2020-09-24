@@ -8,14 +8,16 @@ int main(int argc, char *argv[]) {
 	char *stateName = NULL;
 
 	int verbose = 0;
+	int initialBaud = 9600;
 	bool saveMonitor = true;
 	bool saveState = true;
 	bool saveLog = true;
 	bool rotateMonitor = true;
 
-        char *usage =  "Usage: %1$s [-v] [-g port] [-m file [-R]| -M] [-s file | -S] [-L]\n"
+        char *usage =  "Usage: %1$s [-v] [-g port] [-b initial baud] [-m file [-R]| -M] [-s file | -S] [-L]\n"
                 "\t-v\tIncrease verbosity\n"
                 "\t-g port\tSpecify GPS port\n"
+		"\t-b baud\tGPS initial baud rate\n"
                 "\t-m file\tMonitor file prefix\n"
                 "\t-s file\tState file name. Default derived from GPS port name\n"
 		"\t-M\tDo not use monitor file\n"
@@ -33,11 +35,19 @@ int main(int argc, char *argv[]) {
 
         opterr = 0; // Handle errors ourselves
         int go = 0;
-        while ((go = getopt (argc, argv, "vg:m:s:MSRL")) != -1) {
+        while ((go = getopt (argc, argv, "vb:g:m:s:MSRL")) != -1) {
                 switch(go) {
                         case 'v':
                                 verbose++;
                                 break;
+			case 'b':
+				errno = 0;
+				initialBaud = strtol(optarg, NULL, 10);
+				if (errno) {
+					fprintf(stderr, "Bad initial baud value ('%s')\n", optarg);
+					return EXIT_FAILURE;
+				}
+				break;
 			case 'g':
 				gpsPortName = strdup(optarg);
                                 break;
@@ -128,7 +138,7 @@ int main(int argc, char *argv[]) {
 	const struct sigaction saUnpause = {.sa_handler = signalUnpause, .sa_mask = blocking, .sa_flags = SA_RESTART};
 
 
-	int gpsHandle = openConnection(gpsPortName);
+	int gpsHandle = openConnection(gpsPortName, initialBaud);
 	if (gpsHandle < 0) {
 		fprintf(stderr, "Unable to open a connection on port %s\n", gpsPortName);
 		perror("openConnection");

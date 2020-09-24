@@ -6,7 +6,8 @@
 
 #include "GPSTypes.h"
 
-bool setBaudRate(int handle, uint32_t baud);
+//! Send UBX port configuration to switch baud rate
+bool setBaudRate(const int handle, const uint32_t baud);
 
 #endif
 

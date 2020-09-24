@@ -161,8 +161,10 @@ int main(int argc, char *argv[]) {
 		ubx_message out;
 		if (readMessage(gpsHandle, &out)) {
 			count++;
-			ubx_print_hex(&out);
-			printf("\n");
+			if (verbose > 2) {
+				ubx_print_hex(&out);
+				printf("\n");
+			}
 			uint8_t *data = NULL;
 			ssize_t len = ubx_flat_array(&out, &data);
 			fwrite(data, len, 1, monitorFile);

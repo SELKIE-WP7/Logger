@@ -1,0 +1,98 @@
+#define _GNU_SOURCE
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <errno.h>
+#include <libgen.h>
+#include <signal.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+
+#include "GPSMessages.h"
+#include "GPSSerial.h"
+#include "GPSTypes.h"
+#include "version.h"
+
+//! If no GPS port is specified on the command line, this value will be used
+#define DEFAULT_GPS_PORT "@DEFAULT_GPS_PORT@"
+
+//! If no output file prefix is specified, this will be used as a default
+#define DEFAULT_MON_PREFIX "@DEFAULT_MON_PREFIX@"
+
+/*!
+ * \addtogroup loggerTriggers Logger: Global triggers/signal handlers
+ *
+ * In order to allow the behaviour of the main logging thread to be controlled,
+ * it will check the state of defined trigger variables and react accordingly.
+ * These variables can be set by signal handlers, input threads or by
+ * conditions detected in the main logging loop.
+ *
+ * The signal handlers are hooked to multiple signals. The SIGRTMIN + n flags
+ * are used to be independent of system defined meanings, while other signals
+ * are hooked to match traditional service behaviours.
+ *
+ * @{
+ */
+//! Trigger clean software shutdown
+static volatile bool shutdown = false;
+
+//! Trigger immediate log rotation
+static volatile bool rotateNow = false;
+
+//! Pause logging
+/*!
+ * Will not rotate or close log files, but will stop reading from inputs while this variable is set.
+ */
+static volatile bool pauseLog = false;
+
+
+/*! @brief Set safe shutdown flag
+ *
+ * By default, this is hooked to SIGINT, SIGQUIT and SIGRTMIN + 1
+ */
+void signalShutdown(int signnum);
+
+/*! @brief Set log rotate flag
+ *
+ * By default, this is hooked to SIGUSR1, SIGHUP and SIGRTMIN + 2
+ *
+ * This flag will be cleared by the main loop once logs have been successfully
+ * rotated. If the logger is paused, logs will be rotated when resumed.
+ */
+void signalRotate(int signnum);
+
+/*! @brief Set logger pause flag
+ *
+ * By default, this is hooked to SIGRTMIN + 3
+ * 
+ * The pause flag can only be cleared by the unpause signal handler, or during shutdown.
+ * Calling this function while already paused will have no additional effect.
+ */
+void signalPause(int signnum);
+
+/*! @brief Clear logger pause flag
+ *
+ * By default, this is hooked to SIGRTMIN + 4
+ *
+ * Calling this while the logger is not paused has no effect.
+ */
+void signalUnpause(int signnum);
+/*! @} */
+
+/*! @brief Open dated, serial numbered file with given prefix and extension
+ *
+ * Generates a file name with the form [prefix]YYYYMMDDXX.[extension], where XX
+ * is a two digit hexadecimal serial number. Starting from 0, the proposed file
+ * name is opened in exclusive create mode ("w+x"). If this fails because the
+ * file exists, the serial number is incremented and another attempt to create
+ * the file is made until either a) an unused serial number is found or b) the
+ * serial number reaches 0xFF.
+ *
+ * If no valid file name can be generated, or if any other error is
+ * encountered, the function returns NULL.
+ */
+FILE *openSerialNumberedFile(const char *prefix, const char *extension);

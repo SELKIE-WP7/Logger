@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
         char *monPrefix = NULL;
 	char *stateName = NULL;
 
-	program_state state;
+	program_state state = {0};
 	state.verbose = 0;
 
 	int initialBaud = 9600;

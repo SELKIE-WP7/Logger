@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 /*!
- * \addtogroup Logging Logging Support functions
+ * \addtogroup logging Logging support functions
  *
  * @{
  */

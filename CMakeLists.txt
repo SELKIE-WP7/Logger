@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.12...3.17)
 project(SELKIELogger LANGUAGES C)
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
-add_compile_options(-Wall -pedantic -Werror -g)
+add_compile_options(-Wall -pedantic -Werror -g -O2)
+add_compile_definitions(_GNU_SOURCE)
+add_compile_definitions(_FORTIFY_SOURCE=2)
 
 find_package(Git)
 if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
@@ -30,6 +32,7 @@ configure_file("${CMAKE_SOURCE_DIR}/version.h.in" "${CMAKE_BINARY_DIR}/version.h
 include_directories(${CMAKE_BINARY_DIR})
 
 add_subdirectory(GPS)
+add_subdirectory(base)
 add_subdirectory(src)
 
 enable_testing()
@@ -48,7 +51,7 @@ if (BUILD_DOCUMENTATION)
 	doxygen_add_docs(doxygen ALL ${PROJECT_SOURCE_DIR} COMMENT "Generate developer documentation")
 endif()
 
-find_library(MATH_LIBRARY m)
+#find_library(MATH_LIBRARY m)
 
 
 include(GNUInstallDirs)
@@ -59,7 +62,7 @@ set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 #set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENCE")
 #set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 
-set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
+set(CPACK_SOURCE_GENERATOR "TGZ;RPM;DEB")
 set(CPACK_SOURCE_IGNORE_FILES
     /.git
     /dist

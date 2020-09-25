@@ -19,9 +19,9 @@ void log_error(const program_state *s, const char *format, ...) {
 	} else if (!s->started) {
 		label="[Startup]";
 	} else {
-		label="";
+		label="[Running]";
 	}
-	fprintf(stderr, "%s Error: ", label);
+	fprintf(stderr, "%-10s Error: ", label);
 	va_start(args, format);
 	vfprintf(stderr, format, args);
 	va_end(args);
@@ -44,9 +44,9 @@ void log_warning(const program_state *s, const char *format, ...) {
 	} else if (!s->started) {
 		label="[Startup]";
 	} else {
-		label="";
+		label="[Running]";
 	}
-	fprintf(stderr, "%s Warning: ", label);
+	fprintf(stderr, "%-10s Warning: ", label);
 	va_start(args, format);
 	vfprintf(stderr, format, args);
 	va_end(args);
@@ -69,11 +69,11 @@ void log_info(const program_state *s, const int level, const char *format, ...) 
 	} else if (!s->started) {
 		label="[Startup]";
 	} else {
-		label="";
+		label="[Running]";
 	}
 
 	if (s->verbose >= level) {
-		fprintf(stdout, "%s Info:%d: ", label, level);
+		fprintf(stdout, "%-10s Info:%d: ", label, level);
 		va_start(args, format);
 		vfprintf(stdout, format, args);
 		va_end(args);
@@ -106,7 +106,6 @@ FILE *openSerialNumberedFile(const char *prefix, const char *extension) {
 		errno = 0;
 		file = fopen(fileName, "w+x"); //w+x = rw + create. Fail if exists
 		if (file) {
-			fprintf(stdout, "Using: %s.\n", fileName);
 			free(fileName);
 			return file;
 		}

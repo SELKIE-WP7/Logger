@@ -4,5 +4,5 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Logger.h.in" "${CMAKE_CURRENT_BINARY
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} PRIVATE)
 add_executable(Logger Logger.h Logger.c)
-target_link_libraries(Logger PUBLIC SELKIELoggerGPS)
+target_link_libraries(Logger PUBLIC SELKIELoggerGPS SELKIELoggerBase)
 

@@ -7,22 +7,25 @@ int main(int argc, char *argv[]) {
         char *monPrefix = NULL;
 	char *stateName = NULL;
 
-	int verbose = 0;
+	program_state state;
+	state.verbose = 0;
+
 	int initialBaud = 9600;
 	bool saveMonitor = true;
 	bool saveState = true;
-	bool saveLog = true;
 	bool rotateMonitor = true;
+	bool logToFile = false;
 
-        char *usage =  "Usage: %1$s [-v] [-g port] [-b initial baud] [-m file [-R]| -M] [-s file | -S] [-L]\n"
+        char *usage =  "Usage: %1$s [-v] [-q] [-l] [-g port] [-b initial baud] [-m file [-R]| -M] [-s file | -S]\n"
                 "\t-v\tIncrease verbosity\n"
+		"\t-q\tDecrease verbosity\n"
+		"\t-l\tLog information messages to file\n"
                 "\t-g port\tSpecify GPS port\n"
 		"\t-b baud\tGPS initial baud rate\n"
                 "\t-m file\tMonitor file prefix\n"
                 "\t-s file\tState file name. Default derived from GPS port name\n"
 		"\t-M\tDo not use monitor file\n"
 		"\t-S\tDo not use state file\n"
-		"\t-L\tDo not store log messages\n"
 		"\t-R\tDo not rotate monitor file\n"
                 "\nVersion: " GIT_VERSION_STRING "\n"
 		"Default options equivalent to:\n"
@@ -35,22 +38,28 @@ int main(int argc, char *argv[]) {
 
         opterr = 0; // Handle errors ourselves
         int go = 0;
-        while ((go = getopt (argc, argv, "vb:g:m:s:MSRL")) != -1) {
+        while ((go = getopt (argc, argv, "vqb:g:m:s:MSRL")) != -1) {
                 switch(go) {
                         case 'v':
-                                verbose++;
+                                state.verbose++;
                                 break;
+			case 'q':
+				state.verbose--;
+				break;
 			case 'b':
 				errno = 0;
 				initialBaud = strtol(optarg, NULL, 10);
 				if (errno) {
-					fprintf(stderr, "Bad initial baud value ('%s')\n", optarg);
+					log_error(&state, "Bad initial baud value ('%s')\n", optarg);
 					return EXIT_FAILURE;
 				}
 				break;
 			case 'g':
 				gpsPortName = strdup(optarg);
                                 break;
+			case 'l':
+				logToFile = true;
+				break;
 			case 'm':
 				monPrefix = strdup(optarg);
 				break;
@@ -62,9 +71,6 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'M':
 				saveMonitor = false;
-				break;
-			case 'L':
-				saveLog = false;
 				break;
 			case 'R':
 				rotateMonitor = false;
@@ -78,26 +84,37 @@ int main(int argc, char *argv[]) {
 
 	// Should be no spare arguments
         if (argc - optind != 0) {
+		log_error(&state, "Invalid arguments");
 		fprintf(stderr, usage, argv[0]);
                 return EXIT_FAILURE;
         }
 
 	// Check for conflicting options
 	if (stateName && !saveState) {
-		fprintf(stderr, "-s and -S are mutually exclusive\n");
+		log_error(&state, "-s and -S are mutually exclusive");
 		fprintf(stderr, usage, argv[0]);
 		return EXIT_FAILURE;
 	}
 
 	if ((monPrefix || !rotateMonitor) && !saveMonitor) {
-		fprintf(stderr, "-M and -m/-R are mutually exclusive\n");
+		log_error(&state, "-M and -m/-R are mutually exclusive");
 		fprintf(stderr, usage, argv[0]);
 		return EXIT_FAILURE;
 	}
 
-	if (!saveMonitor && saveLog) {
-		fprintf(stderr, "Will not save log if not saving monitor file\n");
-		return EXIT_FAILURE;
+	if (logToFile) {
+		state.log = openSerialNumberedFile(monPrefix, "log");
+		if (!state.log) {
+			log_error(&state, "Unable to open log file: %s", strerror(errno));
+			return EXIT_FAILURE;
+		}
+
+		// When logging to file, cap printed messages to basic information (0)
+		// and use the verbosity level to dictate what is logged to file instead
+		if (state.verbose > 0) {
+			state.logverbose = state.verbose;
+			state.verbose = 0;
+		}
 	}
 
 	// Set defaults if no argument provided
@@ -121,6 +138,10 @@ int main(int argc, char *argv[]) {
 		free(tmp);
 	}
 
+	log_info(&state, 1, "Using GPS port %s", gpsPortName);
+	log_info(&state, 1, "Using state file %s", stateName);
+	log_info(&state, 1, "Using %s as monitor and log file prefix", monPrefix);
+
 	/*** Set up signal information for installation later ***/
 	sigset_t blocking;
 	sigemptyset(&blocking);
@@ -140,8 +161,7 @@ int main(int argc, char *argv[]) {
 
 	int gpsHandle = openConnection(gpsPortName, initialBaud);
 	if (gpsHandle < 0) {
-		fprintf(stderr, "Unable to open a connection on port %s\n", gpsPortName);
-		perror("openConnection");
+		log_error(&state, "Unable to open a connection on port %s", gpsPortName);
 		return -1;
 	}
 
@@ -152,6 +172,8 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
+	state.started = true;
+	log_info(&state, 1, "Startup complete");
 	/***
 	 * Once startup is complete, enable external signal processing
 	 **/
@@ -171,57 +193,37 @@ int main(int argc, char *argv[]) {
 		ubx_message out;
 		if (readMessage(gpsHandle, &out)) {
 			count++;
-			if (verbose > 2) {
-				ubx_print_hex(&out);
-				printf("\n");
+			// The log_ functions mean this check shouldn't
+			// normally be used, but in this instance it moves the
+			// memory allocation and processing required to output
+			// the debug data out of the "fast" path
+			if (state.verbose >= 3) {
+				char *msg = ubx_string_hex(&out);
+				log_info(&state, 3, "GPS: %s", msg);
+				free(msg);
+				msg = NULL;
 			}
 			uint8_t *data = NULL;
 			ssize_t len = ubx_flat_array(&out, &data);
 			fwrite(data, len, 1, monitorFile);
 		} else {
 			if (!(out.sync1 == 0xFF || out.sync1 == 0xFD)) {
-				fprintf(stderr, "Error signalled from readMessage\n");
+				// 0xFF and 0xFD are used to signal recoverable states that resulted in no
+				// valid message 0xFD indicates an out of data error, which is not a problem
+				// for serial monitoring
+				log_error(&state, "Error signalled from readMessage");
 				break;
 			}
 		}
 	}
+	state.shutdown = true;
+	log_info(&state, 1, "Shutting down");
 	closeConnection(gpsHandle);
+	log_info(&state, 2, "GPS device closed");
 	fclose(monitorFile);
-	fprintf(stdout, "%d messages read successfully\n\n", count);
+	log_info(&state, 2, "Monitor file closed");
+	log_info(&state, 0, "%d messages read successfully\n\n", count);
 	return 0;
-}
-
-FILE *openSerialNumberedFile(const char *prefix, const char *extension) {
-	time_t now = time(NULL);
-	struct tm *tm = localtime(&now);
-	char *fileName = NULL;
-	char date[9];
-	strftime(date, 9, "%Y%m%d", tm);
-
-	int i = 0;
-	FILE *file = NULL;
-	while (i <= 0xFF) {
-		errno = 0;
-		if (asprintf(&fileName, "%s%s%02x.%s", prefix, date, i, extension) == -1) {
-			return NULL;
-		}
-		errno = 0;
-		file = fopen(fileName, "w+x"); //w+x = rw + create. Fail if exists
-		if (file) {
-			fprintf(stdout, "Using: %s.\n", fileName);
-			free(fileName);
-			return file;
-		}
-		if (errno != EEXIST) {
-			free(fileName);
-			return NULL;
-		}
-		i++;
-		free(fileName);
-		fileName = NULL;
-	}
-
-	return NULL;
 }
 
 // Signal handlers documented in header file

@@ -87,6 +87,9 @@ void sa_clear_entry(strarray *array, const int index) {
 }
 
 void sa_destroy(strarray *sa) {
+	if (sa == NULL) {
+		return;
+	}
 	if (sa->entries == 0) {
 		// Why did we allocate a zero length array?
 		if (sa->strings) {
@@ -149,6 +152,9 @@ bool str_update(string *str, const size_t len, const char *src) {
 }
 
 void str_destroy(string *str) {
+	if (str == NULL) {
+		return;
+	}
 	str->length = 0;
 	if (str->data) {
 		free(str->data);

@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
 
         opterr = 0; // Handle errors ourselves
         int go = 0;
+	bool doUsage = false;
         while ((go = getopt (argc, argv, "vqb:g:m:s:MSRL")) != -1) {
                 switch(go) {
                         case 'v':
@@ -51,20 +52,35 @@ int main(int argc, char *argv[]) {
 				initialBaud = strtol(optarg, NULL, 10);
 				if (errno) {
 					log_error(&state, "Bad initial baud value ('%s')\n", optarg);
-					return EXIT_FAILURE;
+					doUsage = true;
 				}
 				break;
 			case 'g':
-				gpsPortName = strdup(optarg);
+				if (gpsPortName) {
+					log_error(&state, "Only a single GPS port can be specified");
+					doUsage = true;
+				} else {
+					gpsPortName = strdup(optarg);
+				}
                                 break;
 			case 'l':
 				logToFile = true;
 				break;
 			case 'm':
-				monPrefix = strdup(optarg);
+				if (monPrefix) {
+					log_error(&state, "Only a single monitor file prefix can be specified");
+					doUsage = true;
+				} else {
+					monPrefix = strdup(optarg);
+				}
 				break;
 			case 's':
-				stateName = strdup(optarg);
+				if (stateName) {
+					log_error(&state, "Only a single state file name can be specified");
+					doUsage = true;
+				} else {
+					stateName = strdup(optarg);
+				}
 				break;
 			case 'S':
 				saveState = false;
@@ -76,45 +92,34 @@ int main(int argc, char *argv[]) {
 				rotateMonitor = false;
 				break;
 			case '?':
-				fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-				fprintf(stderr, usage, argv[0]);
-				return EXIT_FAILURE;
+				log_error(&state, "Unknown option `-%c'.\n", optopt);
+				doUsage = true;
 		}
         }
 
 	// Should be no spare arguments
         if (argc - optind != 0) {
 		log_error(&state, "Invalid arguments");
-		fprintf(stderr, usage, argv[0]);
-                return EXIT_FAILURE;
+		doUsage = true;
         }
 
 	// Check for conflicting options
 	if (stateName && !saveState) {
 		log_error(&state, "-s and -S are mutually exclusive");
-		fprintf(stderr, usage, argv[0]);
-		return EXIT_FAILURE;
+		doUsage = true;
 	}
 
 	if ((monPrefix || !rotateMonitor) && !saveMonitor) {
 		log_error(&state, "-M and -m/-R are mutually exclusive");
-		fprintf(stderr, usage, argv[0]);
-		return EXIT_FAILURE;
+		doUsage = true;
 	}
 
-	if (logToFile) {
-		state.log = openSerialNumberedFile(monPrefix, "log");
-		if (!state.log) {
-			log_error(&state, "Unable to open log file: %s", strerror(errno));
-			return EXIT_FAILURE;
-		}
-
-		// When logging to file, cap printed messages to basic information (0)
-		// and use the verbosity level to dictate what is logged to file instead
-		if (state.verbose > 0) {
-			state.logverbose = state.verbose;
-			state.verbose = 0;
-		}
+	if (doUsage) {
+		fprintf(stderr, usage, argv[0]);
+		if (monPrefix) {free(monPrefix);}
+		if (stateName) {free(stateName);}
+		if (gpsPortName) {free(gpsPortName);}
+		return EXIT_FAILURE;
 	}
 
 	// Set defaults if no argument provided
@@ -133,10 +138,32 @@ int main(int argc, char *argv[]) {
 		char *tmp = strdup(gpsPortName);
 		if (asprintf(&stateName, "%s.state", basename(tmp)) < 0) {
 			perror("asprintf");
+			free(tmp);
+			free(gpsPortName);
+			free(monPrefix);
 			return -1;
 		}
 		free(tmp);
 	}
+
+	if (logToFile) {
+		state.log = openSerialNumberedFile(monPrefix, "log");
+		if (!state.log) {
+			log_error(&state, "Unable to open log file: %s", strerror(errno));
+			free(gpsPortName);
+			free(monPrefix);
+			free(stateName);
+			return EXIT_FAILURE;
+		}
+
+		// When logging to file, cap printed messages to basic information (0)
+		// and use the verbosity level to dictate what is logged to file instead
+		if (state.verbose > 0) {
+			state.logverbose = state.verbose;
+			state.verbose = 0;
+		}
+	}
+
 
 	log_info(&state, 1, "Using GPS port %s", gpsPortName);
 	log_info(&state, 1, "Using state file %s", stateName);

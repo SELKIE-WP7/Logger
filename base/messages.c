@@ -26,7 +26,7 @@ msg_t * msg_new_timestamp(const uint8_t source, const uint8_t type, const uint32
 	return newmsg;
 }
 
-msg_t * str_msg_string(const uint8_t source, const uint8_t type, const size_t len, const char *str) {
+msg_t * msg_new_string(const uint8_t source, const uint8_t type, const size_t len, const char *str) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
 	newmsg->type = type;

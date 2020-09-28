@@ -100,6 +100,15 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	if (!queue_push(&QT, msg_new_string(1,5, 20, "Test Message - 1234"))) {
+		fprintf(stderr, "Unable to push string message to queue");
+		return EXIT_FAILURE;
+	}
+
+	out = queue_pop(&QT);
+	fprintf(stdout, "Logged message: %s\n", out->data.string.data);
+	msg_destroy(out);
+
 	queue_destroy(&QT);
 
 	count = queue_count(&QT);

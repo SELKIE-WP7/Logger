@@ -6,6 +6,18 @@
 #include "GPSMessages.h"
 
 
+/*! @file UBXChecksumTest.c
+ *
+ * @brief Test UBX Checksum functions
+ *
+ * Checks that the checksum functions correctly recognise valid and invalid
+ * checksums, and that updating an invalid message checksum results in a new
+ * and correct checksum.
+ *
+ * Sample values used have been verified against hardware results.
+ *
+ * @addtogroup testing Test programs for use with CTest
+ */
 int main(int argc, char *argv[]) {
 	bool passed = true;
 

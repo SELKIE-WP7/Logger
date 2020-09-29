@@ -4,6 +4,21 @@
 #include "queue.h"
 #include "messages.h"
 
+/*! @file QueueTest.c
+ *
+ * @brief Basic Queue testing
+ *
+ * Creates a queue and several messages, adding and removing them in different
+ * combinations.  The queue length is verified at various points, and messages
+ * removed from the queue are checked to ensure ordering is maintained.
+ *
+ * Note that this is a single threaded test.
+ *
+ * Ideally this test should also be checked with valgrind to ensure memory is
+ * not being leaked through basic queue operations.
+ *
+ * @addtogroup testing Test programs for use with CTest
+ */
 int main(int argc, char *argv[]) {
 
 	msgqueue QT = {0};

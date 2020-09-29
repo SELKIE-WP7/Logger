@@ -3,6 +3,23 @@
 
 #include "strarray.h"
 
+/*! @file SATests.c
+ *
+ * @brief String and String Array tests
+ *
+ * Creates 5 examples strings using str_new(), str_duplicate() and
+ * str_update().
+ *
+ * These strings are then added to an array and an additional test string
+ * created in place.
+ *
+ * Clearing a string array entry and moving an array's contents are also tested.
+ *
+ * Ideally this test should also be checked with valgrind to ensure memory is
+ * not being leaked through basic operations.
+ *
+ * @addtogroup testing Test programs for use with CTest
+ */
 int main(int argc, char *argv[]) {
 
 	string *exA = str_new(20, "Testing String Lib.");

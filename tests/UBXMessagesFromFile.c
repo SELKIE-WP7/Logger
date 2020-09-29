@@ -6,13 +6,21 @@
 #include "GPSMessages.h"
 #include "GPSSerial.h"
 
-//! Test reading from a file
-
-/*!
+/*! @file UBXMessagesFromFile.c
+ *
+ * @brief Test reading from a file
+ *
+ * Read data from file until end of file is reached, outputting total number of
+ * entries read.
+ *
  * Return codes:
  * - 0 for tests passed
  * - -1 for tests failed
  * - -2 for a failure to run the test (system error, unexpected condition etc.)
+ *
+ * Exact outputs dependent on supplied test data
+ *
+ * @addtogroup testing Test programs for use with CTest
  */
 int main(int argc, char *argv[]) {
 	if (argc < 2) {

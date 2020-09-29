@@ -2,6 +2,8 @@
 #define SELKIELogging
 #include <stdbool.h>
 
+//! @file logging.h Output logging and file handling functions
+
 /*!
  * \addtogroup logging Logging support functions
  *

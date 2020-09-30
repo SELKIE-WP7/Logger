@@ -192,6 +192,24 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
+	log_info(&state, 2, "Configuring GPS message rates");
+	{
+		bool msgSuccess = true;
+		errno = 0;
+		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x07, 1); // NAV-PVT on every update
+		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x35, 1); // NAV-SAT on every update
+		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x21, 1); // NAV-TIMEUTC on every update
+		if (!msgSuccess) {
+			log_error(&state, "Unable to complete GPS configuration: %s", strerror(errno));
+			ubx_closeConnection(gpsHandle);
+			free(gpsPortName);
+			free(monPrefix);
+			free(stateName);
+			return EXIT_FAILURE;
+		}
+	}
+
+
 	FILE *monitorFile = openSerialNumberedFile(monPrefix, "dat");
 
 	if (monitorFile == NULL) {

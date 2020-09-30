@@ -196,6 +196,10 @@ int main(int argc, char *argv[]) {
 	{
 		bool msgSuccess = true;
 		errno = 0;
+		msgSuccess &= ubx_enableGalileo(gpsHandle);
+		log_info(&state, 2, "Enabling Galileo (GNSS Reset)");
+		sleep(4);
+		msgSuccess &= ubx_setNavigationRate(gpsHandle, 500, 1); // 500ms Update rate, new output each time
 		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x07, 1); // NAV-PVT on every update
 		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x35, 1); // NAV-SAT on every update
 		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x21, 1); // NAV-TIMEUTC on every update

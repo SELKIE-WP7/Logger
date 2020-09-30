@@ -244,20 +244,27 @@ bool ubx_writeMessage(int handle, const ubx_message *out) {
 		return false;
 	}
 
-	if (out->length <= 256) {
-		ret = write(handle, out->data, out->length);
-	} else {
-		ret = write(handle, out->extdata, out->length);
-	}
-	if (ret != out->length) {
-		perror("writeMessage:data");
-		return false;
-	}
+	/*
+	 * The results of a zero length write are undefined for anything that
+	 * isn't a regular file. Zero length messages are valid, so guard this
+	 * whole section.
+	 */
+	if (out->length >0) {
+		if (out->length <= 256) {
+			ret = write(handle, out->data, out->length);
+		} else {
+			ret = write(handle, out->extdata, out->length);
+		}
+		if (ret != out->length) {
+			perror("writeMessage:data");
+			return false;
+		}
 
-	ret = write(handle, tail, 2);
-	if (ret != 2) {
-		perror("writeMessage:tail");
-		return false;
+		ret = write(handle, tail, 2);
+		if (ret != 2) {
+			perror("writeMessage:tail");
+			return false;
+		}
 	}
 	return true;
 }

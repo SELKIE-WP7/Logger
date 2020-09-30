@@ -49,3 +49,50 @@ bool ubx_setMessageRate(const int handle, const uint8_t msgClass, const uint8_t 
 	ubx_set_checksum(&setRate);
 	return ubx_writeMessage(handle, &setRate);
 }
+
+/*!
+ * Some UBX message types can be polled by sending a message with the message
+ * class and ID but zero length.
+ *
+ * Not valid for all types, check U-Blox manual for information
+ */
+bool ubx_pollMessage(const int handle, const uint8_t msgClass, const uint8_t msgID) {
+	ubx_message poll = {0xB5, 0x62, msgClass, msgID, 0x0000, {0x00}, 0xFF, 0xFF};
+	ubx_set_checksum(&poll);
+	return ubx_writeMessage(handle, &poll);
+}
+
+/*!
+ * Not making this configurable for now, as the "proper" method would need a bit more faff
+ */
+bool ubx_enableGalileo(const int handle) {
+	ubx_message enableGalileo = {
+		0xB5, 0x62, 0x06, 0x3e,
+		0x003C,
+		{0x00, 0x20, 0x20, 0x07, 0x00, 0x08, 0x10, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x01, 0x02, 0x04, 0x08, 0x00, 0x01, 0x00, 0x01, 0x01, 0x03, 0x08, 0x10, 0x00, 0x00, 0x00, 0x01, 0x01, 0x04, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x03, 0x05, 0x00, 0x03, 0x00, 0x01, 0x00, 0x01, 0x05, 0x06, 0x08, 0x0E, 0x00, 0x01, 0x00, 0x01, 0x01},
+		0xFF, 0xFF};
+	ubx_set_checksum(&enableGalileo);
+	return ubx_writeMessage(handle, &enableGalileo);
+}
+
+/*!
+ * Configures the GPS navigation calculation and reporting rate.
+ *
+ * - Interval is measured in milliseconds and determines the rate at which navigation results are calculated.
+ * - Output rate determines how many measurements are made before an update message is sent.
+ *
+ * Can be overridden by power saving settings
+ */
+bool ubx_setNavigationRate(const int handle, const uint16_t interval, const uint16_t outputRate) {
+	ubx_message navRate = {
+		0xB5, 0x62, 0x13, 0x40, // Header, CFG-RATE
+		0x0006,
+		{
+			(interval & 0xFF), ((interval >> 8) & 0xFF),
+			(outputRate & 0xFF), ((outputRate >> 8) & 0xFF),
+			0x00, 0x00 // Align measurements to UTC
+		},
+		0xFF, 0xFF}; // Dummy checksum values
+	ubx_set_checksum(&navRate);
+	return ubx_writeMessage(handle, &navRate);
+}

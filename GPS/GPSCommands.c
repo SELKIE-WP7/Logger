@@ -5,7 +5,7 @@
 #include "GPSTypes.h"
 #include "GPSMessages.h"
 
-bool setBaudRate(const int handle, const uint32_t baud) {
+bool ubx_setBaudRate(const int handle, const uint32_t baud) {
 	ubx_message setBaud = {
 		0xB5, 0x62, // Header bytes
 		0x06, 0x00, // CFG-PRT
@@ -29,10 +29,10 @@ bool setBaudRate(const int handle, const uint32_t baud) {
 	setBaud.data[11] = (uint8_t) ((baud >> 24) & 0xFF);
 
 	ubx_set_checksum(&setBaud);
-	return writeMessage(handle, &setBaud);
+	return ubx_writeMessage(handle, &setBaud);
 }
 
-bool setMessageRate(const int handle, const uint8_t msgClass, const uint8_t msgID, const uint8_t rate) {
+bool ubx_setMessageRate(const int handle, const uint8_t msgClass, const uint8_t msgID, const uint8_t rate) {
 	ubx_message setRate = {
 		0xB5, 0x62, 0x06, 0x01, // Header, CFG-MSG
 		0x0008, // 8 byte message
@@ -47,5 +47,5 @@ bool setMessageRate(const int handle, const uint8_t msgClass, const uint8_t msgI
 		},
 		0xFF, 0xFF};
 	ubx_set_checksum(&setRate);
-	return writeMessage(handle, &setRate);
+	return ubx_writeMessage(handle, &setRate);
 }

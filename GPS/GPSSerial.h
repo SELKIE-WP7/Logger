@@ -5,11 +5,11 @@
 
 #define UBX_SERIAL_BUFF 4096
 
-int openConnection(const char *port, const int initialBaud);
-void closeConnection(int handle);
-bool readMessage(int handle, ubx_message *out);
-bool waitForMessage(const int handle, const uint8_t msgClass, const uint8_t msgID, const int maxDelay, ubx_message *out);
-bool writeMessage(int handle, const ubx_message *out);
+int ubx_openConnection(const char *port, const int initialBaud);
+void ubx_closeConnection(int handle);
+bool ubx_readMessage(int handle, ubx_message *out);
+bool ubx_waitForMessage(const int handle, const uint8_t msgClass, const uint8_t msgID, const int maxDelay, ubx_message *out);
+bool ubx_writeMessage(int handle, const ubx_message *out);
 int baud_to_flag(const int rate);
 int flag_to_baudg(const int flag);
 

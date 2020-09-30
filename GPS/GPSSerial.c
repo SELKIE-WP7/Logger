@@ -16,7 +16,7 @@
 #include "GPSCommands.h"
 
 //! Set up a connection to the specified port
-int openConnection(const char *port, const int initialBaud) {
+int ubx_openConnection(const char *port, const int initialBaud) {
 	/* ! Opens port and sets the following modes:
 	 * - read-write
 	 * - Do not make us controlling terminal (ignore control codes!)
@@ -52,7 +52,7 @@ int openConnection(const char *port, const int initialBaud) {
 		fprintf(stderr, "tcsetattr() failed!\n");
 	}
 
-	if (!setBaudRate(handle, 115200)) {
+	if (!ubx_setBaudRate(handle, 115200)) {
 		fprintf(stderr, "Unable to command baud rate change");
 		perror("openConnection");
 		return -1;
@@ -74,7 +74,7 @@ int openConnection(const char *port, const int initialBaud) {
 	 * would fail silently, and the GPS might be transmitting at the right
 	 * baud but with the wrong protocols
 	 */
-	if (!setBaudRate(handle, 115200)) {
+	if (!ubx_setBaudRate(handle, 115200)) {
 		fprintf(stderr, "Unable to command baud rate change");
 		perror("openConnection");
 		return -1;
@@ -84,7 +84,7 @@ int openConnection(const char *port, const int initialBaud) {
 }
 
 //! Close existing connection
-void closeConnection(int handle) {
+void ubx_closeConnection(int handle) {
 	close(handle);
 }
 
@@ -106,7 +106,7 @@ void closeConnection(int handle) {
  * - 0XEE means a valid message header was found, but no valid message
  *
  */
-bool readMessage(int handle, ubx_message *out) {
+bool ubx_readMessage(int handle, ubx_message *out) {
 	static uint8_t buf[UBX_SERIAL_BUFF];
 	static int index = 0; // Current read position
 	static int hw = 0; // Current array end
@@ -210,10 +210,10 @@ bool readMessage(int handle, ubx_message *out) {
 	return valid;
 }
 
-bool waitForMessage(const int handle, const uint8_t msgClass, const uint8_t msgID, const int maxDelay, ubx_message *out) {
+bool ubx_waitForMessage(const int handle, const uint8_t msgClass, const uint8_t msgID, const int maxDelay, ubx_message *out) {
 	const time_t deadline = time(NULL) + maxDelay;
 	while (time(NULL) < deadline) {
-		bool rms = readMessage(handle, out);
+		bool rms = ubx_readMessage(handle, out);
 		if (rms) {
 			if ((out->msgClass == msgClass) && (out->msgID == msgID)) {
 				return true;
@@ -225,7 +225,7 @@ bool waitForMessage(const int handle, const uint8_t msgClass, const uint8_t msgI
 	return false;
 }
 
-bool writeMessage(int handle, const ubx_message *out) {
+bool ubx_writeMessage(int handle, const ubx_message *out) {
 	/*if (!validType(out->type)) {
 		fprintf(stderr, "Invalid type in send\n");
 		return false;

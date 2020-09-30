@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 	int exit = 0;
 	while (!(feof(testFile) || exit == 1)) {
 		ubx_message tmp;
-		if (readMessage(fileno(testFile), &tmp)) {
+		if (ubx_readMessage(fileno(testFile), &tmp)) {
 			// Successfully read message
 			count++;
 		} else {

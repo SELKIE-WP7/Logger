@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
 	const struct sigaction saUnpause = {.sa_handler = signalUnpause, .sa_mask = blocking, .sa_flags = SA_RESTART};
 
 
-	int gpsHandle = openConnection(gpsPortName, initialBaud);
+	int gpsHandle = ubx_openConnection(gpsPortName, initialBaud);
 	if (gpsHandle < 0) {
 		log_error(&state, "Unable to open a connection on port %s", gpsPortName);
 		return -1;
@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
 	int count = 0;
 	while (!shutdown) {
 		ubx_message out;
-		if (readMessage(gpsHandle, &out)) {
+		if (ubx_readMessage(gpsHandle, &out)) {
 			count++;
 			// The log_ functions mean this check shouldn't
 			// normally be used, but in this instance it moves the
@@ -245,7 +245,7 @@ int main(int argc, char *argv[]) {
 	}
 	state.shutdown = true;
 	log_info(&state, 1, "Shutting down");
-	closeConnection(gpsHandle);
+	ubx_closeConnection(gpsHandle);
 	log_info(&state, 2, "GPS device closed");
 	fclose(monitorFile);
 	log_info(&state, 2, "Monitor file closed");

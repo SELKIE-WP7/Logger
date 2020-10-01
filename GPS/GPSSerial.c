@@ -88,6 +88,19 @@ void ubx_closeConnection(int handle) {
 	close(handle);
 }
 
+//! Static wrapper around ubx_readMessage_buf
+
+/*!
+ * For single threaded development and testing, uses static variables rather
+ * than requiring state to be tracked by caller.
+ */
+bool ubx_readMessage(int handle, ubx_message *out) {
+	static uint8_t buf[UBX_SERIAL_BUFF];
+	static int index = 0; // Current read position
+	static int hw = 0; // Current array end
+	return ubx_readMessage_buf(handle, out, buf, &index, &hw);
+}
+
 //! Read data from handle, and parse message if able
 
 
@@ -106,17 +119,13 @@ void ubx_closeConnection(int handle) {
  * - 0XEE means a valid message header was found, but no valid message
  *
  */
-bool ubx_readMessage(int handle, ubx_message *out) {
-	static uint8_t buf[UBX_SERIAL_BUFF];
-	static int index = 0; // Current read position
-	static int hw = 0; // Current array end
-
+bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BUFF], int *index, int *hw) {
 	int ti = 0;
-	if (hw < UBX_SERIAL_BUFF - 1) {
+	if ((*hw) < UBX_SERIAL_BUFF - 1) {
 		errno = 0;
-		ti = read(handle, &(buf[hw]), UBX_SERIAL_BUFF - hw);
+		ti = read(handle, &(buf[(*hw)]), UBX_SERIAL_BUFF - (*hw));
 		if (ti >= 0) {
-			hw += ti;
+			(*hw) += ti;
 		} else {
 			if (errno != EAGAIN) {
 				fprintf(stderr, "Unexpected error while reading from serial port (handle ID: 0x%02x)\n", handle);
@@ -128,15 +137,15 @@ bool ubx_readMessage(int handle, ubx_message *out) {
 	}
 
 	// Check buf[index] is valid ID
-	while (!(buf[index] == 0xB5) && index < hw) {
-		index++; // Current byte cannot be start of a message, so advance
+	while (!(buf[(*index)] == 0xB5) && (*index) < (*hw)) {
+		(*index)++; // Current byte cannot be start of a message, so advance
 	}
-	if (index == hw) {
-		if (hw > 0 && index > 0) {
+	if ((*index) == (*hw)) {
+		if ((*hw) > 0 && (*index) > 0) {
 			// Move data from index back to zero position
-			memmove(buf, &(buf[index]), UBX_SERIAL_BUFF - index);
-			hw -= index;
-			index = 0;
+			memmove(buf, &(buf[(*index)]), UBX_SERIAL_BUFF - (*index));
+			(*hw) -= (*index);
+			(*index) = 0;
 		}
 		//fprintf(stderr, "Buffer empty - returning\n");
 		out->sync1 = 0xFF;
@@ -146,7 +155,7 @@ bool ubx_readMessage(int handle, ubx_message *out) {
 		return false;
 	}
 
-	if ((hw - index) < 8) {
+	if (((*hw) - (*index)) < 8) {
 		// Not enough data for any valid message, come back later
 		out->sync1 = 0xFF;
 		return false;
@@ -154,21 +163,21 @@ bool ubx_readMessage(int handle, ubx_message *out) {
 
 	// Set length of data required for message
 
-	out->sync1 = buf[index];
-	out->sync2 = buf[index+1];
-	out->msgClass = buf[index + 2];
-	out->msgID = buf[index + 3];
-	out->length = buf[index + 4] + (buf[index + 5] << 8);
+	out->sync1 = buf[(*index)];
+	out->sync2 = buf[(*index)+1];
+	out->msgClass = buf[(*index) + 2];
+	out->msgID = buf[(*index) + 3];
+	out->length = buf[(*index) + 4] + (buf[(*index) + 5] << 8);
 
 	if (out->sync2 != 0x62) {
 		// Found first sync byte, but second not valid
 		// Advance the index so we skip this message and go back around
-		index++;
+		(*index)++;
 		out->sync1 = 0xFF;
 		return false;
 	}
 
-	if ((hw - index) < (out->length + 8) ) {
+	if (((*hw) - (*index)) < (out->length + 8) ) {
 		// Not enough data for this message yet, so mark output invalid
 		out->sync1 = 0xFF;
 		if (ti == 0) {
@@ -181,31 +190,31 @@ bool ubx_readMessage(int handle, ubx_message *out) {
 
 	if (out->length <= 256) {
 		for (uint8_t i = 0; i < out->length; i++) {
-			out->data[i] = buf[index + 6 + i];
+			out->data[i] = buf[(*index) + 6 + i];
 		}
 	} else {
 		out->extdata = calloc(out->length, 1);
 		for (uint16_t i = 0; i < out->length; i++) {
-			out->extdata[i] = buf[index + 6 + i];
+			out->extdata[i] = buf[(*index) + 6 + i];
 		}
 	}
 
-	out->csumA = buf[index + 6 + out->length];
-	out->csumB = buf[index + 7 + out->length];
+	out->csumA = buf[(*index) + 6 + out->length];
+	out->csumB = buf[(*index) + 7 + out->length];
 
 
 	bool valid = ubx_check_checksum(out);
 	if (valid) {
-		index += 8 + out->length ;
+		(*index) += 8 + out->length ;
 	} else {
 		out->sync1 = 0xEE; // Use 0xEE as "Found, but invalid", leaving 0xFF as "No message"
-		index++;
+		(*index)++;
 	}
-	if (hw > 0) {
+	if ((*hw) > 0) {
 		// Move data from index back to zero position
-		memmove(buf, &(buf[index]), UBX_SERIAL_BUFF - index);
-		hw -= index;
-		index = 0;
+		memmove(buf, &(buf[(*index)]), UBX_SERIAL_BUFF - (*index));
+		(*hw) -= (*index);
+		(*index) = 0;
 	}
 	return valid;
 }

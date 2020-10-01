@@ -342,9 +342,12 @@ void *gps_logging(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	log_info(args->pstate, 1, "GPS Logging thread started");
 
+	uint8_t *buf = calloc(UBX_SERIAL_BUFF, sizeof(uint8_t));
+	int ubx_index = 0;
+	int ubx_hw = 0;
 	while (!shutdown) {
-		ubx_message out;
-		if (ubx_readMessage(args->streamHandle, &out)) {
+		ubx_message out = {0};
+		if (ubx_readMessage_buf(args->streamHandle, &out, buf, &ubx_index, &ubx_hw)) {
 			uint8_t *data = NULL;
 			ssize_t len = ubx_flat_array(&out, &data);
 

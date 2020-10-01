@@ -186,39 +186,36 @@ int main(int argc, char *argv[]) {
 	const struct sigaction saUnpause = {.sa_handler = signalUnpause, .sa_mask = blocking, .sa_flags = SA_RESTART};
 
 
-	int gpsHandle = ubx_openConnection(gpsPortName, initialBaud);
+	int gpsHandle = gps_setup(&state, gpsPortName, initialBaud);
+	free(gpsPortName);
+	gpsPortName = NULL;
+
 	if (gpsHandle < 0) {
-		log_error(&state, "Unable to open a connection on port %s", gpsPortName);
-		return -1;
+		log_error(&state, "Unable to set up GPS connection");
+		return EXIT_FAILURE;
 	}
-
-	log_info(&state, 2, "Configuring GPS message rates");
-	{
-		bool msgSuccess = true;
-		errno = 0;
-		msgSuccess &= ubx_enableGalileo(gpsHandle);
-		log_info(&state, 2, "Enabling Galileo (GNSS Reset)");
-		sleep(4);
-		msgSuccess &= ubx_setNavigationRate(gpsHandle, 500, 1); // 500ms Update rate, new output each time
-		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x07, 1); // NAV-PVT on every update
-		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x35, 1); // NAV-SAT on every update
-		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x21, 1); // NAV-TIMEUTC on every update
-		if (!msgSuccess) {
-			log_error(&state, "Unable to complete GPS configuration: %s", strerror(errno));
-			ubx_closeConnection(gpsHandle);
-			free(gpsPortName);
-			free(monPrefix);
-			free(stateName);
-			return EXIT_FAILURE;
-		}
-	}
-
 
 	FILE *monitorFile = openSerialNumberedFile(monPrefix, "dat");
 
 	if (monitorFile == NULL) {
 		perror("monitorFile");
 		return -1;
+	}
+
+
+	msgqueue log_queue = {0};
+	if (!queue_init(&log_queue)) {
+		log_error(&state, "Unable to initialise message queue");
+		return EXIT_FAILURE;
+	}
+
+	log_info(&state, 1, "Initialisation complete, starting log threads");
+
+	log_thread_args_t ltargs = {&log_queue, &state, gpsHandle};
+	pthread_t threads[1];
+	if (pthread_create(&(threads[0]), NULL, &gps_logging, &ltargs) != 0){
+		log_error(&state, "Unable to launch GPS thread");
+		return EXIT_FAILURE;
 	}
 
 	state.started = true;
@@ -236,39 +233,53 @@ int main(int argc, char *argv[]) {
 	sigaction(SIGRTMIN + 3, &saPause, NULL);
 	sigaction(SIGRTMIN + 4, &saUnpause, NULL);
 
-
 	int count = 0;
 	while (!shutdown) {
-		ubx_message out;
-		if (ubx_readMessage(gpsHandle, &out)) {
-			count++;
-			// The log_ functions mean this check shouldn't
-			// normally be used, but in this instance it moves the
-			// memory allocation and processing required to output
-			// the debug data out of the "fast" path
-			if (state.verbose >= 3) {
-				char *msg = ubx_string_hex(&out);
-				log_info(&state, 3, "GPS: %s", msg);
-				free(msg);
-				msg = NULL;
-			}
-			uint8_t *data = NULL;
-			ssize_t len = ubx_flat_array(&out, &data);
-			fwrite(data, len, 1, monitorFile);
-		} else {
-			if (!(out.sync1 == 0xFF || out.sync1 == 0xFD)) {
-				// 0xFF and 0xFD are used to signal recoverable states that resulted in no
-				// valid message 0xFD indicates an out of data error, which is not a problem
-				// for serial monitoring
-				log_error(&state, "Error signalled from readMessage");
-				break;
-			}
+		msg_t *res = queue_pop(&log_queue);
+		if (res == NULL) {
+			usleep(1000);
+			continue;
 		}
+		count++;
+		if (res->dtype == MSG_BYTES) {
+			fwrite(res->data.bytes, res->length, 1, monitorFile);
+			log_info(&state, 3, "X-%lu", res->length);
+		} else {
+			log_warning(&state, "Unexpected message type (%d)", res->dtype);
+		}
+		msg_destroy(res);
+		free(res);
 	}
 	state.shutdown = true;
+	shutdown = true; // Ensure threads aware
 	log_info(&state, 1, "Shutting down");
+	pthread_join(threads[0], NULL);
+	log_info(&state, 2, "GPS thread returned %d", ltargs.returnCode);
 	ubx_closeConnection(gpsHandle);
 	log_info(&state, 2, "GPS device closed");
+
+	if (queue_count(&log_queue) > 0) {
+		log_info(&state, 2, "Processing remaining queued messages");
+		while (queue_count(&log_queue) > 0) {
+			msg_t *res = queue_pop(&log_queue);
+			if (res == NULL) {
+				usleep(1000);
+				continue;
+			}
+			count++;
+			if (res->dtype == MSG_BYTES) {
+				fwrite(res->data.bytes, res->length, 1, monitorFile);
+				log_info(&state, 3, "X-%lu", res->length);
+			} else {
+				log_warning(&state, "Unexpected message type (%d)", res->dtype);
+			}
+			msg_destroy(res);
+			free(res);
+		}
+		log_info(&state, 2, "Queue emptied");
+	}
+	queue_destroy(&log_queue);
+	log_info(&state, 2, "Message queue destroyed");
 	fclose(monitorFile);
 	log_info(&state, 2, "Monitor file closed");
 	log_info(&state, 0, "%d messages read successfully\n\n", count);
@@ -290,4 +301,65 @@ void signalPause(int signnum __attribute__((unused))) {
 
 void signalUnpause(int signnum __attribute__((unused))) {
 	pauseLog = false;
+}
+
+int gps_setup(program_state *pstate, const char* gpsPortName, const int initialBaud) {
+	int gpsHandle = ubx_openConnection(gpsPortName, initialBaud);
+	if (gpsHandle < 0) {
+		log_error(pstate, "Unable to open a connection on port %s", gpsPortName);
+		return -1;
+	}
+
+	log_info(pstate, 2, "Configuring GPS message rates");
+	{
+		bool msgSuccess = true;
+		errno = 0;
+		msgSuccess &= ubx_enableGalileo(gpsHandle);
+		log_info(pstate, 2, "Enabling Galileo (GNSS Reset)");
+		sleep(4);
+		msgSuccess &= ubx_setNavigationRate(gpsHandle, 500, 1); // 500ms Update rate, new output each time
+		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x07, 1); // NAV-PVT on every update
+		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x35, 1); // NAV-SAT on every update
+		msgSuccess &= ubx_setMessageRate(gpsHandle, 0x01, 0x21, 1); // NAV-TIMEUTC on every update
+		if (!msgSuccess) {
+			log_error(pstate, "Unable to complete GPS configuration: %s", strerror(errno));
+			ubx_closeConnection(gpsHandle);
+			return EXIT_FAILURE;
+		}
+	}
+	return gpsHandle;
+}
+
+void *gps_logging(void *ptargs) {
+	log_thread_args_t *args = (log_thread_args_t *) ptargs;
+	log_info(args->pstate, 1, "GPS Logging thread started");
+
+	while (!shutdown) {
+		ubx_message out;
+		if (ubx_readMessage(args->streamHandle, &out)) {
+			uint8_t *data = NULL;
+			ssize_t len = ubx_flat_array(&out, &data);
+
+			msg_t *sm = msg_new_bytes(SLSOURCE_GPS, 3, len, data);
+			if (!queue_push(args->logQ, sm)) {
+				log_error(args->pstate, "Error pushing message to queue from GPS");
+				msg_destroy(sm);
+				args->returnCode = -1;
+				pthread_exit(&(args->returnCode));
+			}
+			msg_destroy(sm);
+			free(sm);
+		} else {
+			if (!(out.sync1 == 0xFF || out.sync1 == 0xFD)) {
+				// 0xFF and 0xFD are used to signal recoverable states that resulted in no
+				// valid message 0xFD indicates an out of data error, which is not a problem
+				// for serial monitoring
+				log_error(args->pstate, "Error signalled from readMessage");
+				args->returnCode = -2;
+				pthread_exit(&(args->returnCode));
+			}
+		}
+	}
+	pthread_exit(NULL);
+	return NULL; // Superfluous, as returning zero via pthread_exit above
 }

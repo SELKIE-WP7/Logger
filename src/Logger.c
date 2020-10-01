@@ -355,8 +355,9 @@ void *gps_logging(void *ptargs) {
 				args->returnCode = -1;
 				pthread_exit(&(args->returnCode));
 			}
-			msg_destroy(sm);
-			free(sm);
+			// Do not destroy or free sm here
+			// After pushing it to the queue, it is the responsibility of the consumer
+			// to dispose of it after use.
 		} else {
 			if (!(out.sync1 == 0xFF || out.sync1 == 0xFD)) {
 				// 0xFF and 0xFD are used to signal recoverable states that resulted in no

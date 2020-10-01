@@ -94,11 +94,13 @@ void msg_destroy(msg_t* msg) {
 			str_destroy(&(msg->data.string));
 			break;
 		case MSG_STRARRAY:
-			// TODO
+			sa_destroy(msg->data.names);
+			break;
+		case MSG_BYTES:
+			free(msg->data.bytes);
 			break;
 		default:
 			fprintf(stderr, "Unhandled message type in msg_destroy!\n");
 			break;
 	}
-	free(msg);
 }

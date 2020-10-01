@@ -52,15 +52,29 @@ int ubx_openConnection(const char *port, const int initialBaud) {
 		fprintf(stderr, "tcsetattr() failed!\n");
 	}
 
+	{
+		struct termios check;
+		tcgetattr(handle, &check);
+		if (cfgetispeed(&check) != baud_to_flag(initialBaud)) {
+			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", cfgetispeed(&check), baud_to_flag(initialBaud));
+			return -1;
+		}
+	}
+
 	if (!ubx_setBaudRate(handle, 115200)) {
 		fprintf(stderr, "Unable to command baud rate change");
 		perror("openConnection");
 		return -1;
 	}
 
+	fsync(handle);
+	usleep(5E4);
+
 	cfsetispeed(&options, B115200);
 	cfsetospeed(&options, B115200);
-	if(tcsetattr(handle, TCSANOW, &options)) {
+
+	// Set options using TCSADRAIN in case commands not yet set
+	if(tcsetattr(handle, TCSADRAIN, &options)) {
 		fprintf(stderr, "tcsetattr() failed!\n");
 	}
 
@@ -79,6 +93,7 @@ int ubx_openConnection(const char *port, const int initialBaud) {
 		perror("openConnection");
 		return -1;
 	}
+	usleep(5E-4);
 
 	return handle;
 }

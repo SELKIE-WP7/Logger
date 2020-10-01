@@ -251,7 +251,6 @@ int main(int argc, char *argv[]) {
 		count++;
 		if (res->dtype == MSG_BYTES) {
 			fwrite(res->data.bytes, res->length, 1, monitorFile);
-			log_info(&state, 3, "X-%lu", res->length);
 		} else {
 			log_warning(&state, "Unexpected message type (%d)", res->dtype);
 		}
@@ -270,14 +269,9 @@ int main(int argc, char *argv[]) {
 		log_info(&state, 2, "Processing remaining queued messages");
 		while (queue_count(&log_queue) > 0) {
 			msg_t *res = queue_pop(&log_queue);
-			if (res == NULL) {
-				usleep(1000);
-				continue;
-			}
 			count++;
 			if (res->dtype == MSG_BYTES) {
 				fwrite(res->data.bytes, res->length, 1, monitorFile);
-				log_info(&state, 3, "X-%lu", res->length);
 			} else {
 				log_warning(&state, "Unexpected message type (%d)", res->dtype);
 			}

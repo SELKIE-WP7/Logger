@@ -235,6 +235,14 @@ int main(int argc, char *argv[]) {
 
 	int count = 0;
 	while (!shutdown) {
+		if (pauseLog) {
+			log_info(&state, 0, "Logging paused");
+			while (pauseLog && !shutdown) {
+				sleep(1);
+			}
+			log_info(&state, 0, "Logging resumed");
+			continue;
+		}
 		msg_t *res = queue_pop(&log_queue);
 		if (res == NULL) {
 			usleep(1000);

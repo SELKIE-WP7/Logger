@@ -1,6 +1,8 @@
 #ifndef SELKIELogging
 #define SELKIELogging
+#include <stdarg.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 //! @file logging.h Output logging and file handling functions
 
@@ -25,7 +27,7 @@ void log_error(const program_state *s, const char *format, ...) __attribute__ ((
 //! Output formatted warning message
 void log_warning(const program_state *s, const char *format, ...) __attribute__ ((format (gnu_printf, 2, 3)));
 
-//! Output formatted information messsage at a given level
+//! Output formatted information message at a given level
 void log_info(const program_state *s, const int level, const char *format, ...) __attribute__ ((format (gnu_printf, 3, 4)));
 
 /*! @brief Open dated, serial numbered file with given prefix and extension

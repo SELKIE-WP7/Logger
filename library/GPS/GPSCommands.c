@@ -96,3 +96,31 @@ bool ubx_setNavigationRate(const int handle, const uint16_t interval, const uint
 	ubx_set_checksum(&navRate);
 	return ubx_writeMessage(handle, &navRate);
 }
+
+bool ubx_enableLogMessages(const int handle) {
+	ubx_message enableInf = {
+		0xB5, 0x62, 0x06, 0x02, // Header, CFG-INF
+		0x000A, // 10 bytes
+		{
+			0x00, //UBX
+			0x00,0x00,0x00, //Reserved
+			0x00, 0x07, 0x00, 0x00, 0x00, 0x00, // Error, warning and info on UART 1, disable all others
+		},
+		0xFF, 0xFF}; // Checksum to be set below
+	ubx_set_checksum(&enableInf);
+	return ubx_writeMessage(handle, &enableInf);
+}
+
+bool ubx_disableLogMessages(const int handle) {
+	ubx_message disableInf = {
+		0xB5, 0x62, 0x06, 0x02, // Header, CFG-INF
+		0x000A, // 10 bytes
+		{
+			0x00, //UBX
+			0x00,0x00,0x00, //Reserved
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Disable all
+		},
+		0xFF, 0xFF}; // Checksum to be set below
+	ubx_set_checksum(&disableInf);
+	return ubx_writeMessage(handle, &disableInf);
+}

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "strarray.h"
+#include "SELKIELoggerBase.h"
 
 /*! @file SATests.c
  *

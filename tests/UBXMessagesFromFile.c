@@ -3,8 +3,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "GPSMessages.h"
-#include "GPSSerial.h"
+#include "SELKIELoggerGPS.h"
 
 /*! @file UBXMessagesFromFile.c
  *

@@ -20,5 +20,11 @@ bool ubx_enableGalileo(const int handle);
 
 //! Set UBX navigation calculation and reporting rate
 bool ubx_setNavigationRate(const int handle, const uint16_t interval, const uint16_t outputRate);
+
+//! Enable log/information messages from GPS device
+bool ubx_enableLogMessages(const int handle);
+
+//! Disable log/information messages from GPS device
+bool ubx_disableLogMessages(const int handle);
 #endif
 

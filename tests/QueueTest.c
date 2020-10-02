@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "queue.h"
-#include "messages.h"
+#include "SELKIELoggerBase.h"
 
 /*! @file QueueTest.c
  *

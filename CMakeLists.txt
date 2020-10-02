@@ -27,12 +27,11 @@ else()
 	set(VERSION_STRING "unversioned" CACHE STRING "Project version information" FORCE)
 endif()
 
-# generate version.h
-configure_file("${CMAKE_SOURCE_DIR}/version.h.in" "${CMAKE_BINARY_DIR}/version.h" @ONLY)
+include(GNUInstallDirs)
+
 include_directories(${CMAKE_BINARY_DIR})
 
-add_subdirectory(GPS)
-add_subdirectory(base)
+add_subdirectory(library)
 add_subdirectory(src)
 
 enable_testing()
@@ -60,7 +59,6 @@ endif()
 #find_library(MATH_LIBRARY m)
 
 
-include(GNUInstallDirs)
 
 set(CPACK_PACKAGE_VENDOR "Swansea University")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SELKIE Datalogger core software")

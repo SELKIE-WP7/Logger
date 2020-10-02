@@ -2,9 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "GPSTypes.h"
-#include "GPSMessages.h"
-
+#include "SELKIELoggerGPS.h"
 
 /*! @file UBXChecksumTest.c
  *

@@ -211,9 +211,14 @@ int main(int argc, char *argv[]) {
 
 	log_info(&state, 1, "Initialisation complete, starting log threads");
 
-	log_thread_args_t ltargs = {&log_queue, &state, gpsHandle};
-	pthread_t threads[1];
-	if (pthread_create(&(threads[0]), NULL, &gps_logging, &ltargs) != 0){
+	const int nThreads = 1;
+	log_thread_args_t *ltargs = calloc(nThreads, sizeof(log_thread_args_t));
+	pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
+
+	ltargs[0].logQ = &log_queue;
+	ltargs[0].pstate = &state;
+	ltargs[0].streamHandle = gpsHandle;
+	if (pthread_create(&(threads[0]), NULL, &gps_logging, &(ltargs[0])) != 0){
 		log_error(&state, "Unable to launch GPS thread");
 		return EXIT_FAILURE;
 	}
@@ -243,6 +248,17 @@ int main(int argc, char *argv[]) {
 			log_info(&state, 0, "Logging resumed");
 			continue;
 		}
+		for (int it=0; it < nThreads; it++) {
+			if (ltargs[it].returnCode != 0) {
+				log_error(&state, "Thread %d has signalled an error: %d", it, ltargs[it].returnCode);
+				// Begin app shutdown
+				// We allow this loop (over threads) to continue in order to report on remaining threads
+				// After that, we allow the main while loop to continue (easier) and it will terminate afterwards
+				shutdown = true;
+			}
+		}
+
+
 		msg_t *res = queue_pop(&log_queue);
 		if (res == NULL) {
 			usleep(1000);
@@ -261,9 +277,12 @@ int main(int argc, char *argv[]) {
 	shutdown = true; // Ensure threads aware
 	log_info(&state, 1, "Shutting down");
 	pthread_join(threads[0], NULL);
-	log_info(&state, 2, "GPS thread returned %d", ltargs.returnCode);
+	log_info(&state, 2, "GPS thread returned %d", ltargs[0].returnCode);
 	ubx_closeConnection(gpsHandle);
 	log_info(&state, 2, "GPS device closed");
+
+	free(ltargs);
+	free(threads);
 
 	if (queue_count(&log_queue) > 0) {
 		log_info(&state, 2, "Processing remaining queued messages");

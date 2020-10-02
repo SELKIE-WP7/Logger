@@ -85,7 +85,7 @@ bool ubx_enableGalileo(const int handle) {
  */
 bool ubx_setNavigationRate(const int handle, const uint16_t interval, const uint16_t outputRate) {
 	ubx_message navRate = {
-		0xB5, 0x62, 0x13, 0x40, // Header, CFG-RATE
+		0xB5, 0x62, 0x06, 0x08, // Header, CFG-RATE
 		0x0006,
 		{
 			(interval & 0xFF), ((interval >> 8) & 0xFF),

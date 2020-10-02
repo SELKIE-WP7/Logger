@@ -364,6 +364,10 @@ void *gps_logging(void *ptargs) {
 				args->returnCode = -2;
 				pthread_exit(&(args->returnCode));
 			}
+			// We've already exited (via pthread_exit) for error
+			// cases, so at this point sleep briefly and wait for
+			// more data
+			usleep(5E2);
 		}
 	}
 	pthread_exit(NULL);

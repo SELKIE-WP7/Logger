@@ -56,7 +56,7 @@ int ubx_openConnection(const char *port, const int initialBaud) {
 		struct termios check;
 		tcgetattr(handle, &check);
 		if (cfgetispeed(&check) != baud_to_flag(initialBaud)) {
-			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", cfgetispeed(&check), baud_to_flag(initialBaud));
+			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", initialBaud, flag_to_baud(cfgetispeed(&check)));
 			return -1;
 		}
 	}
@@ -82,6 +82,14 @@ int ubx_openConnection(const char *port, const int initialBaud) {
 	// i.e. It was already in high rate mode
 	sleep(1);
 
+	{
+		struct termios check;
+		tcgetattr(handle, &check);
+		if (cfgetispeed(&check) != baud_to_flag(115200)) {
+			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", 115200, flag_to_baud(cfgetispeed(&check)));
+			return -1;
+		}
+	}
 	/* Send the command again, to make sure the protocol settings get applied
 	 *
 	 * If we were already in high rate mode the initial rate change command
@@ -93,7 +101,7 @@ int ubx_openConnection(const char *port, const int initialBaud) {
 		perror("openConnection");
 		return -1;
 	}
-	usleep(5E-4);
+	usleep(5E4);
 
 	return handle;
 }

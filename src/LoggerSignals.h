@@ -18,18 +18,10 @@
  *
  * @{
  */
-//! Trigger clean software shutdown
-static volatile bool shutdown = false;
 
-//! Trigger immediate log rotation
-static volatile bool rotateNow = false;
-
-//! Pause logging
-/*!
- * Will not rotate or close log files, but will stop reading from inputs while this variable is set.
- */
-static volatile bool pauseLog = false;
-
+extern volatile bool shutdown;
+extern volatile bool rotateNow;
+extern volatile bool pauseLog;
 
 /*! @brief Set safe shutdown flag
  *

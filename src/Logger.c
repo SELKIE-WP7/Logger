@@ -146,10 +146,30 @@ int main(int argc, char *argv[]) {
 		free(tmp);
 	}
 
+	int mon_yday = -1; //!< Log rotation markers: Day for currently opened files
+	int mon_nextyday = -2; //!< Log rotation markers: Day for next files
+
+	{
+		/*
+		 * Store current yday so that we can rotate files when the day changes
+		 * If we happen to hit midnight between now and the loop then we might
+		 * get an empty/near empty file before rotating, but that's an unlikely
+		 * enough event that ignoring it feels reasonable
+		 */
+		time_t timeNow = time(NULL);
+		struct tm *now = localtime(&timeNow);
+		mon_yday = now->tm_yday;
+	}
+
 	if (logToFile) {
+		errno = 0;
 		state.log = openSerialNumberedFile(monPrefix, "log");
 		if (!state.log) {
-			log_error(&state, "Unable to open log file: %s", strerror(errno));
+			if (errno == EEXIST) {
+				log_error(&state, "Unable to open log file - too many files created with this prefix today?");
+			} else {
+				log_error(&state, "Unable to open log file: %s", strerror(errno));
+			}
 			free(gpsPortName);
 			free(monPrefix);
 			free(stateName);
@@ -245,17 +265,27 @@ int main(int argc, char *argv[]) {
 	sigaction(SIGRTMIN + 2, &saRotate, NULL);
 	sigaction(SIGRTMIN + 3, &saPause, NULL);
 	sigaction(SIGRTMIN + 4, &saUnpause, NULL);
-
-	int count = 0;
+	
+	//! Number of successfully handled messages
+	int msgCount = 0; 
+	//! Loop count. Used to avoid checking e.g. date on every iteration
+	unsigned int loopCount = 0;
 	while (!shutdown) {
-		if (pauseLog) {
-			log_info(&state, 0, "Logging paused");
-			while (pauseLog && !shutdown) {
-				sleep(1);
-			}
-			log_info(&state, 0, "Logging resumed");
-			continue;
-		}
+		/*
+		 * Main application loop
+		 *
+		 * This loop deals with popping messages off the stack and writing them to file (if required),
+		 * as well as responding to events - either from signals or from e.g. the time of day.
+		 *
+		 * The different subsections of this loop interact with each other, which makes the order in
+		 * which they appear significant!
+		 *
+		 */
+
+		// Increment on each iteration - used below to run tasks periodically
+		loopCount++;
+
+		// Check if any of the monitoring threads have exited with an error
 		for (int it=0; it < nThreads; it++) {
 			if (ltargs[it].returnCode != 0) {
 				log_error(&state, "Thread %d has signalled an error: %d", it, ltargs[it].returnCode);
@@ -266,14 +296,116 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
+		// If we're not shutting down, Check if we need to pause
+		if (pauseLog && !shutdown) {
+			log_info(&state, 0, "Logging paused");
+			// Flush outputs, we could be here for a while.
+			fflush(NULL);
+			// Loop until either a) We're unpaused, b) We need to shutdown
+			while (pauseLog && !shutdown) {
+				sleep(1);
+			}
+			log_info(&state, 0, "Logging resumed");
+			continue;
+		}
 
+		// Periodic jobs that don't need checking/testing every iteration
+		if ((loopCount % 200 == 0)) {
+			if (saveMonitor && rotateMonitor) {
+				/*
+				 * During testing of software on the previous project, the time/localtime combination could
+				 * take up a surprising amount of CPU time, so we avoid calling it if we can.
+				 *
+				 * This is also why mon_nextyday is used - it saves us a second call during file rotation.
+				 * Note that this does mean that this check needs to appear after the pauseLog block, but
+				 * before the rotateNow block.
+				 */
+				time_t timeNow = time(NULL);
+				struct tm *now = localtime(&timeNow);
+				if (now->tm_yday != mon_yday) {
+					rotateNow = true;
+					mon_nextyday = now->tm_yday;
+				}
+			}
+
+			if ((loopCount % 1000) == 0) {
+				/*
+				 * Our longest interval check (for now), so we can reset the counter here.
+				 * Note that the interval here (1000) must be a multiple of the outer interval (200),
+				 * otherwise this check needs to be moved out a level
+				 */
+				fflush(NULL);
+				loopCount = 0;
+			}
+		}
+
+		if (rotateNow) {
+			// Rotate all log files, then reset the flag
+
+			/*
+			 * Note that we don't check the rotateMonitor flag here
+			 *
+			 * If automatic rotation is disabled at the command line then the rotateNow flag will only be
+			 * set if triggered by a signal, so this allows rotating logs on an external trigger even if
+			 * automatic rotation is disabled.
+			 */
+
+			log_info(&state, 1, "Rotating log files");
+
+			// "Monitor" / main data file rotation
+			if (saveMonitor) {
+				errno = 0;
+
+				FILE *newMonitor = NULL;
+				newMonitor  = openSerialNumberedFile(monPrefix, "dat");
+
+				if (newMonitor == NULL) {
+					// If the error is likely to be too many data files, continue with the old handle.
+					// For all other errors, we exit.
+					if (errno == EEXIST) {
+						log_error(&state, "Unable to open data file - too many files created with this prefix today?");
+					} else {
+						log_error(&state, "Unable to open data file: %s", strerror(errno));
+						return -1;
+					}
+				} else {
+					fclose(monitorFile);
+					monitorFile = newMonitor;
+				}
+
+			}
+			
+			// As above, but for the log file
+			if (logToFile) {
+				FILE *newLog = NULL;
+				errno = 0;
+				newLog = openSerialNumberedFile(monPrefix, "log");
+				if (newLog == NULL) {
+					// As above, if the issue is log file names then we continue with the existing file
+					if (errno == EEXIST) {
+						log_error(&state, "Unable to open log file - too many files created with this prefix today?");
+					} else {
+						log_error(&state, "Unable to open log file: %s", strerror(errno));
+						return -1;
+					}
+				} else {
+					FILE * oldLog = state.log;
+					state.log = newLog;
+					fclose(oldLog);
+				}
+			}
+
+			mon_yday = mon_nextyday;
+		}
+
+		// Check for waiting messages to be logged
 		msg_t *res = queue_pop(&log_queue);
 		if (res == NULL) {
 			// No data waiting, so sleep for a little bit and go back around
 			usleep(1000);
 			continue;
 		}
-		count++;
+		msgCount++;
 		if (saveMonitor) {
 			if (res->dtype == MSG_BYTES) {
 				// Temporary - currently dumps a UBX file from GPS, but doesn't handle anything else
@@ -300,7 +432,7 @@ int main(int argc, char *argv[]) {
 		log_info(&state, 2, "Processing remaining queued messages");
 		while (queue_count(&log_queue) > 0) {
 			msg_t *res = queue_pop(&log_queue);
-			count++;
+			msgCount++;
 			if (res->dtype == MSG_BYTES) {
 				if (saveMonitor) {
 					fwrite(res->data.bytes, res->length, 1, monitorFile);
@@ -317,6 +449,6 @@ int main(int argc, char *argv[]) {
 	log_info(&state, 2, "Message queue destroyed");
 	fclose(monitorFile);
 	log_info(&state, 2, "Monitor file closed");
-	log_info(&state, 0, "%d messages read successfully\n\n", count);
+	log_info(&state, 0, "%d messages read successfully\n\n", msgCount);
 	return 0;
 }

@@ -195,13 +195,21 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	FILE *monitorFile = openSerialNumberedFile(monPrefix, "dat");
+	FILE *monitorFile = NULL;
 
-	if (monitorFile == NULL) {
-		perror("monitorFile");
-		return -1;
+	if (saveMonitor) {
+		errno = 0;
+		monitorFile = openSerialNumberedFile(monPrefix, "dat");
+
+		if (monitorFile == NULL) {
+			if (errno == EEXIST) {
+				log_error(&state, "Unable to open data file - too many files created with this prefix today?");
+			} else {
+				log_error(&state, "Unable to open data file: %s", strerror(errno));
+			}
+			return -1;
+		}
 	}
-
 
 	msgqueue log_queue = {0};
 	if (!queue_init(&log_queue)) {
@@ -261,14 +269,18 @@ int main(int argc, char *argv[]) {
 
 		msg_t *res = queue_pop(&log_queue);
 		if (res == NULL) {
+			// No data waiting, so sleep for a little bit and go back around
 			usleep(1000);
 			continue;
 		}
 		count++;
-		if (res->dtype == MSG_BYTES) {
-			fwrite(res->data.bytes, res->length, 1, monitorFile);
-		} else {
-			log_warning(&state, "Unexpected message type (%d)", res->dtype);
+		if (saveMonitor) {
+			if (res->dtype == MSG_BYTES) {
+				// Temporary - currently dumps a UBX file from GPS, but doesn't handle anything else
+				fwrite(res->data.bytes, res->length, 1, monitorFile);
+			} else {
+				log_warning(&state, "Unexpected message type (%d)", res->dtype);
+			}
 		}
 		msg_destroy(res);
 		free(res);
@@ -290,7 +302,9 @@ int main(int argc, char *argv[]) {
 			msg_t *res = queue_pop(&log_queue);
 			count++;
 			if (res->dtype == MSG_BYTES) {
-				fwrite(res->data.bytes, res->length, 1, monitorFile);
+				if (saveMonitor) {
+					fwrite(res->data.bytes, res->length, 1, monitorFile);
+				}
 			} else {
 				log_warning(&state, "Unexpected message type (%d)", res->dtype);
 			}

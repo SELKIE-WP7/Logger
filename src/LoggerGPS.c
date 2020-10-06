@@ -1,5 +1,6 @@
 #include "Logger.h"
 #include "LoggerGPS.h"
+#include "LoggerSignals.h"
 
 int gps_setup(program_state *pstate, const char* gpsPortName, const int initialBaud) {
 	int gpsHandle = ubx_openConnection(gpsPortName, initialBaud);
@@ -48,6 +49,7 @@ int gps_setup(program_state *pstate, const char* gpsPortName, const int initialB
 }
 
 void *gps_logging(void *ptargs) {
+	signalHandlersBlock();
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	log_info(args->pstate, 1, "GPS Logging thread started");
 

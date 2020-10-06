@@ -189,22 +189,8 @@ int main(int argc, char *argv[]) {
 	log_info(&state, 1, "Using state file %s", stateName);
 	log_info(&state, 1, "Using %s as monitor and log file prefix", monPrefix);
 
-	/*** Set up signal information for installation later ***/
-	sigset_t blocking;
-	sigemptyset(&blocking);
-	sigaddset(&blocking, SIGINT);
-	sigaddset(&blocking, SIGQUIT);
-	sigaddset(&blocking, SIGUSR1);
-	sigaddset(&blocking, SIGHUP);
-	sigaddset(&blocking, SIGRTMIN + 1);
-	sigaddset(&blocking, SIGRTMIN + 2);
-	sigaddset(&blocking, SIGRTMIN + 3);
-	sigaddset(&blocking, SIGRTMIN + 4);
-	const struct sigaction saShutdown = {.sa_handler = signalShutdown, .sa_mask = blocking, .sa_flags = SA_RESTART};
-	const struct sigaction saRotate = {.sa_handler = signalRotate, .sa_mask = blocking, .sa_flags = SA_RESTART};
-	const struct sigaction saPause = {.sa_handler = signalPause, .sa_mask = blocking, .sa_flags = SA_RESTART};
-	const struct sigaction saUnpause = {.sa_handler = signalUnpause, .sa_mask = blocking, .sa_flags = SA_RESTART};
-
+	// Block signal handling until we're up and running
+	signalHandlersBlock();
 
 	int gpsHandle = gps_setup(&state, gpsPortName, initialBaud);
 	free(gpsPortName);
@@ -253,19 +239,13 @@ int main(int argc, char *argv[]) {
 
 	state.started = true;
 	log_info(&state, 1, "Startup complete");
+
 	/***
 	 * Once startup is complete, enable external signal processing
 	 **/
+	signalHandlersInstall();
+	signalHandlersUnblock();
 
-	sigaction(SIGINT, &saShutdown, NULL);
-	sigaction(SIGQUIT, &saShutdown, NULL);
-	sigaction(SIGRTMIN + 1, &saShutdown, NULL);
-	sigaction(SIGUSR1, &saRotate, NULL);
-	sigaction(SIGHUP, &saRotate, NULL);
-	sigaction(SIGRTMIN + 2, &saRotate, NULL);
-	sigaction(SIGRTMIN + 3, &saPause, NULL);
-	sigaction(SIGRTMIN + 4, &saUnpause, NULL);
-	
 	//! Number of successfully handled messages
 	int msgCount = 0; 
 	//! Loop count. Used to avoid checking e.g. date on every iteration

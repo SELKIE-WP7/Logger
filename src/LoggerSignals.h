@@ -56,4 +56,24 @@ void signalPause(int signnum);
 void signalUnpause(int signnum);
 /*! @} */
 
+
+//! Install signal handlers
+void signalHandlersInstall();
+
+/*! @brief Get signal mask
+ *
+ * Allocates and returns as signal mask that blocks all of the signals that we
+ * have explicit handlers for.
+ *
+ * This can then be used to ensure that source handling threads do not respond
+ * to signals, and that the main logging thread doesn't respond to any of these
+ * signals until it's ready to do so.
+ */
+sigset_t *signalHandlerMask();
+
+//! Block signals that we have handlers for
+void signalHandlersBlock();
+
+//! Unblock signals that we have handlers for
+void signalHandlersUnblock();
 #endif

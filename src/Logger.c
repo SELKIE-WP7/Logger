@@ -374,7 +374,7 @@ int main(int argc, char *argv[]) {
 				}
 
 			}
-			
+
 			// As above, but for the log file
 			if (logToFile) {
 				FILE *newLog = NULL;
@@ -396,6 +396,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			mon_yday = mon_nextyday;
+			rotateNow = false;
 		}
 
 		// Check for waiting messages to be logged

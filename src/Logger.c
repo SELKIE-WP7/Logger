@@ -159,6 +159,9 @@ int main(int argc, char *argv[]) {
 		time_t timeNow = time(NULL);
 		struct tm *now = localtime(&timeNow);
 		mon_yday = now->tm_yday;
+		// If first rotation is triggered by signal and current != next
+		// we get two rotations, so set them to the same value here.
+		mon_nextyday = mon_yday;
 	}
 
 	if (logToFile) {

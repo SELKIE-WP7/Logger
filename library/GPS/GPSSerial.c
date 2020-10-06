@@ -15,7 +15,19 @@
 #include "GPSSerial.h"
 #include "GPSCommands.h"
 
-//! Set up a connection to the specified port
+/*!
+ * Uses openSerialConnection() from the base library to open an initial
+ * connection, then sends UBX commands to configure the module for 115200 baud
+ * UBX output.
+ *
+ * If the module was already operating at 115200 then it will stop listening to
+ * serial commands when we transmit at the wrong rate, so this function will
+ * sleep for 1 second before configuring the protocols again.
+ *
+ * @param[in] port Path to character device connected to UBlox module
+ * @param[in] initialBaud Initial baud rate for connection. Usually 9600, but may vary.
+ * @return File descriptor for use with other commands
+ */
 int ubx_openConnection(const char *port, const int initialBaud) {
 	// Use base library function to get initial connection
 	int handle = openSerialConnection(port, initialBaud);
@@ -70,16 +82,27 @@ int ubx_openConnection(const char *port, const int initialBaud) {
 	return handle;
 }
 
-//! Close existing connection
+/*!
+ * Currently just closes the handle, but could deconfigure and reset the module
+ * or put it into a power saving mode in future.
+ *
+ * @param[in] handle File descriptor from ubx_openConnection()
+ */
+
 void ubx_closeConnection(int handle) {
 	close(handle);
 }
 
-//! Static wrapper around ubx_readMessage_buf
 
 /*!
  * For single threaded development and testing, uses static variables rather
  * than requiring state to be tracked by caller.
+ *
+ * See ubx_readMessage_buf() for full description.
+ * 
+ * @param[in] handle File descriptor from ubx_openConnection()
+ * @param[out] out Pointer to message structure to fill with data
+ * @return True if out now contains a valid message, false otherwise.
  */
 bool ubx_readMessage(int handle, ubx_message *out) {
 	static uint8_t buf[UBX_SERIAL_BUFF];
@@ -88,13 +111,14 @@ bool ubx_readMessage(int handle, ubx_message *out) {
 	return ubx_readMessage_buf(handle, out, buf, &index, &hw);
 }
 
-//! Read data from handle, and parse message if able
-
 
 /*!
- * This function maintains a static internal message buffer, filling it from
- * the file handle provided. This handle can be anything supported by read(),
- * but would usually be a file or a serial port.
+ * Pulls data from `handle` and stores it in `buf`, tracking the current search
+ * position in `index` and the current fill level/buffer high water mark in
+ * `hw`.
+ *
+ * The source handle can be anything supported by read(), but would usually be
+ * a file or a serial port.
  *
  * If a valid message is found then it is written to the structure provided as
  * a parameter and the function returns true.
@@ -107,6 +131,12 @@ bool ubx_readMessage(int handle, ubx_message *out) {
  * - 0xAA means that an error occurred reading in data
  * - 0XEE means a valid message header was found, but no valid message
  *
+ * @param[in] handle File descriptor from ubx_openConnection()
+ * @param[out] out Pointer to message structure to fill with data
+ * @param[in,out] buf Serial data buffer
+ * @param[in,out] index Current search position within `buf`
+ * @param[in,out] hw End of current valid data in `buf`
+ * @return True if out now contains a valid message, false otherwise.
  */
 bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BUFF], int *index, int *hw) {
 	int ti = 0;
@@ -208,6 +238,22 @@ bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BU
 	return valid;
 }
 
+/*!
+ * Messages are read with ubx_readMessage() and discarded until either a
+ * message matches the supplied message class and ID values or the maximum
+ * delay time is reached.
+ *
+ * Note that the function exits as soon as the time specified by `maxDelay` is
+ * **exceeded**. The maximum delay specified in this function is 50us,
+ * but no guarantees are given regarding time spent reading in messages.
+ *
+ * @param[in] handle File descriptor from ubx_openConnection()
+ * @param[in] msgClass Message class to wait for
+ * @param[in] msgID Message ID/Type to wait for
+ * @param[in] maxDelay Timeout in seconds.
+ * @param[out] out Pointer to message structure to fill with data
+ * @return True if required message found, false otherwise (timeout reached)
+ */
 bool ubx_waitForMessage(const int handle, const uint8_t msgClass, const uint8_t msgID, const int maxDelay, ubx_message *out) {
 	const time_t deadline = time(NULL) + maxDelay;
 	while (time(NULL) < deadline) {
@@ -223,6 +269,14 @@ bool ubx_waitForMessage(const int handle, const uint8_t msgClass, const uint8_t 
 	return false;
 }
 
+/*!
+ * Takes a ubx_message, validates the checksum and sync bytes and writes data
+ * to the device or file connected to `handle`.
+ *
+ * @param[in] handle File descriptor from ubx_openConnection()
+ * @param[in] out Pointer to message structure to be sent.
+ * @return True if data successfullt written to `handle`
+ */
 bool ubx_writeMessage(int handle, const ubx_message *out) {
 	/*if (!validType(out->type)) {
 		fprintf(stderr, "Invalid type in send\n");
@@ -257,12 +311,12 @@ bool ubx_writeMessage(int handle, const ubx_message *out) {
 			perror("writeMessage:data");
 			return false;
 		}
+	}
 
-		ret = write(handle, tail, 2);
-		if (ret != 2) {
-			perror("writeMessage:tail");
-			return false;
-		}
+	ret = write(handle, tail, 2);
+	if (ret != 2) {
+		perror("writeMessage:tail");
+		return false;
 	}
 	return true;
 }

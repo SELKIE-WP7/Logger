@@ -1,5 +1,7 @@
-#ifndef SELKIEGPS
-#define SELKIEGPS
+#ifndef SELKIELoggerGPS
+#define SELKIELoggerGPS
+
+//! @file SELKIELoggerGPS.h SELKIE Logger project - u-blox GPS interface functions
 
 #include "GPS/GPSCommands.h"
 #include "GPS/GPSMessages.h"

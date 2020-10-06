@@ -1,5 +1,7 @@
-#ifndef SELKIELoggerSources
-#define SELKIELoggerSources
+#ifndef SELKIELoggerBase_Sources
+#define SELKIELoggerBase_Sources
+
+//! @file sources.h Predefined message source ID information. @sa loggerSources
 
 /*!
  * \addtogroup loggerSources Logger Source IDs

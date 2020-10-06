@@ -6,6 +6,14 @@
 
 #include "messages.h"
 
+/*!
+ * Allocates a new msg_t, copies in the source, type and value and sets the data type to MSG_FLOAT.
+ *
+ * @param[in] source Message source
+ * @param[in] type   Message type
+ * @param[in] val    General numeric value, represented as single precision float
+ * @return Pointer to new message
+ */
 msg_t * msg_new_float(const uint8_t source, const uint8_t type, const float val) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
@@ -16,6 +24,14 @@ msg_t * msg_new_float(const uint8_t source, const uint8_t type, const float val)
 	return newmsg;
 }
 
+/*!
+ * Allocates a new msg_t, copies in the source, type and value and sets the data type to MSG_TIMESTAMP.
+ *
+ * @param[in] source Message source
+ * @param[in] type   Message type
+ * @param[in] ts     Timestamp, assumed to be a value in milliseconds since an arbitrary epoch
+ * @return Pointer to new message
+ */
 msg_t * msg_new_timestamp(const uint8_t source, const uint8_t type, const uint32_t ts) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
@@ -26,13 +42,26 @@ msg_t * msg_new_timestamp(const uint8_t source, const uint8_t type, const uint32
 	return newmsg;
 }
 
+/*!
+ * Allocates a new msg_t, copies in the source, type and value and sets the data type to MSG_STRING
+ *
+ * Intended for sending/receiving source/device names.
+ *
+ * String is created with str_update()
+ *
+ * The length value for a string message is redundant, and duplicates the value embedded in the string itself.
+ *
+ * @param[in] source Message source
+ * @param[in] type   Message type
+ * @param[in] len    Maximum length of character array
+ * @param[in] str    Pointer to character array
+ * @return Pointer to new message, NULL on failure
+ */
 msg_t * msg_new_string(const uint8_t source, const uint8_t type, const size_t len, const char *str) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
 	newmsg->type = type;
 	newmsg->dtype = MSG_STRING;
-	//! The length value for a string message is redundant, and duplicates
-	//! the value in the embedded string itself.
 	newmsg->length = len;
 	if (!str_update(&(newmsg->data.string), len, str)) {
 		free(newmsg);
@@ -41,14 +70,26 @@ msg_t * msg_new_string(const uint8_t source, const uint8_t type, const size_t le
 	return newmsg;
 }
 
+/*!
+ * Allocates a new msg_t, copies in the source, type and values and sets the data type to MSG_STRARRAY
+ *
+ * Intended for sending/receiving channel names
+ *
+ * String is copied with sa_copy()
+ *
+ * The length value embedded in the message is set to the number of entries in the array.
+ * The length of the individual strings has to be extracted from the information in the array itself.
+ *
+ * @param[in] source Message source
+ * @param[in] type   Message type
+ * @param[in] array  Pointer to existing string array
+ * @return Pointer to new message, NULL on failure
+ */
 msg_t * msg_new_string_array(const uint8_t source, const uint8_t type, const strarray *array) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
 	newmsg->type = type;
 	newmsg->dtype = MSG_STRARRAY;
-	//! The length value duplicates the number of entries in the array.
-	//! The length of the individual strings has to be extracted from the
-	//! information in the array.
 	newmsg->length = array->entries;
 	if (!sa_copy(newmsg->data.names, array)) {
 		free(newmsg);
@@ -57,14 +98,26 @@ msg_t * msg_new_string_array(const uint8_t source, const uint8_t type, const str
 	return newmsg;
 }
 
+/*!
+ * Allocates a new msg_t, copies in the source, type and values and sets the data type to MSG_BYTES
+ *
+ * Intended for sending/receiving arbitrary binary data.
+ *
+ * The length stored in the message structure is the only way to reliably
+ * determine how much information is embedded in it.
+ *
+ * @param[in] source Message source
+ * @param[in] type   Message type
+ * @param[in] len    Length of array to be copied
+ * @param[in] bytes  Pointer to existing array of uint8_t
+ * @return Pointer to new message, NULL on failure
+ */
+
 msg_t * msg_new_bytes(const uint8_t source, const uint8_t type, const size_t len, const uint8_t *bytes) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
 	newmsg->type = type;
 	newmsg->dtype = MSG_BYTES;
-	/*!
-	 * The length of a bytes message is the only way to reliably determine how much information is embedded in it.
-	 */
 	newmsg->length = len;
 	newmsg->data.bytes = calloc(len, sizeof(uint8_t));
 	errno = 0;
@@ -82,9 +135,12 @@ msg_t * msg_new_bytes(const uint8_t source, const uint8_t type, const size_t len
  *
  * Note that this function does not free the message itself, only the data
  * embedded within it.
+ *
+ * @param[in] msg Message to be destroyed
  */
 void msg_destroy(msg_t* msg) {
 	switch (msg->dtype) {
+		case MSG_ERROR:
 		case MSG_FLOAT:
 		case MSG_TIMESTAMP:
 		case MSG_UNDEF:

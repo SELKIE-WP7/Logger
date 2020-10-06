@@ -1,5 +1,5 @@
-#ifndef SELKIEQueue
-#define SELKIEQueue
+#ifndef SELKIELoggerBase_Queue
+#define SELKIELoggerBase_Queue
 
 #include <stdbool.h>
 

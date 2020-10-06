@@ -7,6 +7,9 @@
  * Will not re-initialise a queue if it is still valid or has a head or tail
  * value set. Other threads might be able to add entries to the queue between
  * the queue being marked valid and this function returning to the caller.
+ *
+ * @param[in] queue Pointer to queue structure to be initialised
+ * @return True on success, false otherwise
  */
 bool queue_init(msgqueue *queue) {
 	// Do not reinitialise valid or partially valid queue
@@ -22,7 +25,11 @@ bool queue_init(msgqueue *queue) {
 
 /*!
  * The queue is immediately marked as invalid, and this is not undone if an error occurs.
- * Each item is removed from the queue and destroyed.
+ *
+ * Any remaining items are removed from the queue and destroyed.
+ *
+ * @param[in] queue Pointer to queue structure to be destroyed
+ * @return True on success, false otherwise
  */
 void queue_destroy(msgqueue *queue) {
 	// Make atomic
@@ -48,6 +55,10 @@ void queue_destroy(msgqueue *queue) {
 /*!
  * Messages are wrapped into a queue item structure, and passed immediately to
  * queue_push_qi()
+ *
+ * @param[in] queue Pointer to queue
+ * @param[in] msg Pointer to message
+ * @return Return value of queue_push_qi()
  */
 bool queue_push(msgqueue *queue, msg_t *msg) {
 	queueitem *qi = calloc(1, sizeof(queueitem));
@@ -60,12 +71,21 @@ bool queue_push(msgqueue *queue, msg_t *msg) {
  *
  * For a valid but empty queue, only a single attempt is made to make our item the head.
  *
- * For a valid but not empty queue, up to 100 attempts are made to append our item to the end of the list.
- * The append operation (or insertion of an item as the queue head) are atomic,
- * using the __sync_bool_compare_and_swap() function.
+ * For a valid but not empty queue, up to 100 attempts are made to append our
+ * item to the end of the list.  The append operation (or insertion of an item
+ * as the queue head) are atomic, using __sync_bool_compare_and_swap()
  *
  * If the queue is heavily contended, the tail pointer might not track the
  * final entry in the queue, but will be close to it.
+ *
+ * Once pushed to the queue, the queue owns the message embedded in `item` and
+ * the caller should not destroy or free it. That will be handled in
+ * queue_destroy() or the function responsible for consuming items out of the
+ * queue.
+ *
+ * @param[in] queue Pointer to queue
+ * @param[in] item  Pointer to a queue item
+ * @return True if item successfully appended to queue, false otherwise
  */
 bool queue_push_qi(msgqueue *queue, queueitem *item) {
 	if (!queue->valid) {
@@ -123,6 +143,13 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
  * Atomically remove the first entry in the queue and return it.
  * The underlying queue item is freed, but our caller must destroy and free the
  * message itself.
+ *
+ * The queue item is freed, but the caller is responsible for destroying and
+ * freeing the message itself after use (i.e. the caller now owns the message,
+ * not the queue or the sending function).
+ *
+ * @param[in] queue Pointer to queue
+ * @return Pointer to previously queued message
  */
 msg_t * queue_pop(msgqueue *queue) {
 	queueitem *head = queue->head;
@@ -141,6 +168,10 @@ msg_t * queue_pop(msgqueue *queue) {
 	return NULL;
 }
 
+/*!
+ * @param[in] queue Pointer to queue
+ * @return Number of items in queue, or -1 on error
+ */
 int queue_count(const msgqueue *queue) {
 	if (!queue->valid) {
 		return -1;

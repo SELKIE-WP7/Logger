@@ -1,5 +1,7 @@
-#ifndef SELKIELoggerGPSMessages
-#define SELKIELoggerGPSMessages
+#ifndef SELKIELoggerGPS_Messages
+#define SELKIELoggerGPS_Messages
+
+//! @file GPSMessages.h Utility functions for processing UBX messages
 
 #include <stddef.h>
 #include <stdint.h>

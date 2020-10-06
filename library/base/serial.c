@@ -3,17 +3,26 @@
 #include <termios.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "serial.h"
 
+/*!
+ * Opens port and sets the following modes:
+ * - Read-write
+ * - Do not make us controlling terminal (ignore control codes in data!)
+ * - Data synchronised mode
+ * - Ignore flow control lines
+ *
+ * The baud rate provided is compared to the mode requested and an error
+ * returned if this does not match.
+ *
+ * @param[in] port Serial port device path
+ * @param[in] baudRate Target baud rate (will be passed to baud_to_flag()
+ * @return -1 on error, file descriptor number on success
+ */
 int openSerialConnection(const char *port, const int baudRate) {
 
-	/* ! Opens port and sets the following modes:
-	 * - read-write
-	 * - Do not make us controlling terminal (ignore control codes!)
-	 * - Data synchronised mode
-	 * - Ignore flow control lines
-	 */
 	errno = 0;
 	int handle = open(port, O_RDWR | O_NOCTTY | O_DSYNC | O_NDELAY);
 	if (handle < 0) {
@@ -28,10 +37,9 @@ int openSerialConnection(const char *port, const int baudRate) {
 	// Get options, adjust baud and enable local control (cf. NoCTTY) and push to interface
 	tcgetattr(handle, &options);
 
-	// Assume operating in low speed after a reset, so connect at specified initial baud and command rate change
 	cfsetispeed(&options, baud_to_flag(baudRate));
 	cfsetospeed(&options, baud_to_flag(baudRate));
-	options.c_oflag &= ~OPOST; // Disable any post processin
+	options.c_oflag &= ~OPOST; // Disable any post processing
 	options.c_cflag &= ~(PARENB|CSTOPB|CSIZE);
 	options.c_cflag |= (CLOCAL | CREAD);
 	options.c_cflag |= CS8;
@@ -48,6 +56,7 @@ int openSerialConnection(const char *port, const int baudRate) {
 		tcgetattr(handle, &check);
 		if (cfgetispeed(&check) != baud_to_flag(baudRate)) {
 			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", baudRate, flag_to_baud(cfgetispeed(&check)));
+			close(handle); // Don't leave file descriptor dangling
 			return -1;
 		}
 	}
@@ -55,6 +64,15 @@ int openSerialConnection(const char *port, const int baudRate) {
 	return handle;
 }
 
+/*!
+ * Defaults to returning a negated version of the rate in the event that an
+ * unknown baud rate is passed.
+ *
+ * This was apparently a good idea, but not sure why...
+ *
+ * @param[in] rate Baud rate as integer value
+ * @return Corresponding flag from termios.h
+ */
 int baud_to_flag(const int rate) {
 	switch (rate) {
 		case 0:
@@ -106,6 +124,13 @@ int baud_to_flag(const int rate) {
 	}
 }
 
+/*!
+ * As with the baud_to_flag() counterpart, will return a negated version of the
+ * flag if no matching baud rate is found.
+ *
+ * @param[in] flag Corresponding flag from termios.h
+ * @return Baud rate as integer value
+ */
 int flag_to_baud(const int flag) {
 	switch (flag) {
 		case B0:

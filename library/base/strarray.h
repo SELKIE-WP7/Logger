@@ -1,5 +1,5 @@
-#ifndef SELKIEstrarray
-#define SELKIEstrarray
+#ifndef SELKIELoggerBase_StrArray
+#define SELKIELoggerBase_StrArray
 #include <stdbool.h>
 
 //! @file strarray.h String and String Array types and handling functions

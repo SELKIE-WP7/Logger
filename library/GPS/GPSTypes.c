@@ -1,13 +1,6 @@
 #include "GPSTypes.h"
 
-/* 
-typedef struct ubx_message_name {
-	uint8_t msgClass;
-	uint8_t msgID;
-	char name[30];
-} ubx_message_name;
-*/
-
+//! Human readable message names by class and ID
 const ubx_message_name ubx_message_names[] = {
 	{UBXACK, 0x00, "UBX-ACK-NAK"},
 	{UBXACK, 0x01, "UBX-ACK-ACK"},

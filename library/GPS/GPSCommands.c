@@ -5,6 +5,19 @@
 #include "GPSTypes.h"
 #include "GPSMessages.h"
 
+/*!
+ * Sends a UBX protocol CFG-PRT message, configuring UART 1 for the specified
+ * baud rate with all protocols permitted as input and only UBX messages
+ * permitted as output.
+ *
+ * No configuration for UBX message types is performed here, so the GPS may
+ * just sit silently until we configure the messages we want as output
+ * (depending on default configuration).
+ *
+ * @param[in] handle File descriptor to write command to
+ * @param[in] baud Desired baud rate - will be converted with baud_to_flag()
+ * @return Status of ubx_writeMessage()
+ */
 bool ubx_setBaudRate(const int handle, const uint32_t baud) {
 	ubx_message setBaud = {
 		0xB5, 0x62, // Header bytes
@@ -32,6 +45,18 @@ bool ubx_setBaudRate(const int handle, const uint32_t baud) {
 	return ubx_writeMessage(handle, &setBaud);
 }
 
+/*!
+ * Sends a UBX protcol CFG-MSG message with the provided message class, type and rate.
+ *
+ * The message is output very "rate" updates/calculations on UART1 and disabled
+ * on all other outputs.
+ *
+ * @param[in] handle File descriptor to write command to
+ * @param[in] msgClass UBX Message Class
+ * @param[in] msgID UBX Message ID/Type
+ * @param[in] rate Requested message rate (0 to disable)
+ * @return Status of ubx_writeMessage()
+ */
 bool ubx_setMessageRate(const int handle, const uint8_t msgClass, const uint8_t msgID, const uint8_t rate) {
 	ubx_message setRate = {
 		0xB5, 0x62, 0x06, 0x01, // Header, CFG-MSG
@@ -55,6 +80,11 @@ bool ubx_setMessageRate(const int handle, const uint8_t msgClass, const uint8_t 
  * class and ID but zero length.
  *
  * Not valid for all types, check U-Blox manual for information
+ *
+ * @param[in] handle File descriptor to write command to
+ * @param[in] msgClass UBX Message Class
+ * @param[in] msgID UBX Message ID/Type
+ * @return Status of ubx_writeMessage()
  */
 bool ubx_pollMessage(const int handle, const uint8_t msgClass, const uint8_t msgID) {
 	ubx_message poll = {0xB5, 0x62, msgClass, msgID, 0x0000, {0x00}, 0xFF, 0xFF};
@@ -64,6 +94,9 @@ bool ubx_pollMessage(const int handle, const uint8_t msgClass, const uint8_t msg
 
 /*!
  * Not making this configurable for now, as the "proper" method would need a bit more faff
+ *
+ * @param[in] handle File descriptor to write command to
+ * @return Status of ubx_writeMessage()
  */
 bool ubx_enableGalileo(const int handle) {
 	ubx_message enableGalileo = {
@@ -82,6 +115,11 @@ bool ubx_enableGalileo(const int handle) {
  * - Output rate determines how many measurements are made before an update message is sent.
  *
  * Can be overridden by power saving settings
+ *
+ * @param[in] handle File descriptor to write command to
+ * @param[in] interval Calculation interval in milliseconds
+ * @param[in] outputRate Output solution every 'outputRate' calculations
+ * @return Status of ubx_writeMessage()
  */
 bool ubx_setNavigationRate(const int handle, const uint16_t interval, const uint16_t outputRate) {
 	ubx_message navRate = {
@@ -97,6 +135,16 @@ bool ubx_setNavigationRate(const int handle, const uint16_t interval, const uint
 	return ubx_writeMessage(handle, &navRate);
 }
 
+/*!
+ * Allows us to log warnings and information from the GPS module, largely
+ * during the startup and configuration process.
+ *
+ * Enables error, warning and information messages on UART1 only and disables
+ * message output on all other ports.
+ *
+ * @param[in] handle File descriptor to write command to
+ * @return Status of ubx_writeMessage()
+ */
 bool ubx_enableLogMessages(const int handle) {
 	ubx_message enableInf = {
 		0xB5, 0x62, 0x06, 0x02, // Header, CFG-INF
@@ -111,6 +159,12 @@ bool ubx_enableLogMessages(const int handle) {
 	return ubx_writeMessage(handle, &enableInf);
 }
 
+/*!
+ * Disables options set by ubx_enableLogMessages()
+ *
+ * @param[in] handle File descriptor to write command to
+ * @return Status of ubx_writeMessage()
+ */
 bool ubx_disableLogMessages(const int handle) {
 	ubx_message disableInf = {
 		0xB5, 0x62, 0x06, 0x02, // Header, CFG-INF

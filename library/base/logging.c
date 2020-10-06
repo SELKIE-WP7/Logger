@@ -9,6 +9,17 @@
  * @{
  */
 
+/*!
+ * Outputs a provided error message, prepending the current program state and
+ * the marker "Error: ".
+ *
+ * The error message and any additional arguments are passed to vfprintf in
+ * order to support formatted output.
+ *
+ * Always outputs to stderr in addition to any configured log file.
+ *
+ * Cannot be silenced by runtime configuration.
+ */
 void log_error(const program_state *s, const char *format, ...) {
 	va_list args;
 	char *label;
@@ -34,6 +45,17 @@ void log_error(const program_state *s, const char *format, ...) {
 	}
 }
 
+/*!
+ * Outputs a provided warning message, prepending the current program state and
+ * the marker "Warning: ".
+ *
+ * The error message and any additional arguments are passed to vfprintf in
+ * order to support formatted output.
+ *
+ * Always outputs to stderr in addition to any configured log file.
+ *
+ * Cannot be silenced by runtime configuration.
+ */
 void log_warning(const program_state *s, const char *format, ...) {
 	va_list args;
 	char *label;
@@ -59,6 +81,16 @@ void log_warning(const program_state *s, const char *format, ...) {
 	}
 }
 
+/*!
+ * Outputs a provided message, prepending the current program state and
+ * the marker "Info:%d: ", with the level value substituted.
+ *
+ * The error message and any additional arguments are passed to vfprintf in
+ * order to support formatted output.
+ *
+ * The level is compared to the current verbosity to determine if messages are
+ * output to stdout, file, or both.
+ */
 void log_info(const program_state *s, const int level, const char *format, ...) {
 	va_list args;
 	char *label;
@@ -87,6 +119,17 @@ void log_info(const program_state *s, const int level, const char *format, ...) 
 	}
 }
 
+/*!
+ * Generates a file name with the form [prefix]YYYYMMDDXX.[extension], where XX
+ * is a two digit hexadecimal serial number. Starting from 0, the proposed file
+ * name is opened in exclusive create mode ("w+x"). If this fails because the
+ * file exists, the serial number is incremented and another attempt to create
+ * the file is made until either a) an unused serial number is found or b) the
+ * serial number reaches 0xFF.
+ *
+ * If no valid file name can be generated, or if any other error is
+ * encountered, the function returns NULL.
+ */
 FILE *openSerialNumberedFile(const char *prefix, const char *extension) {
 	time_t now = time(NULL);
 	struct tm *tm = localtime(&now);

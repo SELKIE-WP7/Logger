@@ -1,5 +1,7 @@
-#ifndef SELKIEBase
-#define SELKIEBase
+#ifndef SELKIELoggerBase
+#define SELKIELoggerBase
+
+//! @file SELKIELoggerBase.h SELKIE Logger project - base library functions
 
 #include "base/logging.h"
 #include "base/queue.h"

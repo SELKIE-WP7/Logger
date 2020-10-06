@@ -1,5 +1,7 @@
-#ifndef SELKIELoggerGPSCommands
-#define SELKIELoggerGPSCommands
+#ifndef SELKIELoggerGPS_Commands
+#define SELKIELoggerGPS_Commands
+
+//! @file GPSCommands.h Functions representing u-blox GPS module commands
 
 #include <stdbool.h>
 #include <stdint.h>

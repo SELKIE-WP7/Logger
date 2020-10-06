@@ -1,5 +1,5 @@
-#ifndef SELKIEMessages
-#define SELKIEMessages
+#ifndef SELKIELoggerBase_Messages
+#define SELKIELoggerBase_Messages
 #include <stdint.h>
 #include "strarray.h"
 
@@ -25,12 +25,13 @@ typedef union {
 
 //! Each data type should map to an entry in the msg_data_t union
 typedef enum {
+	MSG_ERROR = -1, //!< An error code is returned in data.value
 	MSG_UNDEF = 0, //!< Undefined/Uninitialised message
 	MSG_FLOAT, //!< Generic numerical data
 	MSG_TIMESTAMP, //!< Timestamp (milliseconds since defined epoch/event)
 	MSG_BYTES, //!< Raw binary data
 	MSG_STRING, //!< Single string @sa string
-	MSG_STRARRAY //!< Array of strings. @sa strarray
+	MSG_STRARRAY, //!< Array of strings. @sa strarray
 } msg_dtype_t;
 
 //! Queuable message

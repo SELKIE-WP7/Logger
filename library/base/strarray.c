@@ -8,6 +8,11 @@
  * Allocate a new string array and storage for the stated number of entries.
  *
  * All allocated data is zeroed.
+ *
+ * Must be destroyed with sa_destroy() before being freed.
+ *
+ * @param[in] entries Number of entries in array
+ * @return Pointer to allocated array. NULL on failure.
  */
 strarray * sa_new(int entries) {
 	strarray * newarray = calloc(1, sizeof(strarray));
@@ -27,6 +32,10 @@ strarray * sa_new(int entries) {
  * Destroys the existing contents of the destination array, which cannot be
  * restored in the event of an error, and then creates new strings to match the
  * contents of the source array.
+ *
+ * @param[out] dst Pointer to destination array (all existing data will be lost)
+ * @param[in]  src Pointer to source array
+ * @return True on success, false on error
  */
 bool sa_copy(strarray *dst, const strarray *src) {
 	if (dst == NULL || src == NULL) {
@@ -58,6 +67,10 @@ bool sa_copy(strarray *dst, const strarray *src) {
  *
  * The source array is invalidated and the internal pointer nulled so that it
  * can be destroyed without affecting the destination array.
+ *
+ * @param[out] dst Pointer to destination array (all existing data will be lost)
+ * @param[in]  src Pointer to source array (will be emptied)
+ * @return True on success, false on error.
  */
 bool sa_move(strarray *dst, strarray *src) {
 	if (dst == NULL || src == NULL) {
@@ -74,6 +87,11 @@ bool sa_move(strarray *dst, strarray *src) {
 /*!
  * str_copy() does the heavy lifting, with this function performing bounds
  * checks on the string array itself.
+ *
+ * @param[in] array Pointer to array being modified
+ * @param[in] index Position in array to modify
+ * @param[in] str String to be copied into array
+ * @return Result of str_copy(), or false if parameters are invalid
  */
 bool sa_set_entry(strarray *array, const int index, string *str) {
 	if (array == NULL) {
@@ -90,6 +108,12 @@ bool sa_set_entry(strarray *array, const int index, string *str) {
 /*!
  * Checks that the array is valid and the index is within bounds, then hands
  * off to str_update() to copy in the new string data.
+ *
+ * @param[in] array Pointer to array being modified
+ * @param[in] index Position in array to modify
+ * @param[in] len Length of character array
+ * @param[in] src Character array to be copied into array
+ * @return Result of str_upate(), or false if parameters are invalid
  */
 bool sa_create_entry(strarray *array, const int index, const size_t len, const char *src) {
 	if (array == NULL) {
@@ -105,6 +129,9 @@ bool sa_create_entry(strarray *array, const int index, const size_t len, const c
 /*!
  * Hands off to str_destroy() if the specified index is within the array, and
  * noops if the array is invalid or index is out of bounds
+ *
+ * @param[in] array Pointer to array being modified
+ * @param[in] index Position in array to clear
  */
 void sa_clear_entry(strarray *array, const int index) {
 	if (array == NULL) {
@@ -124,6 +151,10 @@ void sa_clear_entry(strarray *array, const int index) {
  * Internal pointer is nulled and number of entries set to zero, so there
  * should be no side effects if called repeatedly on an array, if that should
  * happen for some reason. Don't do it deliberately just to check.
+ *
+ * Caller is responsible for freeing the array itself, if required.
+ *
+ * @param[in] sa Pointer to array to be destroyed.
  */
 void sa_destroy(strarray *sa) {
 	if (sa == NULL) {
@@ -152,6 +183,10 @@ void sa_destroy(strarray *sa) {
  * handing the array to this function. The declared length represents an upper
  * bound on the string length - the copy will stop at the first null byte found
  * (strncpy() used internally)
+ *
+ * @param[in] len Maximum length of character array to be copied
+ * @param[in] ca  Pointer to character array
+ * @return Pointer to newly allocated string, or NULL on failure
  */
 string * str_new(const size_t len, const char *ca) {
 	string *ns = calloc(1, sizeof(string));
@@ -175,6 +210,10 @@ string * str_new(const size_t len, const char *ca) {
  *
  * No explicit null termination checks, but the source string declared length
  * is used as an upper bound. Uses strncpy() internally, so should be safe enough.
+ *
+ * @param[out] dst Pointer to destination string (Existing data will be destroyed)
+ * @param[in]  src Pointer to source string.
+ * @return True on success, false otherwise
  */
 bool str_copy(string *dst, const string *src) {
 	str_destroy(dst);
@@ -188,6 +227,13 @@ bool str_copy(string *dst, const string *src) {
 	return true;
 }
 
+/*!
+ * Wrapper around str_new(), passing it the length and internal character array
+ * of the source string.
+ *
+ * @param[in] src Pointer to source string
+ * @return Return value of str_new()
+ */
 string * str_duplicate(const string *src) {
 	return str_new(src->length, src->data);
 }
@@ -195,6 +241,11 @@ string * str_duplicate(const string *src) {
 /*!
  * Destroys the string, then allocates new memory and copies the array using
  * strncpy() as described for str_new()
+ *
+ * @param[out] str Pointer to destination string
+ * @param[in]  len Maximum length of new character array to copy in
+ * @param[in]  src Pointer to source character array
+ * @return True on success, false otherwise
  */
 bool str_update(string *str, const size_t len, const char *src) {
 	str_destroy(str);
@@ -210,6 +261,10 @@ bool str_update(string *str, const size_t len, const char *src) {
 
 /*!
  * Frees the internal storage and sets length to zero
+ *
+ * Caller is responsible for freeing string itself, if required.
+ *
+ * @param[in] str Pointer to string to be destroyed
  */
 void str_destroy(string *str) {
 	if (str == NULL) {

@@ -1,7 +1,24 @@
-#ifndef SELKIEGPSTypes
-#define SELKIEGPSTypes
+#ifndef SELKIELoggerGPS_Types
+#define SELKIELoggerGPS_Types
+
+//! @file GPSTypes.h Data types and definitions for use with UBX protocol messages
 
 #include <stdint.h>
+
+/*! @brief UBX Serial synchronisation byte 1
+ *
+ * 0xB5 as defined in UBlox documentation.
+ *
+ * Represents the UTF-8 µ glyph
+ */
+#define UBX_SYNC_BYTE1 0xB5
+
+/*! @brief UBX Serial synchronisation byte 2
+ *
+ * Defined as 0x62 in UBlox documentation.
+ * Represents a b in ASCII or UTF-8.
+ */
+#define UBX_SYNC_BYTE2 0x62
 
 //! UBX Message class ID bytes
 typedef enum ubx_class {

@@ -1,12 +1,12 @@
-list(APPEND SL_Base_SRC logging.c messages.c queue.c strarray.c)
-list(APPEND SL_Base_INC logging.h messages.h queue.h sources.h strarray.h)
+list(APPEND SL_Base_SRC logging.c messages.c queue.c serial.c strarray.c)
+list(APPEND SL_Base_INC logging.h messages.h queue.h serial.h sources.h strarray.h)
 
 add_library(SELKIELoggerBase ${SL_Base_SRC})
 set_target_properties(SELKIELoggerBase PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(SELKIELoggerBase PROPERTIES SONAME 1)
 
 set_target_properties(SELKIELoggerBase PROPERTIES PUBLIC_HEADER SELKIELoggerBase.h)
-set_target_properties(SELKIELoggerBase PROPERTIES PRIVATE_HEADER ${SL_Base_INC})
+set_target_properties(SELKIELoggerBase PROPERTIES PRIVATE_HEADER "${SL_Base_INC}")
 
 include(GNUInstallDirs)
 

@@ -8,6 +8,7 @@ set_target_properties(SELKIELoggerGPS PROPERTIES SONAME 1)
 set_target_properties(SELKIELoggerGPS PROPERTIES PUBLIC_HEADER SELKIELoggerGPS.h)
 set_target_properties(SELKIELoggerGPS PROPERTIES PRIVATE_HEADER "${SL_GPS_INC}")
 
+target_link_libraries(SELKIELoggerGPS PUBLIC SELKIELoggerBase)
 include(GNUInstallDirs)
 
 target_include_directories(SELKIELoggerGPS PUBLIC

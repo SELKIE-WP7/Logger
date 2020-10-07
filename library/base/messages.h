@@ -20,7 +20,7 @@ typedef union {
 	uint32_t timestamp; //!< Intended to represent millisecond level clock
 	uint8_t *bytes; //!< Our "raw" binary type
 	string string; //!< Single character array with length
-	strarray *names; //!< Array of strings, intended for use to provide channel names
+	strarray names; //!< Array of strings, intended for use to provide channel names
 } msg_data_t;
 
 //! Each data type should map to an entry in the msg_data_t union

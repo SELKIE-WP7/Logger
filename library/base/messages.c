@@ -91,7 +91,7 @@ msg_t * msg_new_string_array(const uint8_t source, const uint8_t type, const str
 	newmsg->type = type;
 	newmsg->dtype = MSG_STRARRAY;
 	newmsg->length = array->entries;
-	if (!sa_copy(newmsg->data.names, array)) {
+	if (!sa_copy(&(newmsg->data.names), array)) {
 		free(newmsg);
 		return NULL;
 	}
@@ -150,7 +150,7 @@ void msg_destroy(msg_t* msg) {
 			str_destroy(&(msg->data.string));
 			break;
 		case MSG_STRARRAY:
-			sa_destroy(msg->data.names);
+			sa_destroy(&(msg->data.names));
 			break;
 		case MSG_BYTES:
 			free(msg->data.bytes);

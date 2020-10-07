@@ -1,6 +1,8 @@
 list(APPEND SL_MP_SRC MPSerial.c)
 list(APPEND SL_MP_INC MPSerial.h MPTypes.h)
 
+find_package(msgpack)
+
 add_library(SELKIELoggerMP ${SL_MP_SRC})
 set_target_properties(SELKIELoggerMP PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(SELKIELoggerMP PROPERTIES SONAME 1)
@@ -8,7 +10,7 @@ set_target_properties(SELKIELoggerMP PROPERTIES SONAME 1)
 set_target_properties(SELKIELoggerMP PROPERTIES PUBLIC_HEADER SELKIELoggerMP.h)
 set_target_properties(SELKIELoggerMP PROPERTIES PRIVATE_HEADER "${SL_MP_INC}")
 
-target_link_libraries(SELKIELoggerMP PUBLIC SELKIELoggerBase)
+target_link_libraries(SELKIELoggerMP PUBLIC SELKIELoggerBase msgpackc)
 
 include(GNUInstallDirs)
 

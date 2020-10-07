@@ -54,6 +54,13 @@ int main(int argc, char *argv[]) {
 	assert(mp_writeMessage(fileno(stdout), mdf));
 	assert(mp_writeMessage(fileno(stdout), mdb));
 
+	FILE *tmp = tmpfile();
+	int tmpfd = fileno(tmp);
+	assert(mp_writeMessage(tmpfd, msn));
+	assert(mp_writeMessage(tmpfd, msa));
+	assert(mp_writeMessage(tmpfd, mts));
+	assert(mp_writeMessage(tmpfd, mdf));
+	assert(mp_writeMessage(tmpfd, mdb));
 
 	msg_destroy(msn);
 	free(msn);
@@ -68,6 +75,39 @@ int main(int argc, char *argv[]) {
 
 	sa_destroy(SA);
 	free(SA);
+
+	fflush(tmp);
+	rewind(tmp);
+
+	int count = 0;
+	int exit = 0;
+	while (!(feof(tmp) || exit == 1)) {
+		msg_t tMessage = {0};
+		if (mp_readMessage(fileno(tmp), &tMessage)) {
+			// Successfully read message
+			count++;
+		} else {
+			assert(tMessage.dtype == MSG_ERROR);
+			switch ((uint8_t) tMessage.data.value) {
+				case 0xAA:
+					msg_destroy(&tMessage);
+					fclose(tmp);
+					return -2;
+				case 0xEE:
+					msg_destroy(&tMessage);
+					fclose(tmp);
+					return -1;
+				case 0xFD:
+					exit = 1;
+					break;
+				case 0xFF:
+				default:
+					break;
+			}
+		}
+		msg_destroy(&tMessage);
+	}
+	assert(count == 5);
 
 	return EXIT_SUCCESS;
 }

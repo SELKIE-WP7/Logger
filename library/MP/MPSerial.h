@@ -27,4 +27,7 @@ bool mp_writeMessage(int handle, const msg_t *out);
 
 //! Pack string array
 void mp_pack_strarray(msgpack_packer *pack, const strarray *sa);
+
+//! Unpack msgpack array into string array
+bool mp_unpack_strarray(strarray *sa, msgpack_object_array *obj);
 #endif

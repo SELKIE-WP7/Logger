@@ -267,7 +267,7 @@ bool str_update(string *str, const size_t len, const char *src) {
  * @param[in] str Pointer to string to be destroyed
  */
 void str_destroy(string *str) {
-	if (str == NULL) {
+	if (str == NULL || str->length == 0) {
 		return;
 	}
 	str->length = 0;

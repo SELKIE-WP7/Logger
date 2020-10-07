@@ -6,6 +6,7 @@ add_executable(UBXMessagesFromFile UBXMessagesFromFile.c)
 target_link_libraries(UBXMessagesFromFile PUBLIC SELKIELoggerGPS)
 file(COPY testSample.dat DESTINATION .)
 add_test(NAME UBXMessagesFromFile COMMAND UBXMessagesFromFile testSample.dat)
+set_property(TEST UBXMessagesFromFile PROPERTY PASS_REGULAR_EXPRESSION "3 messages read")
 
 add_executable(QueueTest QueueTest.c)
 target_link_libraries(QueueTest PUBLIC SELKIELoggerBase)

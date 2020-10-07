@@ -4,7 +4,7 @@
 #include "LoggerSignals.h"
 
 //! Trigger clean software shutdown
-volatile bool shutdown = false;
+volatile bool shutdownFlag = false;
 
 //! Trigger immediate log rotation
 volatile bool rotateNow = false;
@@ -17,7 +17,7 @@ volatile bool pauseLog = false;
 
 // Signal handlers documented in header file
 void signalShutdown(int signnum __attribute__((unused))) {
-	shutdown = true;
+	shutdownFlag = true;
 }
 
 void signalRotate(int signnum __attribute__((unused))) {

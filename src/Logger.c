@@ -239,7 +239,7 @@ int main(int argc, char *argv[]) {
 	int msgCount = 0; 
 	//! Loop count. Used to avoid checking e.g. date on every iteration
 	unsigned int loopCount = 0;
-	while (!shutdown) {
+	while (!shutdownFlag) {
 		/*
 		 * Main application loop
 		 *
@@ -261,17 +261,17 @@ int main(int argc, char *argv[]) {
 				// Begin app shutdown
 				// We allow this loop (over threads) to continue in order to report on remaining threads
 				// After that, we allow the main while loop to continue (easier) and it will terminate afterwards
-				shutdown = true;
+				shutdownFlag = true;
 			}
 		}
 
 		// If we're not shutting down, Check if we need to pause
-		if (pauseLog && !shutdown) {
+		if (pauseLog && !shutdownFlag) {
 			log_info(&state, 0, "Logging paused");
 			// Flush outputs, we could be here for a while.
 			fflush(NULL);
 			// Loop until either a) We're unpaused, b) We need to shutdown
-			while (pauseLog && !shutdown) {
+			while (pauseLog && !shutdownFlag) {
 				sleep(1);
 			}
 			log_info(&state, 0, "Logging resumed");
@@ -386,7 +386,7 @@ int main(int argc, char *argv[]) {
 		free(res);
 	}
 	state.shutdown = true;
-	shutdown = true; // Ensure threads aware
+	shutdownFlag = true; // Ensure threads aware
 	log_info(&state, 1, "Shutting down");
 	pthread_join(threads[0], NULL);
 	log_info(&state, 2, "GPS thread returned %d", ltargs[0].returnCode);

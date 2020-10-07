@@ -19,7 +19,7 @@
  * @{
  */
 
-extern volatile bool shutdown;
+extern volatile bool shutdownFlag;
 extern volatile bool rotateNow;
 extern volatile bool pauseLog;
 

@@ -56,7 +56,7 @@ void *gps_logging(void *ptargs) {
 	uint8_t *buf = calloc(UBX_SERIAL_BUFF, sizeof(uint8_t));
 	int ubx_index = 0;
 	int ubx_hw = 0;
-	while (!shutdown) {
+	while (!shutdownFlag) {
 		ubx_message out = {0};
 		if (ubx_readMessage_buf(args->streamHandle, &out, buf, &ubx_index, &ubx_hw)) {
 			uint8_t *data = NULL;

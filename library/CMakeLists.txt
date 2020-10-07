@@ -6,3 +6,4 @@ include_directories($<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 
 add_subdirectory(base)
 add_subdirectory(GPS)
+add_subdirectory(MP)

@@ -14,12 +14,10 @@ int main(int argc, char *argv[]) {
 	bool saveMonitor = true;
 	bool saveState = true;
 	bool rotateMonitor = true;
-	bool logToFile = false;
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-l] [-g port] [-b initial baud] [-m file [-R]| -M] [-s file | -S]\n"
+        char *usage =  "Usage: %1$s [-v] [-q] [-g port] [-b initial baud] [-m file [-R]| -M] [-s file | -S]\n"
                 "\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
-		"\t-l\tLog information messages to file\n"
                 "\t-g port\tSpecify GPS port\n"
 		"\t-b baud\tGPS initial baud rate\n"
                 "\t-m file\tMonitor file prefix\n"
@@ -63,9 +61,6 @@ int main(int argc, char *argv[]) {
 					gpsPortName = strdup(optarg);
 				}
                                 break;
-			case 'l':
-				logToFile = true;
-				break;
 			case 'm':
 				if (monPrefix) {
 					log_error(&state, "Only a single monitor file prefix can be specified");
@@ -164,29 +159,20 @@ int main(int argc, char *argv[]) {
 		mon_nextyday = mon_yday;
 	}
 
-	if (logToFile) {
-		errno = 0;
-		state.log = openSerialNumberedFile(monPrefix, "log");
-		if (!state.log) {
-			if (errno == EEXIST) {
-				log_error(&state, "Unable to open log file - too many files created with this prefix today?");
-			} else {
-				log_error(&state, "Unable to open log file: %s", strerror(errno));
-			}
-			free(gpsPortName);
-			free(monPrefix);
-			free(stateName);
-			return EXIT_FAILURE;
+	errno = 0;
+	state.log = openSerialNumberedFile(monPrefix, "log");
+	state.logverbose = 3;
+	if (!state.log) {
+		if (errno == EEXIST) {
+			log_error(&state, "Unable to open log file - too many files created with this prefix today?");
+		} else {
+			log_error(&state, "Unable to open log file: %s", strerror(errno));
 		}
-
-		// When logging to file, cap printed messages to basic information (0)
-		// and use the verbosity level to dictate what is logged to file instead
-		if (state.verbose > 0) {
-			state.logverbose = state.verbose;
-			state.verbose = 0;
-		}
+		free(gpsPortName);
+		free(monPrefix);
+		free(stateName);
+		return EXIT_FAILURE;
 	}
-
 
 	log_info(&state, 1, "Using GPS port %s", gpsPortName);
 	log_info(&state, 1, "Using state file %s", stateName);
@@ -359,23 +345,21 @@ int main(int argc, char *argv[]) {
 			}
 
 			// As above, but for the log file
-			if (logToFile) {
-				FILE *newLog = NULL;
-				errno = 0;
-				newLog = openSerialNumberedFile(monPrefix, "log");
-				if (newLog == NULL) {
-					// As above, if the issue is log file names then we continue with the existing file
-					if (errno == EEXIST) {
-						log_error(&state, "Unable to open log file - too many files created with this prefix today?");
-					} else {
-						log_error(&state, "Unable to open log file: %s", strerror(errno));
-						return -1;
-					}
+			FILE *newLog = NULL;
+			errno = 0;
+			newLog = openSerialNumberedFile(monPrefix, "log");
+			if (newLog == NULL) {
+				// As above, if the issue is log file names then we continue with the existing file
+				if (errno == EEXIST) {
+					log_error(&state, "Unable to open log file - too many files created with this prefix today?");
 				} else {
-					FILE * oldLog = state.log;
-					state.log = newLog;
-					fclose(oldLog);
+					log_error(&state, "Unable to open log file: %s", strerror(errno));
+					return -1;
 				}
+			} else {
+				FILE * oldLog = state.log;
+				state.log = newLog;
+				fclose(oldLog);
 			}
 
 			mon_yday = mon_nextyday;

@@ -34,6 +34,7 @@ typedef struct {
 
 
 #include "LoggerGPS.h"
+#include "LoggerMP.h"
 #include "LoggerSignals.h"
 
 #endif

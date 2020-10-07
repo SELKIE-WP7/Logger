@@ -8,6 +8,11 @@ file(COPY testSample.dat DESTINATION .)
 add_test(NAME UBXMessagesFromFile COMMAND UBXMessagesFromFile testSample.dat)
 set_property(TEST UBXMessagesFromFile PROPERTY PASS_REGULAR_EXPRESSION "3 messages read")
 
+add_executable(MPMessagesFromFile MPMessagesFromFile.c)
+target_link_libraries(MPMessagesFromFile PUBLIC SELKIELoggerMP)
+file(COPY testSample.dat DESTINATION .)
+add_test(NAME MPMessagesFromFile COMMAND MPMessagesFromFile testSample.dat)
+
 add_executable(QueueTest QueueTest.c)
 target_link_libraries(QueueTest PUBLIC SELKIELoggerBase)
 add_test(NAME QueueTest COMMAND QueueTest)

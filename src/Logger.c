@@ -4,6 +4,7 @@
 
 int main(int argc, char *argv[]) {
 	char *gpsPortName = NULL;
+	char *mpPortName = NULL;
         char *monPrefix = NULL;
 	char *stateName = NULL;
 
@@ -15,10 +16,11 @@ int main(int argc, char *argv[]) {
 	bool saveState = true;
 	bool rotateMonitor = true;
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-g port] [-b initial baud] [-m file [-R]| -M] [-s file | -S]\n"
+        char *usage =  "Usage: %1$s [-v] [-q] [-g port] [-p port] [-b initial baud] [-m file [-R]| -M] [-s file | -S]\n"
                 "\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
                 "\t-g port\tSpecify GPS port\n"
+		"\t-p port\tMP source port\n"
 		"\t-b baud\tGPS initial baud rate\n"
                 "\t-m file\tMonitor file prefix\n"
                 "\t-s file\tState file name. Default derived from GPS port name\n"
@@ -37,7 +39,7 @@ int main(int argc, char *argv[]) {
         opterr = 0; // Handle errors ourselves
         int go = 0;
 	bool doUsage = false;
-        while ((go = getopt (argc, argv, "vqb:g:m:s:MSRL")) != -1) {
+        while ((go = getopt (argc, argv, "vqb:g:m:p:s:MSRL")) != -1) {
                 switch(go) {
                         case 'v':
                                 state.verbose++;
@@ -69,6 +71,14 @@ int main(int argc, char *argv[]) {
 					monPrefix = strdup(optarg);
 				}
 				break;
+			case 'p':
+				if (mpPortName) {
+					log_error(&state, "Only a single MP port can be specified");
+					doUsage = true;
+				} else {
+					mpPortName = strdup(optarg);
+				}
+                                break;
 			case 's':
 				if (stateName) {
 					log_error(&state, "Only a single state file name can be specified");
@@ -190,6 +200,16 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	int mpHandle = 0;
+	if (mpPortName) {
+		mpHandle = mp_setup(&state, mpPortName, 115200);
+		if (mpHandle < 0) {
+			log_error(&state, "Unable to set up MP connection on %s", mpPortName);
+			return EXIT_FAILURE;
+		}
+		free(mpPortName);
+	}
+
 	FILE *monitorFile = NULL;
 
 	if (saveMonitor) {
@@ -214,7 +234,9 @@ int main(int argc, char *argv[]) {
 
 	log_info(&state, 1, "Initialisation complete, starting log threads");
 
-	const int nThreads = 1;
+	int nThreads = 1;
+	if (mpPortName) { nThreads++;}
+
 	log_thread_args_t *ltargs = calloc(nThreads, sizeof(log_thread_args_t));
 	pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
 
@@ -224,6 +246,15 @@ int main(int argc, char *argv[]) {
 	if (pthread_create(&(threads[0]), NULL, &gps_logging, &(ltargs[0])) != 0){
 		log_error(&state, "Unable to launch GPS thread");
 		return EXIT_FAILURE;
+	}
+	if (mpPortName) {
+		ltargs[1].logQ = &log_queue;
+		ltargs[1].pstate = &state;
+		ltargs[1].streamHandle = mpHandle;
+		if (pthread_create(&(threads[0]), NULL, &mp_logging, &(ltargs[1])) != 0){
+			log_error(&state, "Unable to launch GPS thread");
+			return EXIT_FAILURE;
+		}
 	}
 
 	state.started = true;
@@ -375,12 +406,7 @@ int main(int argc, char *argv[]) {
 		}
 		msgCount++;
 		if (saveMonitor) {
-			if (res->dtype == MSG_BYTES) {
-				// Temporary - currently dumps a UBX file from GPS, but doesn't handle anything else
-				fwrite(res->data.bytes, res->length, 1, monitorFile);
-			} else {
-				log_warning(&state, "Unexpected message type (%d)", res->dtype);
-			}
+			mp_writeMessage(fileno(monitorFile), res);
 		}
 		msg_destroy(res);
 		free(res);

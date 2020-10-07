@@ -117,6 +117,9 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 		// Not enough data for any valid message, come back later
 		out->dtype = MSG_ERROR;
 		out->data.value = 0xFF;
+		if (ti == 0) {
+			out->data.value = 0xFD;
+		}
 		return false;
 	}
 

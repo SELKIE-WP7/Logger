@@ -36,10 +36,16 @@ void *mp_logging(void *ptargs) {
 			// After pushing it to the queue, it is the responsibility of the consumer
 			// to dispose of it after use.
 		} else {
-			if (out->dtype == MSG_ERROR && !(out->data.value == 0xFF || out->data.value == 0xFD)) {
-				// 0xFF and 0xFD are used to signal recoverable states that resulted in no
-				// valid message 0xFD indicates an out of data error, which is not a problem
-				// for serial monitoring
+			if (out->dtype == MSG_ERROR &&
+				!(out->data.value == 0xFF || out->data.value == 0xFD || out->data.value == 0xEE )) {
+
+				// 0xFF, 0xFD and 0xEE are used to signal recoverable states that resulted
+				// in no valid message.
+				// 
+				// 0xFF and 0xFD indicate an out of data error, which is not a problem
+				// for serial monitoring, but might indicate EOF when reading from file
+				//
+				// 0xEE indicates an invalid message following valid sync bytes
 				log_error(args->pstate, "Error signalled from mp_readMessage");
 				free(buf);
 				free(out);

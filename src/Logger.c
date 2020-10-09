@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
 		ltargs[1].logQ = &log_queue;
 		ltargs[1].pstate = &state;
 		ltargs[1].streamHandle = mpHandle;
-		if (pthread_create(&(threads[0]), NULL, &mp_logging, &(ltargs[1])) != 0){
+		if (pthread_create(&(threads[1]), NULL, &mp_logging, &(ltargs[1])) != 0){
 			log_error(&state, "Unable to launch GPS thread");
 			return EXIT_FAILURE;
 		}
@@ -414,8 +414,12 @@ int main(int argc, char *argv[]) {
 	state.shutdown = true;
 	shutdownFlag = true; // Ensure threads aware
 	log_info(&state, 1, "Shutting down");
-	pthread_join(threads[0], NULL);
-	log_info(&state, 2, "GPS thread returned %d", ltargs[0].returnCode);
+	for (int it=0; it < nThreads; it++) {
+		pthread_join(threads[it], NULL);
+		if (ltargs[it].returnCode != 0) {
+			log_error(&state, "Thread %d has signalled an error: %d", it, ltargs[it].returnCode);
+		}
+	}
 	ubx_closeConnection(gpsHandle);
 	log_info(&state, 2, "GPS device closed");
 
@@ -442,7 +446,10 @@ int main(int argc, char *argv[]) {
 	queue_destroy(&log_queue);
 	log_info(&state, 2, "Message queue destroyed");
 	fclose(monitorFile);
+	free(monPrefix);
+	free(stateName);
 	log_info(&state, 2, "Monitor file closed");
 	log_info(&state, 0, "%d messages read successfully\n\n", msgCount);
+	fclose(state.log);
 	return 0;
 }

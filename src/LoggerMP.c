@@ -41,15 +41,22 @@ void *mp_logging(void *ptargs) {
 				// valid message 0xFD indicates an out of data error, which is not a problem
 				// for serial monitoring
 				log_error(args->pstate, "Error signalled from mp_readMessage");
+				free(buf);
+				free(out);
 				args->returnCode = -2;
 				pthread_exit(&(args->returnCode));
 			}
+			// out was allocated but not pushed to the queue, so free it here.
+			msg_destroy(out);
+			free(out);
+
 			// We've already exited (via pthread_exit) for error
 			// cases, so at this point sleep briefly and wait for
 			// more data
 			usleep(5E2);
 		}
 	}
+	free(buf);
 	pthread_exit(NULL);
 	return NULL; // Superfluous, as returning zero via pthread_exit above
 }

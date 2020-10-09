@@ -69,6 +69,9 @@ void *gps_logging(void *ptargs) {
 				args->returnCode = -1;
 				pthread_exit(&(args->returnCode));
 			}
+			if (data) {
+				free(data); // Copied into message, so can safely free here
+			}
 			// Do not destroy or free sm here
 			// After pushing it to the queue, it is the responsibility of the consumer
 			// to dispose of it after use.
@@ -79,6 +82,10 @@ void *gps_logging(void *ptargs) {
 				// for serial monitoring
 				log_error(args->pstate, "Error signalled from readMessage");
 				args->returnCode = -2;
+				free(buf);
+				if (out.extdata) {
+					free(out.extdata);
+				}
 				pthread_exit(&(args->returnCode));
 			}
 			// We've already exited (via pthread_exit) for error
@@ -86,7 +93,13 @@ void *gps_logging(void *ptargs) {
 			// more data
 			usleep(5E2);
 		}
+
+		// Clean up before next iteration
+		if (out.extdata) { // Similarly, we are finished with this copy
+			free(out.extdata);
+		}
 	}
+	free(buf);
 	pthread_exit(NULL);
 	return NULL; // Superfluous, as returning zero via pthread_exit above
 }

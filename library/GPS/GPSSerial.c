@@ -207,6 +207,7 @@ bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BU
 		return false;
 	}
 
+	out->extdata = NULL;
 	if (out->length <= 256) {
 		for (uint8_t i = 0; i < out->length; i++) {
 			out->data[i] = buf[(*index) + 6 + i];
@@ -227,6 +228,10 @@ bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BU
 		(*index) += 8 + out->length ;
 	} else {
 		out->sync1 = 0xEE; // Use 0xEE as "Found, but invalid", leaving 0xFF as "No message"
+		if (out->extdata) {
+			free(out->extdata);
+			out->extdata = NULL;
+		}
 		(*index)++;
 	}
 	if ((*hw) > 0) {

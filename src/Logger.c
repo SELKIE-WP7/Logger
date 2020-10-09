@@ -3,18 +3,18 @@
 //! @file Logger.c Generates main data logging executable
 
 int main(int argc, char *argv[]) {
-	char *gpsPortName = NULL;
-	char *mpPortName = NULL;
         char *monPrefix = NULL;
 	char *stateName = NULL;
 
 	program_state state = {0};
 	state.verbose = 0;
 
-	int initialBaud = 9600;
 	bool saveMonitor = true;
 	bool saveState = true;
 	bool rotateMonitor = true;
+
+	gps_params gpsParams = gps_getParams();
+	mp_params mpParams = mp_getParams();
 
         char *usage =  "Usage: %1$s [-v] [-q] [-g port] [-p port] [-b initial baud] [-m file [-R]| -M] [-s file | -S]\n"
                 "\t-v\tIncrease verbosity\n"
@@ -49,18 +49,18 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'b':
 				errno = 0;
-				initialBaud = strtol(optarg, NULL, 10);
+				gpsParams.initialBaud = strtol(optarg, NULL, 10);
 				if (errno) {
 					log_error(&state, "Bad initial baud value ('%s')\n", optarg);
 					doUsage = true;
 				}
 				break;
 			case 'g':
-				if (gpsPortName) {
+				if (gpsParams.portName) {
 					log_error(&state, "Only a single GPS port can be specified");
 					doUsage = true;
 				} else {
-					gpsPortName = strdup(optarg);
+					gpsParams.portName = strdup(optarg);
 				}
                                 break;
 			case 'm':
@@ -72,11 +72,11 @@ int main(int argc, char *argv[]) {
 				}
 				break;
 			case 'p':
-				if (mpPortName) {
+				if (mpParams.portName) {
 					log_error(&state, "Only a single MP port can be specified");
 					doUsage = true;
 				} else {
-					mpPortName = strdup(optarg);
+					mpParams.portName = strdup(optarg);
 				}
                                 break;
 			case 's':
@@ -123,15 +123,15 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, usage, argv[0]);
 		if (monPrefix) {free(monPrefix);}
 		if (stateName) {free(stateName);}
-		if (gpsPortName) {free(gpsPortName);}
+		if (gpsParams.portName) {free(gpsParams.portName);}
 		return EXIT_FAILURE;
 	}
 
 	// Set defaults if no argument provided
 	// Defining the defaults as compiled in constants at the top of main() causes issues
 	// with overwriting them later
-	if (!gpsPortName) {
-		gpsPortName = strdup(DEFAULT_GPS_PORT);
+	if (!gpsParams.portName) {
+		gpsParams.portName = strdup(DEFAULT_GPS_PORT);
 	}
 
 	if (!monPrefix) {
@@ -140,11 +140,11 @@ int main(int argc, char *argv[]) {
 
 	// Default state file name is derived from the port name
 	if (!stateName) {
-		char *tmp = strdup(gpsPortName);
+		char *tmp = strdup(gpsParams.portName);
 		if (asprintf(&stateName, "%s.state", basename(tmp)) < 0) {
 			perror("asprintf");
 			free(tmp);
-			free(gpsPortName);
+			free(gpsParams.portName);
 			free(monPrefix);
 			return -1;
 		}
@@ -178,36 +178,53 @@ int main(int argc, char *argv[]) {
 		} else {
 			log_error(&state, "Unable to open log file: %s", strerror(errno));
 		}
-		free(gpsPortName);
+		free(gpsParams.portName);
 		free(monPrefix);
 		free(stateName);
 		return EXIT_FAILURE;
 	}
 
-	log_info(&state, 1, "Using GPS port %s", gpsPortName);
+	log_info(&state, 1, "Using GPS port %s", gpsParams.portName);
 	log_info(&state, 1, "Using state file %s", stateName);
 	log_info(&state, 1, "Using %s as monitor and log file prefix", monPrefix);
 
 	// Block signal handling until we're up and running
 	signalHandlersBlock();
 
-	int gpsHandle = gps_setup(&state, gpsPortName, initialBaud);
-	free(gpsPortName);
-	gpsPortName = NULL;
+	msgqueue log_queue = {0};
+	if (!queue_init(&log_queue)) {
+		log_error(&state, "Unable to initialise message queue");
+		return EXIT_FAILURE;
+	}
 
-	if (gpsHandle < 0) {
+	int nThreads = 1;
+	if (mpParams.portName) { nThreads++;}
+
+	log_thread_args_t *ltargs = calloc(nThreads, sizeof(log_thread_args_t));
+	pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
+
+	device_callbacks gpsDev = gps_getCallbacks();
+	ltargs[0].logQ = &log_queue;
+	ltargs[0].pstate = &state;
+	ltargs[0].dParams = &gpsParams;
+
+	gpsDev.startup(&(ltargs[0]));
+	if (ltargs[0].returnCode < 0) {
 		log_error(&state, "Unable to set up GPS connection");
 		return EXIT_FAILURE;
 	}
 
-	int mpHandle = 0;
-	if (mpPortName) {
-		mpHandle = mp_setup(&state, mpPortName, 115200);
-		if (mpHandle < 0) {
-			log_error(&state, "Unable to set up MP connection on %s", mpPortName);
+
+	device_callbacks mpDev = mp_getCallbacks();
+	if (mpParams.portName) {
+		ltargs[1].logQ = &log_queue;
+		ltargs[1].pstate = &state;
+		ltargs[1].dParams = &mpParams;
+		mpDev.startup(&(ltargs[1]));
+		if (ltargs[1].returnCode < 0) {
+			log_error(&state, "Unable to set up MP connection on %s", mpParams.portName);
 			return EXIT_FAILURE;
 		}
-		free(mpPortName);
 	}
 
 	FILE *monitorFile = NULL;
@@ -226,33 +243,16 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	msgqueue log_queue = {0};
-	if (!queue_init(&log_queue)) {
-		log_error(&state, "Unable to initialise message queue");
-		return EXIT_FAILURE;
-	}
-
 	log_info(&state, 1, "Initialisation complete, starting log threads");
 
-	int nThreads = 1;
-	if (mpPortName) { nThreads++;}
-
-	log_thread_args_t *ltargs = calloc(nThreads, sizeof(log_thread_args_t));
-	pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
-
-	ltargs[0].logQ = &log_queue;
-	ltargs[0].pstate = &state;
-	ltargs[0].streamHandle = gpsHandle;
-	if (pthread_create(&(threads[0]), NULL, &gps_logging, &(ltargs[0])) != 0){
+	if (pthread_create(&(threads[0]), NULL, gpsDev.logging, &(ltargs[0])) != 0){
 		log_error(&state, "Unable to launch GPS thread");
 		return EXIT_FAILURE;
 	}
-	if (mpPortName) {
-		ltargs[1].logQ = &log_queue;
-		ltargs[1].pstate = &state;
-		ltargs[1].streamHandle = mpHandle;
-		if (pthread_create(&(threads[1]), NULL, &mp_logging, &(ltargs[1])) != 0){
-			log_error(&state, "Unable to launch GPS thread");
+
+	if (mpParams.portName) {
+		if (pthread_create(&(threads[1]), NULL, mpDev.logging, &(ltargs[1])) != 0){
+			log_error(&state, "Unable to launch MP thread");
 			return EXIT_FAILURE;
 		}
 	}
@@ -420,9 +420,11 @@ int main(int argc, char *argv[]) {
 			log_error(&state, "Thread %d has signalled an error: %d", it, ltargs[it].returnCode);
 		}
 	}
-	ubx_closeConnection(gpsHandle);
-	log_info(&state, 2, "GPS device closed");
 
+	gpsDev.shutdown(&gpsParams);
+	if (mpParams.portName) {
+		mpDev.shutdown(&mpParams);
+	}
 	free(ltargs);
 	free(threads);
 

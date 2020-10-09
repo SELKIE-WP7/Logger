@@ -25,13 +25,27 @@
 #define DEFAULT_MON_PREFIX "@DEFAULT_MON_PREFIX@"
 
 //! Logging thread information
+
+/*!
+ * This will be allocated by the main Logger thread, and used to pass
+ * information to the device specific threads for initialisation, logging and
+ * shutdown.
+ */
 typedef struct {
-	msgqueue *logQ;
-	program_state *pstate;
-	int streamHandle;
-	int returnCode;
+	msgqueue *logQ; //!< Main message queue. Pushed to by threads, consumed by main()
+	program_state *pstate; //!< Current program state, used for logging
+	void *dParams; //!< Device/Thread specific data
+	int returnCode; //!< Thread return code (output)
 } log_thread_args_t;
 
+//! Device specific functions
+typedef void *(*device_fn)(void *);
+
+typedef struct {
+	device_fn startup;  //!< Called serially at startup, opens devices etc.
+	device_fn logging;  //!< Main logging thread, passed to pthread_create()
+	device_fn shutdown; //!< Called on shutdown - close handles etc.
+} device_callbacks;
 
 #include "LoggerGPS.h"
 #include "LoggerMP.h"

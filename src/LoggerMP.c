@@ -2,21 +2,28 @@
 #include "LoggerMP.h"
 #include "LoggerSignals.h"
 
-int mp_setup(program_state *pstate, const char* mpPortName, const int baudRate) {
-	int mpHandle = mp_openConnection(mpPortName, baudRate);
-	if (mpHandle < 0) {
-		log_error(pstate, "Unable to open a connection on port %s", mpPortName);
-		return -1;
+void *mp_setup(void *ptargs) {
+	log_thread_args_t *args = (log_thread_args_t *) ptargs;
+	mp_params *mpInfo = (mp_params *) args->dParams;
+
+	mpInfo->handle = mp_openConnection(mpInfo->portName, mpInfo->baudRate);
+	if (mpInfo->handle < 0) {
+		log_error(args->pstate, "[MP:%s] Unable to open a connection", mpInfo->portName);
+		args->returnCode = -1;
+		return NULL;
 	}
 
-	log_info(pstate, 1, "Connected MP Source on port %s", mpPortName);
-	return mpHandle;
+	log_info(args->pstate, 2, "[MP:%s] Connected", mpInfo->portName);
+	args->returnCode = 0;
+	return NULL;
 }
 
 void *mp_logging(void *ptargs) {
 	signalHandlersBlock();
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	log_info(args->pstate, 1, "MP Logging thread started");
+	mp_params *mpInfo = (mp_params *) args->dParams;
+
+	log_info(args->pstate, 1, "[MP:%s] Logging thread started", mpInfo->portName);
 
 	uint8_t *buf = calloc(MP_SERIAL_BUFF, sizeof(uint8_t));
 	int mp_index = 0;
@@ -24,10 +31,10 @@ void *mp_logging(void *ptargs) {
 	while (!shutdownFlag) {
 		// Needs to be on the heap as we'll be queuing it
 		msg_t *out = calloc(1, sizeof(msg_t));
-		if (mp_readMessage_buf(args->streamHandle, out, buf, &mp_index, &mp_hw)) {
+		if (mp_readMessage_buf(mpInfo->handle, out, buf, &mp_index, &mp_hw)) {
 
 			if (!queue_push(args->logQ, out)) {
-				log_error(args->pstate, "Error pushing message to queue from MP source");
+				log_error(args->pstate, "[MP:%s] Error pushing message to queue", mpInfo->portName);
 				msg_destroy(out);
 				args->returnCode = -1;
 				pthread_exit(&(args->returnCode));
@@ -46,7 +53,7 @@ void *mp_logging(void *ptargs) {
 				// for serial monitoring, but might indicate EOF when reading from file
 				//
 				// 0xEE indicates an invalid message following valid sync bytes
-				log_error(args->pstate, "Error signalled from mp_readMessage");
+				log_error(args->pstate, "[MP:%s] Error signalled from mp_readMessage_buf", mpInfo->portName);
 				free(buf);
 				free(out);
 				args->returnCode = -2;
@@ -65,4 +72,35 @@ void *mp_logging(void *ptargs) {
 	free(buf);
 	pthread_exit(NULL);
 	return NULL; // Superfluous, as returning zero via pthread_exit above
+}
+
+/*!
+ * Simple wrapper around mp_closeConnection(), which will do any cleanup required.
+ */
+void *mp_shutdown(void *ptargs) {
+	log_thread_args_t *args = (log_thread_args_t *) ptargs;
+	mp_params *mpInfo = (mp_params *) args->dParams;
+	if (mpInfo->handle >= 0) { // Admittedly 0 is unlikely
+		mp_closeConnection(mpInfo->handle);
+	}
+	mpInfo->handle = -1;
+	return NULL;
+}
+
+device_callbacks mp_getCallbacks() {
+	device_callbacks cb = {
+		.startup = &mp_setup,
+		.logging = &mp_logging,
+		.shutdown = &mp_shutdown
+	};
+	return cb;
+}
+
+mp_params mp_getParams() {
+	mp_params mp = {
+		.portName = NULL,
+		.baudRate = 115200,
+		.handle = -1
+	};
+	return mp;
 }

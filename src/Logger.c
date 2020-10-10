@@ -194,6 +194,7 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	log_info(&state, 1, "Version: " GIT_VERSION_STRING); // Preprocessor concatenation, not a format string!
 	log_info(&state, 1, "Using GPS port %s", gpsParams.portName);
 	log_info(&state, 1, "Using state file %s", stateName);
 	log_info(&state, 1, "Using %s as monitor and log file prefix", monPrefix);

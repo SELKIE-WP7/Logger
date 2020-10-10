@@ -284,6 +284,7 @@ int main(int argc, char *argv[]) {
 			log_error(&state, "Unable to launch MP thread");
 			return EXIT_FAILURE;
 		}
+		tix++;
 	}
 
 	if (nmeaParams.portName) {
@@ -291,6 +292,7 @@ int main(int argc, char *argv[]) {
 			log_error(&state, "Unable to launch NMEA thread");
 			return EXIT_FAILURE;
 		}
+		tix++;
 	}
 
 	state.started = true;
@@ -457,10 +459,21 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	gpsDev.shutdown(&gpsParams);
+
+	tix = 0;
+	gpsDev.shutdown(&(ltargs[tix]));
+	tix++;
+
 	if (mpParams.portName) {
-		mpDev.shutdown(&mpParams);
+		mpDev.shutdown(&(ltargs[tix]));
+		tix++;
 	}
+
+	if (nmeaParams.portName) {
+		nmeaDev.shutdown(&(ltargs[tix]));
+		tix++;
+	}
+
 	free(ltargs);
 	free(threads);
 

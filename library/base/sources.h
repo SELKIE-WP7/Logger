@@ -34,6 +34,8 @@
 
 #define SLSOURCE_ADC	0x20 //!< Generic analogue inputs
 
+#define SLSOURCE_NMEA	0x30 //!< NMEA Bus
+
 #define SLSOURCE_IMU	0x70 //!< IMUs (e.g. SURFTEC IMU devices)
 
 //! @}
@@ -57,6 +59,7 @@
 #define SLCHAN_NAME	0x00 //!< Name of source device
 #define SLCHAN_MAP	0x01 //!< Channel name map (excludes log channels)
 #define SLCHAN_TSTAMP	0x02 //!< Source timestamp (milliseconds, arbitrary epoch)
+#define SLCHAN_RAW	0x03 //!< Raw device data (Not mandatory)
 #define SLCHAN_LOG_INFO	0x7D //!< Information messages
 #define SLCHAN_LOG_WARN	0x7E //!< Warning messages
 #define SLCHAN_LOG_ERR	0x7F //!< Error messages

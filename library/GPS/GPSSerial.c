@@ -114,8 +114,7 @@ bool ubx_readMessage(int handle, ubx_message *out) {
 
 /*!
  * Pulls data from `handle` and stores it in `buf`, tracking the current search
- * position in `index` and the current fill level/buffer high water mark in
- * `hw`.
+ * position in `index` and the current fill level/buffer high water mark in `hw`
  *
  * The source handle can be anything supported by read(), but would usually be
  * a file or a serial port.

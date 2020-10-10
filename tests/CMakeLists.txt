@@ -26,3 +26,13 @@ target_link_libraries(MPTests PUBLIC SELKIELoggerBase SELKIELoggerMP)
 add_test(NAME MPTests COMMAND MPTests)
 add_test(NAME MPTestsOutput COMMAND bash -c "$<TARGET_FILE:MPTests>|md5sum")
 set_property(TEST MPTestsOutput PROPERTY PASS_REGULAR_EXPRESSION "48ece0e95633a32450a4aa98939968e6")
+
+add_executable(NMEAChecksumTest NMEAChecksumTest.c)
+target_link_libraries(NMEAChecksumTest PUBLIC SELKIELoggerNMEA)
+add_test(NAME NMEAChecksumTest COMMAND NMEAChecksumTest)
+
+add_executable(NMEAMessagesFromFile NMEAMessagesFromFile.c)
+target_link_libraries(NMEAMessagesFromFile PUBLIC SELKIELoggerNMEA)
+file(COPY NMEASample.dat DESTINATION .)
+add_test(NAME NMEAMessagesFromFile COMMAND NMEAMessagesFromFile NMEASample.dat)
+set_property(TEST NMEAMessagesFromFile PROPERTY PASS_REGULAR_EXPRESSION "100 messages read")

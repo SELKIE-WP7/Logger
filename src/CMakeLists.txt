@@ -7,7 +7,7 @@ find_package(Threads REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} PRIVATE)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} PRIVATE)
 
-add_executable(Logger Logger.h Logger.c LoggerGPS.h LoggerGPS.c LoggerSignals.c LoggerMP.c)
+add_executable(Logger Logger.h Logger.c LoggerGPS.h LoggerGPS.c LoggerSignals.c LoggerMP.c LoggerNMEA.c)
 target_link_libraries(Logger PUBLIC ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(Logger PUBLIC SELKIELoggerGPS SELKIELoggerBase SELKIELoggerMP)
+target_link_libraries(Logger PUBLIC SELKIELoggerGPS SELKIELoggerBase SELKIELoggerMP SELKIELoggerNMEA)
 

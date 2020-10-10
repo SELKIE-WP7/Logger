@@ -15,6 +15,7 @@
 
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerGPS.h"
+#include "SELKIELoggerNMEA.h"
 
 #include "version.h"
 
@@ -49,6 +50,7 @@ typedef struct {
 
 #include "LoggerGPS.h"
 #include "LoggerMP.h"
+#include "LoggerNMEA.h"
 #include "LoggerSignals.h"
 
 #endif

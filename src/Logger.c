@@ -206,12 +206,13 @@ int main(int argc, char *argv[]) {
 	log_thread_args_t *ltargs = calloc(nThreads, sizeof(log_thread_args_t));
 	pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
 
-	device_callbacks gpsDev = gps_getCallbacks();
+	ltargs[tix].tag = "GPS";
 	ltargs[tix].logQ = &log_queue;
 	ltargs[tix].pstate = &state;
 	ltargs[tix].dParams = &gpsParams;
+	ltargs[tix].funcs = gps_getCallbacks();
 
-	gpsDev.startup(&(ltargs[tix]));
+	ltargs[tix].funcs.startup(&(ltargs[tix]));
 	if (ltargs[tix].returnCode < 0) {
 		log_error(&state, "Unable to set up GPS connection");
 		return EXIT_FAILURE;
@@ -219,12 +220,13 @@ int main(int argc, char *argv[]) {
 	// All done, let next thread be configured
 	tix++;
 
-	device_callbacks mpDev = mp_getCallbacks();
 	if (mpParams.portName) {
+		ltargs[tix].tag = "MP";
 		ltargs[tix].logQ = &log_queue;
 		ltargs[tix].pstate = &state;
 		ltargs[tix].dParams = &mpParams;
-		mpDev.startup(&(ltargs[tix]));
+		ltargs[tix].funcs = mp_getCallbacks();
+		ltargs[tix].funcs.startup(&(ltargs[tix]));
 		if (ltargs[tix].returnCode < 0) {
 			log_error(&state, "Unable to set up MP connection on %s", mpParams.portName);
 			return EXIT_FAILURE;
@@ -232,12 +234,13 @@ int main(int argc, char *argv[]) {
 		tix++;
 	}
 
-	device_callbacks nmeaDev = nmea_getCallbacks();
 	if (nmeaParams.portName) {
+		ltargs[tix].tag = "NMEA";
 		ltargs[tix].logQ = &log_queue;
 		ltargs[tix].pstate = &state;
 		ltargs[tix].dParams = &nmeaParams;
-		nmeaDev.startup(&(ltargs[tix]));
+		ltargs[tix].funcs = nmea_getCallbacks();
+		ltargs[tix].funcs.startup(&(ltargs[tix]));
 		if (ltargs[tix].returnCode < 0) {
 			log_error(&state, "Unable to set up NMEA connection on %s", nmeaParams.portName);
 			return EXIT_FAILURE;
@@ -261,27 +264,11 @@ int main(int argc, char *argv[]) {
 
 	log_info(&state, 1, "Initialisation complete, starting log threads");
 
-	tix = 0;
-	if (pthread_create(&(threads[tix]), NULL, gpsDev.logging, &(ltargs[tix])) != 0){
-		log_error(&state, "Unable to launch GPS thread");
-		return EXIT_FAILURE;
-	}
-	tix++;
-
-	if (mpParams.portName) {
-		if (pthread_create(&(threads[tix]), NULL, mpDev.logging, &(ltargs[tix])) != 0){
-			log_error(&state, "Unable to launch MP thread");
+	for (int tix=0; tix < nThreads; tix++) {
+		if (pthread_create(&(threads[tix]), NULL, ltargs[tix].funcs.logging, &(ltargs[tix])) != 0){
+			log_error(&state, "Unable to launch %s thread", ltargs[tix].tag);
 			return EXIT_FAILURE;
 		}
-		tix++;
-	}
-
-	if (nmeaParams.portName) {
-		if (pthread_create(&(threads[tix]), NULL, nmeaDev.logging, &(ltargs[tix])) != 0){
-			log_error(&state, "Unable to launch NMEA thread");
-			return EXIT_FAILURE;
-		}
-		tix++;
 	}
 
 	state.started = true;
@@ -444,18 +431,8 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	tix = 0;
-	gpsDev.shutdown(&(ltargs[tix]));
-	tix++;
-
-	if (mpParams.portName) {
-		mpDev.shutdown(&(ltargs[tix]));
-		tix++;
-	}
-
-	if (nmeaParams.portName) {
-		nmeaDev.shutdown(&(ltargs[tix]));
-		tix++;
+	for (int tix=0; tix < nThreads; tix++) {
+		ltargs[tix].funcs.shutdown(&(ltargs[tix]));
 	}
 
 	free(ltargs);

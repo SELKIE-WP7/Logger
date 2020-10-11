@@ -36,6 +36,16 @@
  */
 #define SERIAL_SLEEP 1E3
 
+//! Device specific callback functions
+typedef void *(*device_fn)(void *);
+
+//! Device specific function information
+typedef struct {
+	device_fn startup;  //!< Called serially at startup, opens devices etc.
+	device_fn logging;  //!< Main logging thread, passed to pthread_create()
+	device_fn shutdown; //!< Called on shutdown - close handles etc.
+} device_callbacks;
+
 //! Logging thread information
 
 /*!
@@ -44,20 +54,13 @@
  * shutdown.
  */
 typedef struct {
+	char *tag; //!< Tag/device type for messages etc.
 	msgqueue *logQ; //!< Main message queue. Pushed to by threads, consumed by main()
 	program_state *pstate; //!< Current program state, used for logging
+	device_callbacks funcs; //!< Callback information for this device/thread
 	void *dParams; //!< Device/Thread specific data
 	int returnCode; //!< Thread return code (output)
 } log_thread_args_t;
-
-//! Device specific functions
-typedef void *(*device_fn)(void *);
-
-typedef struct {
-	device_fn startup;  //!< Called serially at startup, opens devices etc.
-	device_fn logging;  //!< Main logging thread, passed to pthread_create()
-	device_fn shutdown; //!< Called on shutdown - close handles etc.
-} device_callbacks;
 
 #include "LoggerGPS.h"
 #include "LoggerMP.h"

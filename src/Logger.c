@@ -9,7 +9,6 @@ int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 0;
 
-	bool saveMonitor = true;
 	bool saveState = true;
 	bool rotateMonitor = true;
 
@@ -17,7 +16,7 @@ int main(int argc, char *argv[]) {
 	mp_params mpParams = mp_getParams();
 	nmea_params nmeaParams = nmea_getParams();
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-g port] [-n port] [-p port] [-b initial baud] [-m file [-R]| -M] [-s file | -S]\n"
+        char *usage =  "Usage: %1$s [-v] [-q] [-g port] [-n port] [-p port] [-b initial baud] [-m file] [-R] [-s file | -S]\n"
                 "\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
                 "\t-g port\tSpecify GPS port\n"
@@ -26,7 +25,6 @@ int main(int argc, char *argv[]) {
 		"\t-b baud\tGPS initial baud rate\n"
                 "\t-m file\tMonitor file prefix\n"
                 "\t-s file\tState file name. Default derived from GPS port name\n"
-		"\t-M\tDo not use monitor file\n"
 		"\t-S\tDo not use state file\n"
 		"\t-R\tDo not rotate monitor file\n"
                 "\nVersion: " GIT_VERSION_STRING "\n"
@@ -41,7 +39,7 @@ int main(int argc, char *argv[]) {
         opterr = 0; // Handle errors ourselves
         int go = 0;
 	bool doUsage = false;
-        while ((go = getopt (argc, argv, "vqb:g:m:n:p:s:MSRL")) != -1) {
+        while ((go = getopt (argc, argv, "vqb:g:m:n:p:s:SRL")) != -1) {
                 switch(go) {
                         case 'v':
                                 state.verbose++;
@@ -100,9 +98,6 @@ int main(int argc, char *argv[]) {
 			case 'S':
 				saveState = false;
 				break;
-			case 'M':
-				saveMonitor = false;
-				break;
 			case 'R':
 				rotateMonitor = false;
 				break;
@@ -121,11 +116,6 @@ int main(int argc, char *argv[]) {
 	// Check for conflicting options
 	if (stateName && !saveState) {
 		log_error(&state, "-s and -S are mutually exclusive");
-		doUsage = true;
-	}
-
-	if ((monPrefix || !rotateMonitor) && !saveMonitor) {
-		log_error(&state, "-M and -m/-R are mutually exclusive");
 		doUsage = true;
 	}
 
@@ -257,18 +247,16 @@ int main(int argc, char *argv[]) {
 
 	FILE *monitorFile = NULL;
 
-	if (saveMonitor) {
-		errno = 0;
-		monitorFile = openSerialNumberedFile(monPrefix, "dat");
+	errno = 0;
+	monitorFile = openSerialNumberedFile(monPrefix, "dat");
 
-		if (monitorFile == NULL) {
-			if (errno == EEXIST) {
-				log_error(&state, "Unable to open data file - too many files created with this prefix today?");
-			} else {
-				log_error(&state, "Unable to open data file: %s", strerror(errno));
-			}
-			return -1;
+	if (monitorFile == NULL) {
+		if (errno == EEXIST) {
+			log_error(&state, "Unable to open data file - too many files created with this prefix today?");
+		} else {
+			log_error(&state, "Unable to open data file: %s", strerror(errno));
 		}
+		return -1;
 	}
 
 	log_info(&state, 1, "Initialisation complete, starting log threads");
@@ -350,7 +338,7 @@ int main(int argc, char *argv[]) {
 
 		// Periodic jobs that don't need checking/testing every iteration
 		if ((loopCount % 200 == 0)) {
-			if (saveMonitor && rotateMonitor) {
+			if (rotateMonitor) {
 				/*
 				 * During testing of software on the previous project, the time/localtime combination could
 				 * take up a surprising amount of CPU time, so we avoid calling it if we can.
@@ -392,26 +380,23 @@ int main(int argc, char *argv[]) {
 			log_info(&state, 1, "Rotating log files");
 
 			// "Monitor" / main data file rotation
-			if (saveMonitor) {
-				errno = 0;
+			errno = 0;
 
-				FILE *newMonitor = NULL;
-				newMonitor  = openSerialNumberedFile(monPrefix, "dat");
+			FILE *newMonitor = NULL;
+			newMonitor  = openSerialNumberedFile(monPrefix, "dat");
 
-				if (newMonitor == NULL) {
-					// If the error is likely to be too many data files, continue with the old handle.
-					// For all other errors, we exit.
-					if (errno == EEXIST) {
-						log_error(&state, "Unable to open data file - too many files created with this prefix today?");
-					} else {
-						log_error(&state, "Unable to open data file: %s", strerror(errno));
-						return -1;
-					}
+			if (newMonitor == NULL) {
+				// If the error is likely to be too many data files, continue with the old handle.
+				// For all other errors, we exit.
+				if (errno == EEXIST) {
+					log_error(&state, "Unable to open data file - too many files created with this prefix today?");
 				} else {
-					fclose(monitorFile);
-					monitorFile = newMonitor;
+					log_error(&state, "Unable to open data file: %s", strerror(errno));
+					return -1;
 				}
-
+			} else {
+				fclose(monitorFile);
+				monitorFile = newMonitor;
 			}
 
 			// As above, but for the log file
@@ -444,9 +429,7 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		msgCount++;
-		if (saveMonitor) {
-			mp_writeMessage(fileno(monitorFile), res);
-		}
+		mp_writeMessage(fileno(monitorFile), res);
 		msg_destroy(res);
 		free(res);
 	}
@@ -483,13 +466,8 @@ int main(int argc, char *argv[]) {
 		while (queue_count(&log_queue) > 0) {
 			msg_t *res = queue_pop(&log_queue);
 			msgCount++;
-			if (res->dtype == MSG_BYTES) {
-				if (saveMonitor) {
-					fwrite(res->data.bytes, res->length, 1, monitorFile);
-				}
-			} else {
-				log_warning(&state, "Unexpected message type (%d)", res->dtype);
-			}
+			msgCount++;
+			mp_writeMessage(fileno(monitorFile), res);
 			msg_destroy(res);
 			free(res);
 		}

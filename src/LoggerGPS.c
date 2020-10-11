@@ -120,7 +120,7 @@ void *gps_logging(void *ptargs) {
 			// We've already exited (via pthread_exit) for error
 			// cases, so at this point sleep briefly and wait for
 			// more data
-			usleep(5E2);
+			usleep(SERIAL_SLEEP);
 		}
 
 		// Clean up before next iteration

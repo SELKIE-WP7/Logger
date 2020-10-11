@@ -25,6 +25,17 @@
 //! If no output file prefix is specified, this will be used as a default
 #define DEFAULT_MON_PREFIX "@DEFAULT_MON_PREFIX@"
 
+//! Default serial wait time
+
+/*!
+ * If no data, the various reader threads usleep() for a period to give
+ * sensors/devices time to send more data.
+ *
+ * The main logging thread also sleeps when no messages are available, which is
+ * also based on this value.
+ */
+#define SERIAL_SLEEP 1E3
+
 //! Logging thread information
 
 /*!

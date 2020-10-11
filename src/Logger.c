@@ -425,7 +425,7 @@ int main(int argc, char *argv[]) {
 		msg_t *res = queue_pop(&log_queue);
 		if (res == NULL) {
 			// No data waiting, so sleep for a little bit and go back around
-			usleep(1000);
+			usleep(5 * SERIAL_SLEEP);
 			continue;
 		}
 		msgCount++;

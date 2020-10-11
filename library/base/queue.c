@@ -92,47 +92,40 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 		return false;
 	}
 
-	queueitem *qi = queue->tail;
+	queueitem *qi = NULL;
 
-	if (queue->head == NULL) {
-		// Empty queue!
-		bool swapped = false;
-		swapped = __sync_bool_compare_and_swap(&(queue->head), NULL, item);
-		if (swapped) {
-			queue->tail = queue->head;
-			return true;
-		}
-
-		if (queue->tail) {
-			qi = queue->tail;
-			// No return, will fall out of enclosing if and continue with rest of function
-		} else {
-			// Odd scenario. Could attempt to enqueue again, but for now will just fail
-			return false;
-		}
-	}
-
-	if (qi->next) {
-		do {
-			qi = qi->next;
-		} while (qi->next);
-	}
 
 	int attempts = 0;
 	bool swapped = false;
 	while (!swapped && attempts < 100) {
-		if (qi->next) {
-			do {
-				qi = qi->next;
-			} while (qi->next);
-		}
-		swapped = __sync_bool_compare_and_swap(&(qi->next), NULL, item);
-		if (swapped) {
-			// The seek and atomic compare and swap above ensure we only append to the real tail.
-			// If there's no contention, we are still the tail of the queue and this works as planned.
-			// If not, then we're still *near* the end of the queue, which is sufficient for our
-			// purposes as we only ever treat the tail pointer as a hint.
-			queue->tail = item;
+		if (queue->head == NULL) {
+			// Empty queue!
+			swapped = __sync_bool_compare_and_swap(&(queue->head), NULL, item);
+			if (swapped) {
+				queue->tail = queue->head;
+				return true;
+			}
+		} else {
+			if (queue->tail) {
+				qi = queue->tail;
+			} else if (queue->head) {
+				qi = queue->head;
+			}
+
+			if (qi && qi->next) {
+				do {
+					qi = qi->next;
+				} while (qi->next);
+			}
+			swapped = __sync_bool_compare_and_swap(&(qi->next), NULL, item);
+			if (swapped) {
+				// The seek and atomic compare and swap above ensure we only append to the real tail.
+				// If there's no contention, we are still the tail of the queue and this works as planned.
+				// If not, then we're still *near* the end of the queue, which is sufficient for our
+				// purposes as we only ever treat the tail pointer as a hint.
+				queue->tail = item;
+				return true;
+			}
 		}
 		attempts++;
 	}

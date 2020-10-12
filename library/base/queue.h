@@ -7,10 +7,10 @@
 
 //! @file queue.h Queue definition and handling functions
 
-typedef struct queueitem queueitem;
+typedef volatile struct queueitem queueitem;
 
 //! Represent a simple FIFO message queue
-typedef struct {
+struct msgqueue {
 	queueitem *head; //!< Points to first message, or NULL if empty
 
 	/*! @brief Tail entry hint
@@ -22,7 +22,9 @@ typedef struct {
 	queueitem *tail;
 	//! Set in queue_init(), entries will only be added and removed while this remains true
 	bool valid;
-} msgqueue;
+};
+
+typedef volatile struct msgqueue msgqueue;
 
 //! Each queue item is a message and pointer to the next queue entry, if any.
 //! @sa msg_t

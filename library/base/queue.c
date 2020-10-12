@@ -153,7 +153,7 @@ msg_t * queue_pop(msgqueue *queue) {
 
 	if (__sync_bool_compare_and_swap(&(queue->head), head, head->next)) {
 		msg_t * item = head->item;
-		free(head);
+		free((struct queueitem *)head);
 		return item;
 	}
 	// The plan is only to have a single consumer, so this shouldn't ever fail.

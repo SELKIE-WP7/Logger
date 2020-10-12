@@ -115,6 +115,12 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 			if (qi && qi->next) {
 				do {
 					qi = qi->next;
+					if (qi == qi->next) {
+						// So there's a pathological case somewhere that ends up with the queue
+						// item pointing to itself as the next item. Hopefully this is fixed by
+						// explicitly nulling items in _pop, but we will also check explicitly here.
+						qi = queue->tail;
+					}
 				} while (qi->next);
 			}
 			swapped = __sync_bool_compare_and_swap(&(qi->next), NULL, item);
@@ -153,6 +159,11 @@ msg_t * queue_pop(msgqueue *queue) {
 
 	if (__sync_bool_compare_and_swap(&(queue->head), head, head->next)) {
 		msg_t * item = head->item;
+		head->next = NULL;
+		head->item = NULL;
+		if (queue->tail == head) {
+			queue->tail = NULL;
+		}
 		free((struct queueitem *)head);
 		return item;
 	}

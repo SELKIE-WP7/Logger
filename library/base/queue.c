@@ -121,7 +121,7 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 						// explicitly nulling items in _pop, but we will also check explicitly here.
 						qi = queue->tail;
 					}
-				} while (qi->next);
+				} while (qi && qi->next);
 			}
 			if (!qi) {
 				continue;
@@ -155,7 +155,7 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
  */
 msg_t * queue_pop(msgqueue *queue) {
 	queueitem *head = queue->head;
-	if (queue->head == NULL || !queue->valid) {
+	if (head == NULL || !queue->valid) {
 		// Empty or invalid queue
 		return NULL;
 	}

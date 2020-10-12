@@ -324,6 +324,7 @@ bool mp_writeMessage(int handle, const msg_t *out) {
 		case MSG_ERROR:
 		case MSG_UNDEF:
 		default:
+			msgpack_sbuffer_destroy(&sbuf);
 			return false;
 	}
 	int ret = write(handle, sbuf.data, sbuf.size);

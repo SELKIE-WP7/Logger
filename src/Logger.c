@@ -301,12 +301,6 @@ int main(int argc, char *argv[]) {
 
 	for (int tix=0; tix < nThreads; tix++) {
 		if (pthread_create(&(threads[tix]), NULL, ltargs[tix].funcs.logging, &(ltargs[tix])) != 0){
-
-#ifdef _GNU_SOURCE
-			char threadname[16] = {0};
-			snprintf(threadname, 16, "Logger: %s", ltargs[tix].tag);
-			pthread_setname_np(threads[tix], threadname);
-#endif
 			log_error(&state, "Unable to launch %s thread", ltargs[tix].tag);
 			free(gpsParams.portName);
 			free(mpParams.portName);
@@ -316,6 +310,12 @@ int main(int argc, char *argv[]) {
 			free(threads);
 			return EXIT_FAILURE;
 		}
+
+#ifdef _GNU_SOURCE
+		char threadname[16] = {0};
+		snprintf(threadname, 16, "Logger: %s", ltargs[tix].tag);
+		pthread_setname_np(threads[tix], threadname);
+#endif
 	}
 
 	state.started = true;

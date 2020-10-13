@@ -121,9 +121,11 @@ int main(int argc, char *argv[]) {
 
 	if (doUsage) {
 		fprintf(stderr, usage, argv[0]);
-		if (monPrefix) {free(monPrefix);}
-		if (stateName) {free(stateName);}
-		if (gpsParams.portName) {free(gpsParams.portName);}
+		free(gpsParams.portName);
+		free(mpParams.portName);
+		free(nmeaParams.portName);
+		free(monPrefix);
+		free(stateName);
 		return EXIT_FAILURE;
 	}
 
@@ -145,6 +147,8 @@ int main(int argc, char *argv[]) {
 			perror("asprintf");
 			free(tmp);
 			free(gpsParams.portName);
+			free(mpParams.portName);
+			free(nmeaParams.portName);
 			free(monPrefix);
 			return -1;
 		}
@@ -179,6 +183,8 @@ int main(int argc, char *argv[]) {
 			log_error(&state, "Unable to open log file: %s", strerror(errno));
 		}
 		free(gpsParams.portName);
+		free(mpParams.portName);
+		free(nmeaParams.portName);
 		free(monPrefix);
 		free(stateName);
 		return EXIT_FAILURE;
@@ -195,6 +201,11 @@ int main(int argc, char *argv[]) {
 	msgqueue log_queue = {0};
 	if (!queue_init(&log_queue)) {
 		log_error(&state, "Unable to initialise message queue");
+		free(gpsParams.portName);
+		free(mpParams.portName);
+		free(nmeaParams.portName);
+		free(monPrefix);
+		free(stateName);
 		return EXIT_FAILURE;
 	}
 
@@ -215,6 +226,12 @@ int main(int argc, char *argv[]) {
 	ltargs[tix].funcs.startup(&(ltargs[tix]));
 	if (ltargs[tix].returnCode < 0) {
 		log_error(&state, "Unable to set up GPS connection");
+		free(gpsParams.portName);
+		free(mpParams.portName);
+		free(nmeaParams.portName);
+		free(monPrefix);
+		free(stateName);
+		free(threads);
 		return EXIT_FAILURE;
 	}
 	// All done, let next thread be configured
@@ -229,6 +246,12 @@ int main(int argc, char *argv[]) {
 		ltargs[tix].funcs.startup(&(ltargs[tix]));
 		if (ltargs[tix].returnCode < 0) {
 			log_error(&state, "Unable to set up MP connection on %s", mpParams.portName);
+			free(gpsParams.portName);
+			free(mpParams.portName);
+			free(nmeaParams.portName);
+			free(monPrefix);
+			free(stateName);
+			free(threads);
 			return EXIT_FAILURE;
 		}
 		tix++;
@@ -243,6 +266,12 @@ int main(int argc, char *argv[]) {
 		ltargs[tix].funcs.startup(&(ltargs[tix]));
 		if (ltargs[tix].returnCode < 0) {
 			log_error(&state, "Unable to set up NMEA connection on %s", nmeaParams.portName);
+			free(gpsParams.portName);
+			free(mpParams.portName);
+			free(nmeaParams.portName);
+			free(monPrefix);
+			free(stateName);
+			free(threads);
 			return EXIT_FAILURE;
 		}
 		tix++;
@@ -259,6 +288,12 @@ int main(int argc, char *argv[]) {
 		} else {
 			log_error(&state, "Unable to open data file: %s", strerror(errno));
 		}
+		free(gpsParams.portName);
+		free(mpParams.portName);
+		free(nmeaParams.portName);
+		free(monPrefix);
+		free(stateName);
+		free(threads);
 		return -1;
 	}
 
@@ -273,6 +308,12 @@ int main(int argc, char *argv[]) {
 			pthread_setname_np(threads[tix], threadname);
 #endif
 			log_error(&state, "Unable to launch %s thread", ltargs[tix].tag);
+			free(gpsParams.portName);
+			free(mpParams.portName);
+			free(nmeaParams.portName);
+			free(monPrefix);
+			free(stateName);
+			free(threads);
 			return EXIT_FAILURE;
 		}
 	}

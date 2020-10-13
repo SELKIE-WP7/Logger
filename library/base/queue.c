@@ -63,7 +63,16 @@ void queue_destroy(msgqueue *queue) {
 bool queue_push(msgqueue *queue, msg_t *msg) {
 	queueitem *qi = calloc(1, sizeof(queueitem));
 	qi->item = msg;
-	return queue_push_qi(queue, qi);
+	if (queue_push_qi(queue, qi)) {
+		return true;
+	} else {
+		// free() complains about the volatile flag on qi
+		// If we end up in this branch, the item was never queued and
+		// this is the only pointer left to qi, so we're safe to free
+		// it here and the cast keeps the compiler happy.
+		free((struct queueitem *)qi);
+		return false;
+	}
 }
 
 /*!
@@ -167,6 +176,9 @@ msg_t * queue_pop(msgqueue *queue) {
 		if (queue->tail == head) {
 			queue->tail = NULL;
 		}
+		// At this point we should have the only valid pointer to head
+		// ** This is only valid while a single thread is consuming items from the queue **
+		// As with the explanation in queue_pop(), the cast keeps the compiler happy
 		free((struct queueitem *)head);
 		return item;
 	}

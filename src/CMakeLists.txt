@@ -12,9 +12,16 @@ add_executable(Logger Logger.h Logger.c LoggerGPS.h LoggerGPS.c LoggerSignals.c 
 target_link_libraries(Logger PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(Logger PUBLIC SELKIELoggerGPS SELKIELoggerBase SELKIELoggerMP SELKIELoggerNMEA)
 
-
 install(TARGETS Logger RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Logger)
 
 set(CPACK_COMPONENT_LOGGER_GROUP "Applications")
 set(CPACK_COMPONENT_LOGGER_DESCRIPTION "Main data recorder program")
 set(CPACK_COMPONENT_LOGGER_DEPENDS Base GPS NMEA MP)
+
+find_library(I2CTools NAMES i2c REQUIRED)
+add_executable(PowerHatRead PowerHatRead.c)
+target_link_libraries(PowerHatRead PUBLIC ${I2CTools})
+install(TARGETS Logger RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT PowerHat)
+
+set(CPACK_COMPONENT_POWERHAT_GROUP "Applications")
+set(CPACK_COMPONENT_POWERHAT_DESCRIPTION "Read values from an INA219 based ADC Hat")

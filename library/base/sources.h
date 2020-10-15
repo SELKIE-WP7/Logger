@@ -36,6 +36,8 @@
 
 #define SLSOURCE_NMEA	0x30 //!< NMEA Bus
 
+#define SLSOURCE_I2C	0x40 //!< I2C Bus
+
 #define SLSOURCE_IMU	0x70 //!< IMUs (e.g. SURFTEC IMU devices)
 
 //! @}

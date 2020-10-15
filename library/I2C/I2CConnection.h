@@ -5,6 +5,9 @@
 
 //! @file I2CConnection.h General connection functions for I2C bus connected sensors
 
+//! Device specific callback functions
+typedef float (*i2c_dev_read_fn)(const int, const int);
+
 //! Set up a connection to the specified bus
 int i2c_openConnection(const char *bus);
 

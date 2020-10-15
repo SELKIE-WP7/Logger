@@ -8,15 +8,15 @@ find_package(Threads REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} PRIVATE)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} PRIVATE)
 
-add_executable(Logger Logger.h Logger.c LoggerGPS.h LoggerGPS.c LoggerSignals.c LoggerMP.c LoggerNMEA.c)
+add_executable(Logger Logger.h Logger.c LoggerGPS.h LoggerGPS.c LoggerSignals.c LoggerMP.c LoggerNMEA.c LoggerI2C.c)
 target_link_libraries(Logger PUBLIC ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(Logger PUBLIC SELKIELoggerGPS SELKIELoggerBase SELKIELoggerMP SELKIELoggerNMEA)
+target_link_libraries(Logger PUBLIC SELKIELoggerGPS SELKIELoggerBase SELKIELoggerMP SELKIELoggerNMEA SELKIELoggerI2C)
 
 install(TARGETS Logger RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Logger)
 
 set(CPACK_COMPONENT_LOGGER_GROUP "Applications")
 set(CPACK_COMPONENT_LOGGER_DESCRIPTION "Main data recorder program")
-set(CPACK_COMPONENT_LOGGER_DEPENDS Base GPS NMEA MP)
+set(CPACK_COMPONENT_LOGGER_DEPENDS Base GPS NMEA MP I2C)
 
 add_executable(PowerHatRead PowerHatRead.c)
 target_link_libraries(PowerHatRead PUBLIC SELKIELoggerI2C)

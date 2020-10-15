@@ -1,7 +1,11 @@
 list(APPEND SL_Base_SRC logging.c messages.c queue.c serial.c strarray.c)
 list(APPEND SL_Base_INC logging.h messages.h queue.h serial.h sources.h strarray.h)
 
+find_package(Threads REQUIRED)
+
 add_library(SELKIELoggerBase ${SL_Base_SRC})
+target_link_libraries(SELKIELoggerBase PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+
 set_target_properties(SELKIELoggerBase PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(SELKIELoggerBase PROPERTIES SONAME 1)
 

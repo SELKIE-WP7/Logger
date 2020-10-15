@@ -2,29 +2,27 @@
 #define SELKIELoggerBase_Queue
 
 #include <stdbool.h>
+#include <pthread.h>
 
 #include "messages.h"
 
 //! @file queue.h Queue definition and handling functions
 
-typedef volatile struct queueitem queueitem;
+typedef struct queueitem queueitem;
 
 //! Represent a simple FIFO message queue
 struct msgqueue {
 	queueitem *head; //!< Points to first message, or NULL if empty
 
-	/*! @brief Tail entry hint
-	 *
-	 * Not guaranteed to be the last entry if the queue is highly
-	 * contended, but should save time compared to iterating from the head
-	 * on every insert.
-	 */
+	//! @brief Tail entry hint
 	queueitem *tail;
+	//! Queue lock
+	pthread_mutex_t lock;
 	//! Set in queue_init(), entries will only be added and removed while this remains true
 	bool valid;
 };
 
-typedef volatile struct msgqueue msgqueue;
+typedef struct msgqueue msgqueue;
 
 //! Each queue item is a message and pointer to the next queue entry, if any.
 //! @sa msg_t

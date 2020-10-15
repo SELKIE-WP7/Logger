@@ -18,7 +18,7 @@ bool queue_init(msgqueue *queue) {
 	}
 	queue->head = NULL;
 	queue->tail = NULL;
-	// Make atomic
+	pthread_mutex_init(&(queue->lock), NULL);
 	queue->valid = true;
 	return queue->valid;
 }
@@ -32,8 +32,8 @@ bool queue_init(msgqueue *queue) {
  * @return True on success, false otherwise
  */
 void queue_destroy(msgqueue *queue) {
-	// Make atomic
 	queue->valid = false;
+	pthread_mutex_lock(&(queue->lock));
 	if (queue->head == NULL) {
 		// Queue is empty
 		// Tail should already be null, but set it just in case
@@ -50,6 +50,8 @@ void queue_destroy(msgqueue *queue) {
 	}
 	queue->head = NULL;
 	queue->tail = NULL;
+	pthread_mutex_unlock(&(queue->lock));
+	pthread_mutex_destroy(&(queue->lock));
 }
 
 /*!
@@ -78,15 +80,6 @@ bool queue_push(msgqueue *queue, msg_t *msg) {
 /*!
  * Will not append to an invalid queue.
  *
- * For a valid but empty queue, only a single attempt is made to make our item the head.
- *
- * For a valid but not empty queue, up to 100 attempts are made to append our
- * item to the end of the list.  The append operation (or insertion of an item
- * as the queue head) are atomic, using __sync_bool_compare_and_swap()
- *
- * If the queue is heavily contended, the tail pointer might not track the
- * final entry in the queue, but will be close to it.
- *
  * Once pushed to the queue, the queue owns the message embedded in `item` and
  * the caller should not destroy or free it. That will be handled in
  * queue_destroy() or the function responsible for consuming items out of the
@@ -103,51 +96,26 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 
 	queueitem *qi = NULL;
 
-
-	int attempts = 0;
-	bool swapped = false;
-	while (!swapped && attempts < 100) {
-		if (queue->head == NULL) {
-			// Empty queue!
-			swapped = __sync_bool_compare_and_swap(&(queue->head), NULL, item);
-			if (swapped) {
-				queue->tail = queue->head;
-				return true;
-			}
-		} else {
-			if (queue->tail) {
-				qi = queue->tail;
-			} else if (queue->head) {
-				qi = queue->head;
-			}
-
-			if (qi && qi->next) {
-				do {
-					qi = qi->next;
-					if (qi && qi == qi->next) {
-						// So there's a pathological case somewhere that ends up with the queue
-						// item pointing to itself as the next item. Hopefully this is fixed by
-						// explicitly nulling items in _pop, but we will also check explicitly here.
-						qi = queue->tail;
-					}
-				} while (qi && qi->next);
-			}
-			if (!qi) {
-				continue;
-			}
-			swapped = __sync_bool_compare_and_swap(&(qi->next), NULL, item);
-			if (swapped) {
-				// The seek and atomic compare and swap above ensure we only append to the real tail.
-				// If there's no contention, we are still the tail of the queue and this works as planned.
-				// If not, then we're still *near* the end of the queue, which is sufficient for our
-				// purposes as we only ever treat the tail pointer as a hint.
-				queue->tail = item;
-				return true;
-			}
-		}
-		attempts++;
+	pthread_mutex_lock(&(queue->lock));
+	if (queue->head == NULL) {
+		queue->head = item;
+		queue->tail = item;
+		pthread_mutex_unlock(&(queue->lock));
+		return true;
 	}
-	return swapped;
+
+	qi = queue->tail;
+	if (qi) {
+		if (qi->next) {
+			do {
+				qi = qi->next;
+			} while (qi->next);
+		}
+		qi->next = item;
+	}
+	queue->tail = item;
+	pthread_mutex_unlock(&(queue->lock));
+	return true;
 }
 
 /*!
@@ -169,22 +137,21 @@ msg_t * queue_pop(msgqueue *queue) {
 		return NULL;
 	}
 
-	if (__sync_bool_compare_and_swap(&(queue->head), head, head->next)) {
-		msg_t * item = head->item;
-		head->next = NULL;
-		head->item = NULL;
-		if (queue->tail == head) {
-			queue->tail = NULL;
-		}
-		// At this point we should have the only valid pointer to head
-		// ** This is only valid while a single thread is consuming items from the queue **
-		// As with the explanation in queue_pop(), the cast keeps the compiler happy
-		free((struct queueitem *)head);
-		return item;
+	pthread_mutex_lock(&(queue->lock));
+	msg_t * item = head->item;
+	queue->head = head->next;
+
+	head->next = NULL;
+	head->item = NULL;
+	if (queue->tail == head) {
+		queue->tail = NULL;
 	}
-	// The plan is only to have a single consumer, so this shouldn't ever fail.
-	// If it does, something odd is going on and best to leave things alone rather than retry!
-	return NULL;
+	pthread_mutex_unlock(&(queue->lock));
+	// At this point we should have the only valid pointer to head
+	// ** This is only valid while a single thread is consuming items from the queue **
+	// As with the explanation in queue_pop(), the cast keeps the compiler happy
+	free((struct queueitem *)head);
+	return item;
 }
 
 /*!

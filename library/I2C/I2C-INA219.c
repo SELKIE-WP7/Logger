@@ -164,10 +164,10 @@ float i2c_ina219_read_current(const int busHandle, const int devAddr) {
 	uint16_t sres = i2c_swapbytes(res);
 	float current = 0;
 	if ((sres & 0x8000)) {
-		uint16_t t = ~(sres & 0x7FFF) - 1;
-		current = t * 1E-3;
+		uint16_t t = ~(sres & 0x7FFF) + 1;
+		current = t * 1E-4;
 	} else {
-		current = (sres & 0x7FFF) * 1E-3;
+		current = (sres & 0x7FFF) * 1E-4;
 	}
 	return current;
 }

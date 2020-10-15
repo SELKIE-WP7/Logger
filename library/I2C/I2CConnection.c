@@ -39,5 +39,6 @@ void i2c_closeConnection(int handle) {
  * @return Input, with byte order reversed
  */
 int16_t i2c_swapbytes(const int16_t in) {
-	return ((int16_t) ((in >> 8) + ((in & 0xFF) << 8)));
+	uint16_t tmp = in;
+	return (int16_t) ((tmp >> 8) + ((tmp & 0xFF) << 8));
 }

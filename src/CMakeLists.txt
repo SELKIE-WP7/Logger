@@ -18,9 +18,8 @@ set(CPACK_COMPONENT_LOGGER_GROUP "Applications")
 set(CPACK_COMPONENT_LOGGER_DESCRIPTION "Main data recorder program")
 set(CPACK_COMPONENT_LOGGER_DEPENDS Base GPS NMEA MP)
 
-find_library(I2CTools NAMES i2c REQUIRED)
 add_executable(PowerHatRead PowerHatRead.c)
-target_link_libraries(PowerHatRead PUBLIC ${I2CTools})
+target_link_libraries(PowerHatRead PUBLIC SELKIELoggerI2C)
 install(TARGETS Logger RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT PowerHat)
 
 set(CPACK_COMPONENT_POWERHAT_GROUP "Applications")

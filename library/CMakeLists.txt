@@ -8,6 +8,7 @@ add_subdirectory(base)
 add_subdirectory(GPS)
 add_subdirectory(MP)
 add_subdirectory(NMEA)
+add_subdirectory(I2C)
 
 set(CPACK_COMPONENT_GROUP_LIBRARIES_DESCRIPTION "SELKIELogger Libraries")
 set(CPACK_COMPONENT_GROUP_HEADERS_DESCRIPTION "SELKIELogger Headers (for development)")

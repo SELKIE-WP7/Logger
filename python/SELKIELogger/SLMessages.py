@@ -129,7 +129,7 @@ class SLMessageSink:
         """Pretty print a message"""
         return f"{self.SourceName(msg.SourceID)}\t{self.ChannelName(msg.SourceID, msg.ChannelID)}\t{msg.Data}"
 
-    def Process(self, message, output="dict"):
+    def Process(self, message, output="dict", allMessages=False):
         """ Process an incoming message
 
         Accepts a SLMessage or bytes that can be unpacked.
@@ -152,22 +152,30 @@ class SLMessageSink:
         if not message.SourceID in self.Sources:
             self.Sources[message.SourceID] = {'name': f'[{message.SourceID:02x}]', 'channels': ["Name", "Channels", "Timestamp"], 'lastTimestamp': 0}
 
+        suppressOutput = False
         if message.ChannelID == 0:
             self._log.debug(f"New name for {self.SourceName(message.SourceID)}: {message.Data}")
             self.Sources[message.SourceID]['name'] = message.Data
+            suppressOutput = True
         elif message.ChannelID == 1:
             self._log.debug(f"New channels for {self.SourceName(message.SourceID)}: {message.Data}")
             self.Sources[message.SourceID]['channels'] = message.Data
+            suppressOutput = True
         elif message.ChannelID == 2:
             self._log.debug(f"New update time for {self.SourceName(message.SourceID)}: {message.Data}")
             self.Sources[message.SourceID]['lastTimestamp'] = message.Data
+            suppressOutput = True
         elif message.ChannelID == 125:
             self._msglog.info(self.FormatMessage(message))
+            suppressOutput = True
         elif message.ChannelID == 126:
             self._msglog.warning(self.FormatMessage(message))
+            suppressOutput = True
         elif message.ChannelID == 127:
             self._msglog.error(self.FormatMessage(message))
-        else:
+            suppressOutput = True
+
+        if allMessages or (not suppressOutput):
             if output == "dict":
                 return {
                         'sourceID': message.SourceID, 'sourceName': self.SourceName(message.SourceID),

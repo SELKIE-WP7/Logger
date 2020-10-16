@@ -87,6 +87,18 @@ void *gps_logging(void *ptargs) {
 			uint8_t *data = NULL;
 			ssize_t len = ubx_flat_array(&out, &data);
 
+			if (out.msgClass == UBXNAV && out.msgID == 0x21) {
+				// Extract GPS ToW
+				uint32_t ts = out.data[3] + (out.data[2] << 8) + (out.data[1] << 16) + (out.data[2] << 24);
+				msg_t *utc = msg_new_timestamp(gpsInfo->sourceNum, SLCHAN_TSTAMP, ts);
+				if (!queue_push(args->logQ, utc)) {
+					log_error(args->pstate, "[GPS:%s] Error pushing message to queue", gpsInfo->portName);
+					msg_destroy(utc);
+					args->returnCode = -1;
+					pthread_exit(&(args->returnCode));
+				}
+			}
+			// This will also push the raw NAV-TIMEUTC message used for the timestamp above, so we can extract the UBX data later
 			msg_t *sm = msg_new_bytes(gpsInfo->sourceNum, 3, len, data);
 			if (!queue_push(args->logQ, sm)) {
 				log_error(args->pstate, "[GPS:%s] Error pushing message to queue", gpsInfo->portName);
@@ -162,7 +174,7 @@ void *gps_channels(void *ptargs) {
 		args->returnCode = -1;
 		pthread_exit(&(args->returnCode));
 	}
-	
+
 	strarray *channels = sa_new(4);
 	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
 	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");

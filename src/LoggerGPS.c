@@ -154,6 +154,15 @@ void *gps_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	gps_params *gpsInfo = (gps_params *) args->dParams;
 
+	msg_t *m_sn = msg_new_string(gpsInfo->sourceNum, SLCHAN_NAME, strlen(args->tag), args->tag);
+
+	if (!queue_push(args->logQ, m_sn)) {
+		log_error(args->pstate, "[GPS:%s] Error pushing channel name to queue", gpsInfo->portName);
+		msg_destroy(m_sn);
+		args->returnCode = -1;
+		pthread_exit(&(args->returnCode));
+	}
+	
 	strarray *channels = sa_new(4);
 	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
 	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");

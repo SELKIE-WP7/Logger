@@ -117,6 +117,16 @@ void *i2c_shutdown(void *ptargs) {
 void *i2c_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	i2c_params *i2cInfo = (i2c_params *) args->dParams;
+
+	msg_t *m_sn = msg_new_string(i2cInfo->sourceNum, SLCHAN_NAME, strlen(args->tag), args->tag);
+
+	if (!queue_push(args->logQ, m_sn)) {
+		log_error(args->pstate, "[I2C:%s] Error pushing channel name to queue", i2cInfo->busName);
+		msg_destroy(m_sn);
+		args->returnCode = -1;
+		pthread_exit(&(args->returnCode));
+	}
+
 	uint8_t maxID = 3;
 	for (int i=0; i < i2cInfo->en_count; i++) {
 		if (i2cInfo->chanmap[i].messageID > maxID) {

@@ -298,6 +298,7 @@ bool mp_writeMessage(int handle, const msg_t *out) {
 	msgpack_pack_int(&pack, MP_SYNC_BYTE2);
 	msgpack_pack_int(&pack, out->source);
 	msgpack_pack_int(&pack, out->type);
+	size_t sl = 0;
 	switch (out->dtype) {
 		case MSG_FLOAT:
 			msgpack_pack_float(&pack, out->data.value);
@@ -313,8 +314,12 @@ bool mp_writeMessage(int handle, const msg_t *out) {
 			break;
 
 		case MSG_STRING:
-			msgpack_pack_str(&pack, out->data.string.length);
-			msgpack_pack_str_body(&pack, out->data.string.data, out->data.string.length);
+			sl = out->data.string.length;
+			if (strlen(out->data.string.data) < sl) {
+				sl = strlen(out->data.string.data);
+			}
+			msgpack_pack_str(&pack, sl);
+			msgpack_pack_str_body(&pack, out->data.string.data, sl);
 			break;
 
 		case MSG_STRARRAY:
@@ -344,8 +349,12 @@ void mp_pack_strarray(msgpack_packer *pack, const strarray *sa) {
 	msgpack_pack_array(pack, sa->entries);
 	for (int ix = 0; ix < sa->entries; ix++) {
 		string *s = &(sa->strings[ix]);
-		msgpack_pack_str(pack, s->length);
-		msgpack_pack_str_body(pack, s->data, s->length);
+		size_t sl = s->length;
+		if (strlen(s->data) < sl) {
+			sl = strlen(s->data);
+		}
+		msgpack_pack_str(pack, sl);
+		msgpack_pack_str_body(pack, s->data, sl);
 	}
 }
 

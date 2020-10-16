@@ -40,7 +40,7 @@ class SLMessage:
         return self.pack()
 
     def __str__(self):
-        return f"{self.SourceID:02x}:{self.ChannelID:02x}\t{str(self.Data)}"
+        return f"{self.SourceID:02x}\t{self.ChannelID:02x}\t{str(self.Data)}"
 
 class SLMessageSource:
     """Software source of messages"""
@@ -127,7 +127,7 @@ class SLMessageSink:
 
     def FormatMessage(self, msg):
         """Pretty print a message"""
-        return f"{self.SourceName(msg.SourceID)}:{self.ChannelName(msg.SourceID, msg.ChannelID)}:{msg.Data}"
+        return f"{self.SourceName(msg.SourceID)}\t{self.ChannelName(msg.SourceID, msg.ChannelID)}\t{msg.Data}"
 
     def Process(self, message, output="dict"):
         """ Process an incoming message

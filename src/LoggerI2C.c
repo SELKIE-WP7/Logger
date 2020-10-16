@@ -6,13 +6,18 @@ void *i2c_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	i2c_params *i2cInfo = (i2c_params *) args->dParams;
 
+	if (!i2c_validate_chanmap(i2cInfo)) {
+		log_error(args->pstate, "[I2C:%s] Invalid channel map", i2cInfo->busName);
+		args->returnCode = -2;
+		return NULL;
+	} 
+
 	i2cInfo->handle = i2c_openConnection(i2cInfo->busName);
 	if (i2cInfo->handle < 0) {
 		log_error(args->pstate, "[I2C:%s] Unable to open a connection", i2cInfo->busName);
 		args->returnCode = -1;
 		return NULL;
 	}
-
 	log_info(args->pstate, 2, "[I2C:%s] Connected", i2cInfo->busName);
 	args->returnCode = 0;
 	return NULL;
@@ -218,7 +223,7 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 	if (baseID < 4 || baseID > 121) {
 		return false;
 	}
-	i2c_msg_map *tmp = realloc(ip->chanmap, ip->en_count + 3);
+	i2c_msg_map *tmp = realloc(ip->chanmap, sizeof(i2c_msg_map) * (ip->en_count + 3));
 	if (!tmp) {
 		return false;
 	}
@@ -237,7 +242,7 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 	ip->en_count++;
 
 	snprintf(tmpS, 16, "0x%02x:BusVoltage", devAddr);
-	ip->chanmap[ip->en_count].messageID = baseID;
+	ip->chanmap[ip->en_count].messageID = baseID+1;
 	ip->chanmap[ip->en_count].message_name.length = 0;
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 16, tmpS);
@@ -246,7 +251,7 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 	ip->en_count++;
 
 	snprintf(tmpS, 16, "0x%02x:BusCurrent", devAddr);
-	ip->chanmap[ip->en_count].messageID = baseID;
+	ip->chanmap[ip->en_count].messageID = baseID+2;
 	ip->chanmap[ip->en_count].message_name.length = 0;
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 16, tmpS);

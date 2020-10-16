@@ -37,10 +37,12 @@ void *gps_setup(void *ptargs) {
 		sleep(3); // This one *is* necessary, as enabling Galileo can require a GNSS reset
 		msgSuccess &= ubx_setNavigationRate(gpsInfo->handle, 500, 1); // 500ms Update rate, new output each time
 		usleep(5E3);
+		msgSuccess &= ubx_setI2CAddress(gpsInfo->handle, 0x0a);
+		usleep(5E3);
 		log_info(args->pstate, 2, "[GPS:%s] Configuring message rates", gpsInfo->portName);
 		msgSuccess &= ubx_setMessageRate(gpsInfo->handle, 0x01, 0x07, 1); // NAV-PVT on every update
 		usleep(5E3);
-		msgSuccess &= ubx_setMessageRate(gpsInfo->handle, 0x01, 0x35, 1); // NAV-SAT on every update
+		msgSuccess &= ubx_setMessageRate(gpsInfo->handle, 0x01, 0x35, 120); // NAV-SAT on every 100th update
 		usleep(5E3);
 		msgSuccess &= ubx_setMessageRate(gpsInfo->handle, 0x01, 0x21, 1); // NAV-TIMEUTC on every update
 		usleep(5E3);

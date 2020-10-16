@@ -28,5 +28,8 @@ bool ubx_enableLogMessages(const int handle);
 
 //! Disable log/information messages from GPS device
 bool ubx_disableLogMessages(const int handle);
+
+//! Set I2C address
+bool ubx_setI2CAddress(const int handle, const uint8_t addr);
 #endif
 

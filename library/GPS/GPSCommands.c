@@ -178,3 +178,29 @@ bool ubx_disableLogMessages(const int handle) {
 	ubx_set_checksum(&disableInf);
 	return ubx_writeMessage(handle, &disableInf);
 }
+
+/*!
+ * Set I2C address for this GPS module
+ *
+ * @param[in] handle File descriptor to write command to
+ * @param[in] addr New I2C address
+ * @return Status of ubx_writeMessage()
+ */
+bool ubx_setI2CAddress(const int handle, const uint8_t addr) {
+	ubx_message setI2C = {
+		0xB5, 0x62, 0x06, 0x00, // Header, CFG-INF
+		0x0014, // 20 bytes
+		{
+			0x00, //I2C/DDC
+			0x00, //Reserved
+			0x00, 0x00, //TXReady (disabled)
+			(addr << 1), 0x00, 0x00, 0x00, // Mode
+			0x00, 0x00, //Reserved
+			0x01, // UBX Only input
+			0x01, // UBX Only output
+			0x00, 0x00, 0x00, 0x00, // Flags, reserved
+		},
+		0xFF, 0xFF}; // Checksum to be set below
+	ubx_set_checksum(&setI2C);
+	return ubx_writeMessage(handle, &setI2C);
+}

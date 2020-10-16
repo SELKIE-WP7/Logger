@@ -28,6 +28,9 @@ void *gps_logging(void *ptargs);
 //! GPS Shutdown
 void *gps_shutdown(void *ptargs);
 
+//! GPS Channel map
+void *gps_channels(void *ptargs);
+
 //! Fill out device callback functions for logging
 device_callbacks gps_getCallbacks();
 

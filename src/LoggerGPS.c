@@ -147,11 +147,41 @@ void *gps_shutdown(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * Populate list of channels and push to queue as a map message
+ */
+void *gps_channels(void *ptargs) {
+	log_thread_args_t *args = (log_thread_args_t *) ptargs;
+	gps_params *gpsInfo = (gps_params *) args->dParams;
+
+	strarray *channels = sa_new(4);
+	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
+	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");
+	sa_create_entry(channels, SLCHAN_TSTAMP, 9, "Timestamp");
+	sa_create_entry(channels, SLCHAN_RAW, 7, "Raw UBX");
+
+	msg_t *m_cmap = msg_new_string_array(gpsInfo->sourceNum, SLCHAN_MAP, channels);
+
+	if (!queue_push(args->logQ, m_cmap)) {
+		log_error(args->pstate, "[GPS:%s] Error pushing channel map to queue", gpsInfo->portName);
+		msg_destroy(m_cmap);
+		sa_destroy(channels);
+		free(channels);
+		args->returnCode = -1;
+		pthread_exit(&(args->returnCode));
+	}
+
+	sa_destroy(channels);
+	free(channels);
+	return NULL;
+}
+
 device_callbacks gps_getCallbacks() {
 	device_callbacks cb = {
 		.startup = &gps_setup,
 		.logging = &gps_logging,
-		.shutdown = &gps_shutdown
+		.shutdown = &gps_shutdown,
+		.channels = &gps_channels
 	};
 	return cb;
 }

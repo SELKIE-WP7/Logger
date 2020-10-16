@@ -107,11 +107,41 @@ void *nmea_shutdown(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * Populate list of channels and push to queue as a map message
+ */
+void *nmea_channels(void *ptargs) {
+	log_thread_args_t *args = (log_thread_args_t *) ptargs;
+	nmea_params *nmeaInfo = (nmea_params *) args->dParams;
+
+	strarray *channels = sa_new(4);
+	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
+	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");
+	sa_create_entry(channels, SLCHAN_TSTAMP, 9, "Timestamp");
+	sa_create_entry(channels, SLCHAN_RAW, 8, "Raw NMEA");
+
+	msg_t *m_cmap = msg_new_string_array(nmeaInfo->sourceNum, SLCHAN_MAP, channels);
+
+	if (!queue_push(args->logQ, m_cmap)) {
+		log_error(args->pstate, "[NMEA:%s] Error pushing channel map to queue", nmeaInfo->portName);
+		msg_destroy(m_cmap);
+		sa_destroy(channels);
+		free(channels);
+		args->returnCode = -1;
+		pthread_exit(&(args->returnCode));
+	}
+
+	sa_destroy(channels);
+	free(channels);
+	return NULL;
+}
+
 device_callbacks nmea_getCallbacks() {
 	device_callbacks cb = {
 		.startup = &nmea_setup,
 		.logging = &nmea_logging,
-		.shutdown = &nmea_shutdown
+		.shutdown = &nmea_shutdown,
+		.channels = &nmea_channels
 	};
 	return cb;
 }

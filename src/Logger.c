@@ -362,6 +362,9 @@ int main(int argc, char *argv[]) {
 		snprintf(threadname, 16, "Logger: %s", ltargs[tix].tag);
 		pthread_setname_np(threads[tix], threadname);
 #endif
+		if (ltargs[tix].funcs.channels) {
+			ltargs[tix].funcs.channels(&ltargs[tix]);
+		}
 	}
 
 	state.started = true;
@@ -497,6 +500,12 @@ int main(int argc, char *argv[]) {
 				fclose(oldLog);
 			}
 
+			// Re-request channel names for the new files
+			for (int tix=0; tix < nThreads; tix++) {
+				if (ltargs[tix].funcs.channels) {
+					ltargs[tix].funcs.channels(&ltargs[tix]);
+				}
+			}
 			log_info(&state, 0, "%d messages read successfully - resetting count", msgCount);
 			msgCount = 0;
 			mon_yday = mon_nextyday;

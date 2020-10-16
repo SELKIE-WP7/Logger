@@ -106,11 +106,49 @@ void *i2c_shutdown(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * Populate list of channels and push to queue as a map message
+ */
+void *i2c_channels(void *ptargs) {
+	log_thread_args_t *args = (log_thread_args_t *) ptargs;
+	i2c_params *i2cInfo = (i2c_params *) args->dParams;
+	uint8_t maxID = 3;
+	for (int i=0; i < i2cInfo->en_count; i++) {
+		if (i2cInfo->chanmap[i].messageID > maxID) {
+			maxID = i2cInfo->chanmap[i].messageID;
+		}
+	}
+	strarray *channels = sa_new(maxID+1);
+	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
+	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");
+	sa_create_entry(channels, SLCHAN_TSTAMP, 9, "Timestamp");
+
+	for (int i=0; i < i2cInfo->en_count; i++) {
+		sa_set_entry(channels, i2cInfo->chanmap[i].messageID, &(i2cInfo->chanmap[i].message_name));
+	}
+
+	msg_t *m_cmap = msg_new_string_array(i2cInfo->sourceNum, SLCHAN_MAP, channels);
+
+	if (!queue_push(args->logQ, m_cmap)) {
+		log_error(args->pstate, "[I2C:%s] Error pushing channel map to queue", i2cInfo->busName);
+		msg_destroy(m_cmap);
+		sa_destroy(channels);
+		free(channels);
+		args->returnCode = -1;
+		pthread_exit(&(args->returnCode));
+	}
+
+	sa_destroy(channels);
+	free(channels);
+	return NULL;
+}
+
 device_callbacks i2c_getCallbacks() {
 	device_callbacks cb = {
 		.startup = &i2c_setup,
 		.logging = &i2c_logging,
-		.shutdown = &i2c_shutdown
+		.shutdown = &i2c_shutdown,
+		.channels = &i2c_channels
 	};
 	return cb;
 }

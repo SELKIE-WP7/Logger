@@ -45,6 +45,7 @@ typedef struct {
 	device_fn startup;  //!< Called serially at startup, opens devices etc.
 	device_fn logging;  //!< Main logging thread, passed to pthread_create()
 	device_fn shutdown; //!< Called on shutdown - close handles etc.
+	device_fn channels; //!< Send a current channel map to the queue (optional)
 } device_callbacks;
 
 //! Logging thread information

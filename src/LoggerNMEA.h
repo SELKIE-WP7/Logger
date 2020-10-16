@@ -28,6 +28,9 @@ void *nmea_logging(void *ptargs);
 //! NMEA Shutdown
 void *nmea_shutdown(void *ptargs);
 
+//! NMEA Channel map
+void *nmea_channels(void *ptargs);
+
 //! Fill out device callback functions for logging
 device_callbacks nmea_getCallbacks();
 

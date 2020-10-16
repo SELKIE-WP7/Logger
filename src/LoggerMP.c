@@ -91,7 +91,8 @@ device_callbacks mp_getCallbacks() {
 	device_callbacks cb = {
 		.startup = &mp_setup,
 		.logging = &mp_logging,
-		.shutdown = &mp_shutdown
+		.shutdown = &mp_shutdown,
+		.channels = NULL
 	};
 	return cb;
 }

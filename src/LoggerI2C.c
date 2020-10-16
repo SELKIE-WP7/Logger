@@ -190,6 +190,9 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 
 	snprintf(tmpS, 18, "0x%02x:ShuntVoltage", devAddr);
 	ip->chanmap[ip->en_count].messageID = baseID;
+	// Memory was allocated with malloc, so make sure we initialise these values
+	ip->chanmap[ip->en_count].message_name.length = 0; 
+	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 18, tmpS);
 	ip->chanmap[ip->en_count].deviceAddr = devAddr;
 	ip->chanmap[ip->en_count].func = &i2c_ina219_read_shuntVoltage;
@@ -197,6 +200,8 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 
 	snprintf(tmpS, 16, "0x%02x:BusVoltage", devAddr);
 	ip->chanmap[ip->en_count].messageID = baseID;
+	ip->chanmap[ip->en_count].message_name.length = 0;
+	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 16, tmpS);
 	ip->chanmap[ip->en_count].deviceAddr = devAddr;
 	ip->chanmap[ip->en_count].func = &i2c_ina219_read_busVoltage;
@@ -204,6 +209,8 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 
 	snprintf(tmpS, 16, "0x%02x:BusCurrent", devAddr);
 	ip->chanmap[ip->en_count].messageID = baseID;
+	ip->chanmap[ip->en_count].message_name.length = 0;
+	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 16, tmpS);
 	ip->chanmap[ip->en_count].deviceAddr = devAddr;
 	ip->chanmap[ip->en_count].func = &i2c_ina219_read_current;

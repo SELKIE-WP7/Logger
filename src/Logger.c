@@ -457,7 +457,7 @@ int main(int argc, char *argv[]) {
 			 * automatic rotation is disabled.
 			 */
 
-			log_info(&state, 1, "Rotating log files");
+			log_info(&state, 0, "Rotating log files");
 
 			// "Monitor" / main data file rotation
 			errno = 0;
@@ -497,6 +497,8 @@ int main(int argc, char *argv[]) {
 				fclose(oldLog);
 			}
 
+			log_info(&state, 0, "%d messages read successfully - resetting count", msgCount);
+			msgCount = 0;
 			mon_yday = mon_nextyday;
 			rotateNow = false;
 		}

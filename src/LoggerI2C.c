@@ -126,3 +126,88 @@ i2c_params i2c_getParams() {
 	};
 	return i2c;
 }
+
+/*!
+ * Ensures that the only one message is set for each channel, that no reserved
+ * channels are used and that device addresses and read functions are set.
+ */
+bool i2c_validate_chanmap(i2c_params *ip) {
+	i2c_msg_map *cmap = ip->chanmap;
+	bool seen[128] = {0};
+	if (!cmap) {
+		return false;
+	}
+	// Reserved channels
+	seen[SLCHAN_NAME] = true;
+	seen[SLCHAN_MAP] = true;
+	seen[SLCHAN_TSTAMP] = true;
+	seen[SLCHAN_RAW] = true;
+	seen[SLCHAN_LOG_INFO] = true;
+	seen[SLCHAN_LOG_WARN] = true;
+	seen[SLCHAN_LOG_ERR] = true;
+
+	for (int i=0; i < ip->en_count; i++) {
+		if (seen[ip->chanmap[i].messageID]) {
+			return false;
+		}
+		seen[ip->chanmap[i].messageID] = true;
+		if (!ip->chanmap[i].func) {
+			return false;
+		}
+		if (!ip->chanmap[i].deviceAddr) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/*!
+ * Adds three entries to the channel map for a specified INA219 device
+ *
+ * - `baseID`: Shunt Voltage [mV]
+ * - `baseID+1`: Bus Voltage [V]
+ * - `baseID+2`: Bus Current [A]
+ *
+ * @param[in] ip i2c_params structure to modify
+ * @param[in] devAddr INA219 Device Address
+ * @param[in] baseID Message ID for first message type (Shunt Voltage)
+ * @return True on success, false otherwise
+ */
+bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID) {
+	if (!ip) {
+		return false;
+	}
+	if (baseID < 4 || baseID > 121) {
+		return false;
+	}
+	i2c_msg_map *tmp = realloc(ip->chanmap, ip->en_count + 3);
+	if (!tmp) {
+		return false;
+	}
+	ip->chanmap = tmp;
+
+	char tmpS[50] = {0};
+
+	snprintf(tmpS, 18, "0x%02x:ShuntVoltage", devAddr);
+	ip->chanmap[ip->en_count].messageID = baseID;
+	str_update(&(ip->chanmap[ip->en_count].message_name), 18, tmpS);
+	ip->chanmap[ip->en_count].deviceAddr = devAddr;
+	ip->chanmap[ip->en_count].func = &i2c_ina219_read_shuntVoltage;
+	ip->en_count++;
+
+	snprintf(tmpS, 16, "0x%02x:BusVoltage", devAddr);
+	ip->chanmap[ip->en_count].messageID = baseID;
+	str_update(&(ip->chanmap[ip->en_count].message_name), 16, tmpS);
+	ip->chanmap[ip->en_count].deviceAddr = devAddr;
+	ip->chanmap[ip->en_count].func = &i2c_ina219_read_busVoltage;
+	ip->en_count++;
+
+	snprintf(tmpS, 16, "0x%02x:BusCurrent", devAddr);
+	ip->chanmap[ip->en_count].messageID = baseID;
+	str_update(&(ip->chanmap[ip->en_count].message_name), 16, tmpS);
+	ip->chanmap[ip->en_count].deviceAddr = devAddr;
+	ip->chanmap[ip->en_count].func = &i2c_ina219_read_current;
+	ip->en_count++;
+
+	return true;
+}

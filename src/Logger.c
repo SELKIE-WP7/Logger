@@ -15,14 +15,16 @@ int main(int argc, char *argv[]) {
 	gps_params gpsParams = gps_getParams();
 	mp_params mpParams = mp_getParams();
 	nmea_params nmeaParams = nmea_getParams();
+	i2c_params i2cParams = i2c_getParams();
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-g port] [-n port] [-p port] [-b initial baud] [-m file] [-R] [-s file | -S]\n"
+        char *usage =  "Usage: %1$s [-v] [-q] [-g port] [-n port] [-p port] [-i port] [-b initial baud] [-m file] [-R] [-s file | -S]\n"
                 "\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
                 "\t-g port\tSpecify GPS port\n"
 		"\t-n port\tNMEA source port\n"
 		"\t-p port\tMP source port\n"
 		"\t-b baud\tGPS initial baud rate\n"
+		"\t-i port\tI2C Bus\n"
                 "\t-m file\tMonitor file prefix\n"
                 "\t-s file\tState file name. Default derived from GPS port name\n"
 		"\t-S\tDo not use state file\n"
@@ -39,7 +41,7 @@ int main(int argc, char *argv[]) {
         opterr = 0; // Handle errors ourselves
         int go = 0;
 	bool doUsage = false;
-        while ((go = getopt (argc, argv, "vqb:g:m:n:p:s:SRL")) != -1) {
+        while ((go = getopt (argc, argv, "vqb:g:i:m:n:p:s:SRL")) != -1) {
                 switch(go) {
                         case 'v':
                                 state.verbose++;
@@ -63,6 +65,14 @@ int main(int argc, char *argv[]) {
 					gpsParams.portName = strdup(optarg);
 				}
                                 break;
+			case 'i':
+				if (i2cParams.busName) {
+					log_error(&state, "Only a single I2C bus is supported");
+					doUsage = true;
+				} else {
+					i2cParams.busName = strdup(optarg);
+				}
+				break;
 			case 'm':
 				if (monPrefix) {
 					log_error(&state, "Only a single monitor file prefix can be specified");
@@ -124,6 +134,7 @@ int main(int argc, char *argv[]) {
 		free(gpsParams.portName);
 		free(mpParams.portName);
 		free(nmeaParams.portName);
+		free(i2cParams.busName);
 		free(monPrefix);
 		free(stateName);
 		return EXIT_FAILURE;
@@ -149,6 +160,7 @@ int main(int argc, char *argv[]) {
 			free(gpsParams.portName);
 			free(mpParams.portName);
 			free(nmeaParams.portName);
+			free(i2cParams.busName);
 			free(monPrefix);
 			return -1;
 		}
@@ -185,6 +197,7 @@ int main(int argc, char *argv[]) {
 		free(gpsParams.portName);
 		free(mpParams.portName);
 		free(nmeaParams.portName);
+		free(i2cParams.busName);
 		free(monPrefix);
 		free(stateName);
 		return EXIT_FAILURE;
@@ -204,6 +217,7 @@ int main(int argc, char *argv[]) {
 		free(gpsParams.portName);
 		free(mpParams.portName);
 		free(nmeaParams.portName);
+		free(i2cParams.busName);
 		free(monPrefix);
 		free(stateName);
 		return EXIT_FAILURE;
@@ -212,6 +226,7 @@ int main(int argc, char *argv[]) {
 	int nThreads = 1;
 	if (mpParams.portName) { nThreads++;}
 	if (nmeaParams.portName) { nThreads++;}
+	if (i2cParams.busName) { nThreads++;}
 
 	int tix = 0; // Thread Index
 	log_thread_args_t *ltargs = calloc(nThreads, sizeof(log_thread_args_t));
@@ -229,6 +244,7 @@ int main(int argc, char *argv[]) {
 		free(gpsParams.portName);
 		free(mpParams.portName);
 		free(nmeaParams.portName);
+		free(i2cParams.busName);
 		free(monPrefix);
 		free(stateName);
 		free(threads);
@@ -249,6 +265,7 @@ int main(int argc, char *argv[]) {
 			free(gpsParams.portName);
 			free(mpParams.portName);
 			free(nmeaParams.portName);
+			free(i2cParams.busName);
 			free(monPrefix);
 			free(stateName);
 			free(threads);
@@ -269,12 +286,39 @@ int main(int argc, char *argv[]) {
 			free(gpsParams.portName);
 			free(mpParams.portName);
 			free(nmeaParams.portName);
+			free(i2cParams.busName);
 			free(monPrefix);
 			free(stateName);
 			free(threads);
 			return EXIT_FAILURE;
 		}
 		tix++;
+	}
+
+	if (i2cParams.busName) {
+		i2c_chanmap_add_ina219(&i2cParams, 0x40,  4);
+		i2c_chanmap_add_ina219(&i2cParams, 0x41,  7);
+		i2c_chanmap_add_ina219(&i2cParams, 0x42, 10);
+		i2c_chanmap_add_ina219(&i2cParams, 0x43, 13);
+		ltargs[tix].tag = "I2C";
+		ltargs[tix].logQ = &log_queue;
+		ltargs[tix].pstate = &state;
+		ltargs[tix].dParams = &i2cParams;
+		ltargs[tix].funcs = i2c_getCallbacks();
+		ltargs[tix].funcs.startup(&ltargs[tix]);
+		if (ltargs[tix].returnCode < 0) {
+			log_error(&state, "Unable to set up I2C connection on %s", i2cParams.busName);
+			free(gpsParams.portName);
+			free(mpParams.portName);
+			free(nmeaParams.portName);
+			free(i2cParams.busName);
+			free(monPrefix);
+			free(stateName);
+			free(threads);
+			return EXIT_FAILURE;
+		}
+		tix++;
+
 	}
 
 	FILE *monitorFile = NULL;
@@ -291,6 +335,7 @@ int main(int argc, char *argv[]) {
 		free(gpsParams.portName);
 		free(mpParams.portName);
 		free(nmeaParams.portName);
+		free(i2cParams.busName);
 		free(monPrefix);
 		free(stateName);
 		free(threads);
@@ -305,6 +350,7 @@ int main(int argc, char *argv[]) {
 			free(gpsParams.portName);
 			free(mpParams.portName);
 			free(nmeaParams.portName);
+			free(i2cParams.busName);
 			free(monPrefix);
 			free(stateName);
 			free(threads);

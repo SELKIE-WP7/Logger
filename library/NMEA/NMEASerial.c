@@ -92,7 +92,19 @@ bool nmea_readMessage_buf(int handle, nmea_msg_t *out, uint8_t buf[NMEA_SERIAL_B
 			}
 		}
 	}
-
+	if (((*hw) == NMEA_SERIAL_BUFF) && (*index) > 0 && (*index) > (*hw)-8) {
+		// Full buffer, very close to the fill limit
+		// Assume we're full of garbage before index
+		memmove(buf, &(buf[(*index)]), NMEA_SERIAL_BUFF - (*index));
+		(*hw) -= (*index);
+		(*index) = 0;
+		out->rawlen = 1;
+		out->raw[0] =  0xFF;
+		if (ti == 0) {
+			out->raw[0] =  0xFD;
+		}
+		return false;
+	}
 	// Check buf[index] matches either of the valid start bytes
 	while (!(buf[(*index)] == NMEA_START_BYTE1 || buf[(*index)] == NMEA_START_BYTE2) && (*index) < (*hw)) {
 		(*index)++; // Current byte cannot be start of a message, so advance
@@ -123,7 +135,8 @@ bool nmea_readMessage_buf(int handle, nmea_msg_t *out, uint8_t buf[NMEA_SERIAL_B
 	}
 
 	int eom = (*index) +1;
-	while (!(buf[eom] == NMEA_END_BYTE2 && buf[eom-1] == NMEA_END_BYTE1) && eom < (*hw)) {
+	// Spec says \r\n, but the USB gateway seems to do \n\n at startup
+	while (!(buf[eom] == NMEA_END_BYTE2 && (buf[eom-1] == NMEA_END_BYTE1 || buf[eom-1] == NMEA_END_BYTE2)) && eom < (*hw)) {
 		eom++; // Current byte cannot be start of a message, so advance
 	}
 

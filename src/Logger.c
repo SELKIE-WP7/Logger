@@ -27,12 +27,12 @@ int main(int argc, char *argv[]) {
 		"\t-b baud\tGPS initial baud rate\n"
 		"\t-i port\tI2C Bus\n"
                 "\t-m file\tMonitor file prefix\n"
-                "\t-s file\tState file name. Default derived from GPS port name\n"
+                "\t-s file\tState file name\n"
 		"\t-S\tDo not use state file\n"
 		"\t-R\tDo not rotate monitor file\n"
                 "\nVersion: " GIT_VERSION_STRING "\n"
 		"Default options equivalent to:\n"
-		"\t%1$s -g " DEFAULT_GPS_PORT " -m " DEFAULT_MON_PREFIX "\n";
+		"\t%1$s -m " DEFAULT_MON_PREFIX " -s " DEFAULT_STATE_NAME "\n";
 
 /*****************************************************************************
 	Program Startup
@@ -144,28 +144,13 @@ int main(int argc, char *argv[]) {
 	// Set defaults if no argument provided
 	// Defining the defaults as compiled in constants at the top of main() causes issues
 	// with overwriting them later
-	if (!gpsParams.portName) {
-		gpsParams.portName = strdup(DEFAULT_GPS_PORT);
-	}
-
 	if (!monPrefix) {
 		monPrefix = strdup(DEFAULT_MON_PREFIX);
 	}
 
 	// Default state file name is derived from the port name
 	if (!stateName) {
-		char *tmp = strdup(gpsParams.portName);
-		if (asprintf(&stateName, "%s.state", basename(tmp)) < 0) {
-			perror("asprintf");
-			free(tmp);
-			free(gpsParams.portName);
-			free(mpParams.portName);
-			free(nmeaParams.portName);
-			free(i2cParams.busName);
-			free(monPrefix);
-			return -1;
-		}
-		free(tmp);
+		stateName = strdup(DEFAULT_STATE_NAME);
 	}
 
 	int mon_yday = -1; //!< Log rotation markers: Day for currently opened files
@@ -205,8 +190,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	log_info(&state, 1, "Version: " GIT_VERSION_STRING); // Preprocessor concatenation, not a format string!
-	log_info(&state, 1, "Using GPS port %s", gpsParams.portName);
-	log_info(&state, 1, "Using state file %s", stateName);
+	if (saveState) {
+		log_info(&state, 1, "Using state file %s", stateName);
+	}
 	log_info(&state, 1, "Using %s as monitor and log file prefix", monPrefix);
 
 	// Block signal handling until we're up and running
@@ -225,6 +211,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	int nThreads = 1;
+	if (gpsParams.portName) { nThreads++;}
 	if (mpParams.portName) { nThreads++;}
 	if (nmeaParams.portName) { nThreads++;}
 	if (i2cParams.busName) { nThreads++;}
@@ -232,27 +219,6 @@ int main(int argc, char *argv[]) {
 	int tix = 0; // Thread Index
 	log_thread_args_t *ltargs = calloc(nThreads, sizeof(log_thread_args_t));
 	pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
-
-	ltargs[tix].tag = "GPS";
-	ltargs[tix].logQ = &log_queue;
-	ltargs[tix].pstate = &state;
-	ltargs[tix].dParams = &gpsParams;
-	ltargs[tix].funcs = gps_getCallbacks();
-
-	ltargs[tix].funcs.startup(&(ltargs[tix]));
-	if (ltargs[tix].returnCode < 0) {
-		log_error(&state, "Unable to set up GPS connection");
-		free(gpsParams.portName);
-		free(mpParams.portName);
-		free(nmeaParams.portName);
-		free(i2cParams.busName);
-		free(monPrefix);
-		free(stateName);
-		free(threads);
-		return EXIT_FAILURE;
-	}
-	// All done, let next thread be configured
-	tix++;
 
 	ltargs[tix].tag = "Timer";
 	ltargs[tix].logQ = &log_queue;
@@ -273,6 +239,29 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	tix++;
+
+	if (gpsParams.portName) {
+		ltargs[tix].tag = "GPS";
+		ltargs[tix].logQ = &log_queue;
+		ltargs[tix].pstate = &state;
+		ltargs[tix].dParams = &gpsParams;
+		ltargs[tix].funcs = gps_getCallbacks();
+
+		ltargs[tix].funcs.startup(&(ltargs[tix]));
+		if (ltargs[tix].returnCode < 0) {
+			log_error(&state, "Unable to set up GPS connection on %s", gpsParams.portName);
+			free(gpsParams.portName);
+			free(mpParams.portName);
+			free(nmeaParams.portName);
+			free(i2cParams.busName);
+			free(monPrefix);
+			free(stateName);
+			free(threads);
+			return EXIT_FAILURE;
+		}
+		// All done, let next thread be configured
+		tix++;
+	}
 
 	if (mpParams.portName) {
 		ltargs[tix].tag = "MP";

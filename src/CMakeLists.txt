@@ -1,5 +1,6 @@
-set(DEFAULT_GPS_PORT "/dev/ttyUSB0" CACHE STRING "Define the default port used to communicate with the GPS module")
 set(DEFAULT_MON_PREFIX "mon" CACHE STRING "Define the default prefix used for the logger output files")
+set(DEFAULT_STATE_NAME "SLogger.state" CACHE STRING "Define the default state file name")
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Logger.h.in" "${CMAKE_CURRENT_BINARY_DIR}/Logger.h" @ONLY)
 
 include(GNUInstallDirs)

@@ -20,11 +20,11 @@
 
 #include "version.h"
 
-//! If no GPS port is specified on the command line, this value will be used
-#define DEFAULT_GPS_PORT "@DEFAULT_GPS_PORT@"
-
 //! If no output file prefix is specified, this will be used as a default
 #define DEFAULT_MON_PREFIX "@DEFAULT_MON_PREFIX@"
+
+//! If no state file name is specified, this will be used as a default
+#define DEFAULT_STATE_NAME "@DEFAULT_STATE_NAME@"
 
 //! Default serial wait time
 

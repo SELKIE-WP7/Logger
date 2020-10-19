@@ -23,37 +23,6 @@ void *i2c_setup(void *ptargs) {
 	return NULL;
 }
 
-
-/*!
- * Timespec subtraction, modified from the timeval example in the glibc manual
- *
- * @param[out] result X-Y
- * @param[in] x Input X
- * @param[in] y Input Y
- * @return true if difference is negative
- */
-bool timespec_subtract(struct timespec *result, struct timespec *x, struct timespec *y) {
-	/* Perform the carry for the later subtraction by updating y. */
-	if (x->tv_nsec < y->tv_nsec) {
-		int fsec = (y->tv_nsec - x->tv_nsec) / 1000000000 + 1;
-		y->tv_nsec -= 1000000000 * fsec;
-		y->tv_sec += fsec;
-	}
-	if ((x->tv_nsec - y->tv_nsec) > 1000000000) {
-		int fsec = (x->tv_nsec - y->tv_nsec) / 1000000000;
-		y->tv_nsec += 1000000000 * fsec;
-		y->tv_sec -= fsec;
-	}
-
-	/* Compute the time remaining to wait.
-	tv_usec is certainly positive. */
-	result->tv_sec = x->tv_sec - y->tv_sec;
-	result->tv_nsec = x->tv_nsec - y->tv_nsec;
-
-	/* Return 1 if result is negative. */
-	return x->tv_sec < y->tv_sec;
-}
-
 void *i2c_logging(void *ptargs) {
 	signalHandlersBlock();
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;

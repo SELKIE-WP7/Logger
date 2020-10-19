@@ -34,9 +34,6 @@ void *i2c_logging(void *ptargs);
 void *i2c_shutdown(void *ptargs);
 void *i2c_channels(void *ptargs);
 
-//! Difference between timespecs (used for rate keeping)
-bool timespec_subtract (struct timespec *result, struct timespec *x, struct timespec *y);
-
 //! Fill out device callback functions for logging
 device_callbacks i2c_getCallbacks();
 

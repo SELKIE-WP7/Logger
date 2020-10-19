@@ -64,6 +64,10 @@ typedef struct {
 	int returnCode; //!< Thread return code (output)
 } log_thread_args_t;
 
+
+//! Difference between timespecs (used for rate keeping)
+bool timespec_subtract (struct timespec *result, struct timespec *x, struct timespec *y);
+
 #include "LoggerGPS.h"
 #include "LoggerMP.h"
 #include "LoggerNMEA.h"

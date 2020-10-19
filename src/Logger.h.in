@@ -72,6 +72,7 @@ bool timespec_subtract (struct timespec *result, struct timespec *x, struct time
 #include "LoggerMP.h"
 #include "LoggerNMEA.h"
 #include "LoggerI2C.h"
+#include "LoggerTime.h"
 #include "LoggerSignals.h"
 
 #endif

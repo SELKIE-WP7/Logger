@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
 	mp_params mpParams = mp_getParams();
 	nmea_params nmeaParams = nmea_getParams();
 	i2c_params i2cParams = i2c_getParams();
+	timer_params timerParams = timer_getParams();
 
         char *usage =  "Usage: %1$s [-v] [-q] [-g port] [-n port] [-p port] [-i port] [-b initial baud] [-m file] [-R] [-s file | -S]\n"
                 "\t-v\tIncrease verbosity\n"
@@ -251,6 +252,26 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	// All done, let next thread be configured
+	tix++;
+
+	ltargs[tix].tag = "Timer";
+	ltargs[tix].logQ = &log_queue;
+	ltargs[tix].pstate = &state;
+	ltargs[tix].dParams = &timerParams;
+	ltargs[tix].funcs = timer_getCallbacks();
+
+	ltargs[tix].funcs.startup(&(ltargs[tix]));
+	if (ltargs[tix].returnCode < 0) {
+		log_error(&state, "Unable to set up Timers");
+		free(gpsParams.portName);
+		free(mpParams.portName);
+		free(nmeaParams.portName);
+		free(i2cParams.busName);
+		free(monPrefix);
+		free(stateName);
+		free(threads);
+		return EXIT_FAILURE;
+	}
 	tix++;
 
 	if (mpParams.portName) {

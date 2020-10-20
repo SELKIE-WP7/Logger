@@ -1,5 +1,6 @@
 set(DEFAULT_MON_PREFIX "mon" CACHE STRING "Define the default prefix used for the logger output files")
 set(DEFAULT_STATE_NAME "SLogger.state" CACHE STRING "Define the default state file name")
+set(DEFAULT_MARK_FREQUENCY 10 CACHE STRING "Default local timestamp frequency")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Logger.h.in" "${CMAKE_CURRENT_BINARY_DIR}/Logger.h" @ONLY)
 

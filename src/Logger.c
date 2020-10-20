@@ -18,9 +18,10 @@ int main(int argc, char *argv[]) {
 	i2c_params i2cParams = i2c_getParams();
 	timer_params timerParams = timer_getParams();
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-g port] [-n port] [-p port] [-i port] [-b initial baud] [-m file] [-R] [-s file | -S]\n"
+        char *usage =  "Usage: %1$s [-v] [-q] [-f frequency] [-g port] [-n port] [-p port] [-i port] [-b initial baud] [-m file] [-R] [-s file | -S]\n"
                 "\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
+		"\t-f\tMarker frequency\n"
                 "\t-g port\tSpecify GPS port\n"
 		"\t-n port\tNMEA source port\n"
 		"\t-p port\tMP source port\n"
@@ -32,7 +33,7 @@ int main(int argc, char *argv[]) {
 		"\t-R\tDo not rotate monitor file\n"
                 "\nVersion: " GIT_VERSION_STRING "\n"
 		"Default options equivalent to:\n"
-		"\t%1$s -m " DEFAULT_MON_PREFIX " -s " DEFAULT_STATE_NAME "\n";
+		"\t%1$s -f " DEFAULT_MARK_FREQ_STRING " -m " DEFAULT_MON_PREFIX " -s " DEFAULT_STATE_NAME "\n";
 
 /*****************************************************************************
 	Program Startup
@@ -42,7 +43,7 @@ int main(int argc, char *argv[]) {
         opterr = 0; // Handle errors ourselves
         int go = 0;
 	bool doUsage = false;
-        while ((go = getopt (argc, argv, "vqb:g:i:m:n:p:s:SRL")) != -1) {
+        while ((go = getopt (argc, argv, "vqb:f:g:i:m:n:p:s:SRL")) != -1) {
                 switch(go) {
                         case 'v':
                                 state.verbose++;
@@ -54,7 +55,15 @@ int main(int argc, char *argv[]) {
 				errno = 0;
 				gpsParams.initialBaud = strtol(optarg, NULL, 10);
 				if (errno) {
-					log_error(&state, "Bad initial baud value ('%s')\n", optarg);
+					log_error(&state, "Bad initial baud value ('%s')", optarg);
+					doUsage = true;
+				}
+				break;
+			case 'f':
+				errno = 0;
+				timerParams.frequency = strtol(optarg, NULL, 10);
+				if (errno || timerParams.frequency < 1) {
+					log_error(&state, "Bad marker frequency ('%s')", optarg);
 					doUsage = true;
 				}
 				break;

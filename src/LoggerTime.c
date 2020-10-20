@@ -117,8 +117,8 @@ device_callbacks timer_getCallbacks() {
 
 timer_params timer_getParams() {
 	timer_params timer = {
-		.sourceNum = SLSOURCE_LOCAL,
-		.frequency = 10,
+		.sourceNum = SLSOURCE_TIMER,
+		.frequency = DEFAULT_MARK_FREQUENCY,
 	};
 	return timer;
 }

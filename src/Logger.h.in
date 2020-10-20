@@ -26,6 +26,12 @@
 //! If no state file name is specified, this will be used as a default
 #define DEFAULT_STATE_NAME "@DEFAULT_STATE_NAME@"
 
+//! Default sample/marker frequency
+#define DEFAULT_MARK_FREQUENCY @DEFAULT_MARK_FREQUENCY@
+
+//! Default sample/marker frequency, as a string
+#define DEFAULT_MARK_FREQ_STRING "@DEFAULT_MARK_FREQUENCY@"
+
 //! Default serial wait time
 
 /*!

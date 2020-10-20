@@ -13,12 +13,13 @@ void *timer_logging(void *ptargs) {
 
 	log_info(args->pstate, 1, "[Timer] Logging thread started");
 
-	int lc = 0;
-	struct timespec lastIter = {0};
-	clock_gettime(CLOCK_MONOTONIC, &lastIter);
+	const int incr_nsec = (1E9 / timerInfo->frequency);
+	time_t lstamp = 0;
 	while (!shutdownFlag) {
+		struct timespec now = {0};
+		clock_gettime(CLOCK_MONOTONIC, &now);
 		// Millisecond precision timestamp, but arbitrary reference point
-		msg_t *msg = msg_new_timestamp(timerInfo->sourceNum, SLCHAN_TSTAMP, (1000 * lastIter.tv_sec + lastIter.tv_nsec * 1000000));
+		msg_t *msg = msg_new_timestamp(timerInfo->sourceNum, SLCHAN_TSTAMP, (1000 * now.tv_sec + now.tv_nsec / 1000000));
 		if (!queue_push(args->logQ, msg)) {
 			log_error(args->pstate, "[Timer] Error pushing message to queue");
 			msg_destroy(msg);
@@ -26,35 +27,35 @@ void *timer_logging(void *ptargs) {
 			pthread_exit(&(args->returnCode));
 		}
 
-		if ((lc % 10) == 0) {
+		time_t nstamp = time(NULL);
+		if (nstamp != lstamp) {
 			// Unix Epoch referenced timestamp
-			msg_t *epoch_msg = msg_new_timestamp(timerInfo->sourceNum, 4, time(NULL));
+			msg_t *epoch_msg = msg_new_timestamp(timerInfo->sourceNum, 4, nstamp);
 			if (!queue_push(args->logQ, epoch_msg)) {
 				log_error(args->pstate, "[Timer] Error pushing message to queue");
 				msg_destroy(epoch_msg);
 				args->returnCode = -1;
 				pthread_exit(&(args->returnCode));
 			}
-			lc = 0;
+			lstamp = nstamp;
 		}
-		lc++;
 
-		lastIter.tv_nsec += 1E9 / timerInfo->frequency;
-		if (lastIter.tv_nsec > 1E9) {
-			int nsec = lastIter.tv_nsec / 1000000000;
-			lastIter.tv_nsec = lastIter.tv_nsec % 1000000000;
-			lastIter.tv_sec += nsec;
+
+		struct timespec nextIter = now;
+		nextIter.tv_nsec += incr_nsec;
+		if (nextIter.tv_nsec >= 1E9) {
+			int nsec = nextIter.tv_nsec / 1000000000;
+			nextIter.tv_nsec = nextIter.tv_nsec % 1000000000;
+			nextIter.tv_sec += nsec;
 		}
-		struct timespec now = {0};
-		clock_gettime(CLOCK_MONOTONIC, &now);
+		nextIter.tv_nsec -= (nextIter.tv_nsec % incr_nsec);
+
 		struct timespec target = {0};
-		if (timespec_subtract(&target, &lastIter, &now)) {
-			// Target has passed!
-			clock_gettime(CLOCK_MONOTONIC, &lastIter);
+		if (timespec_subtract(&target, &nextIter, &now)) {
+			// Target has passed! Update ASAP and continue
+			log_warning(args->pstate, "[Timer] Deadline missed");
+			continue;
 		} else {
-			clock_gettime(CLOCK_MONOTONIC, &lastIter);
-			// If we're interrupted, just carry on. We might need to handle
-			// the shutdown flag, and worst case is we log a bit of extra data
 			nanosleep(&target, NULL);
 		}
 	}
@@ -82,7 +83,7 @@ void *timer_channels(void *ptargs) {
 		pthread_exit(&(args->returnCode));
 	}
 
-	strarray *channels = sa_new(4);
+	strarray *channels = sa_new(5); // 0,1,2 and 4
 	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
 	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");
 	sa_create_entry(channels, SLCHAN_TSTAMP, 9, "Timestamp");

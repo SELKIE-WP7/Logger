@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
 	char *stateName = NULL;
 
 	program_state state = {0};
-	state.verbose = 0;
+	state.verbose = 1;
 
 	bool saveState = true;
 	bool rotateMonitor = true;

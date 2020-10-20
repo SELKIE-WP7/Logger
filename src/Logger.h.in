@@ -68,6 +68,9 @@ typedef struct {
 //! Difference between timespecs (used for rate keeping)
 bool timespec_subtract (struct timespec *result, struct timespec *x, struct timespec *y);
 
+//! Push current software version into message queue
+bool log_softwareVersion(msgqueue *q);
+
 #include "LoggerGPS.h"
 #include "LoggerMP.h"
 #include "LoggerNMEA.h"

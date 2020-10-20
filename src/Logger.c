@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
 				rotateMonitor = false;
 				break;
 			case '?':
-				log_error(&state, "Unknown option `-%c'.\n", optopt);
+				log_error(&state, "Unknown option `-%c'", optopt);
 				doUsage = true;
 		}
         }
@@ -380,6 +380,18 @@ int main(int argc, char *argv[]) {
 	state.started = true;
 	log_info(&state, 1, "Startup complete");
 
+	if (!log_softwareVersion(&log_queue)) {
+		log_error(&state, "Error pushing version message to queue");
+		free(gpsParams.portName);
+		free(mpParams.portName);
+		free(nmeaParams.portName);
+		free(i2cParams.busName);
+		free(monPrefix);
+		free(stateName);
+		free(threads);
+		return EXIT_FAILURE;
+	}
+
 	/***
 	 * Once startup is complete, enable external signal processing
 	 **/
@@ -516,6 +528,12 @@ int main(int argc, char *argv[]) {
 					ltargs[tix].funcs.channels(&ltargs[tix]);
 				}
 			}
+
+			if (!log_softwareVersion(&log_queue)) {
+				log_error(&state, "Unable to push software version message to queue");
+				return -1;
+			}
+
 			log_info(&state, 0, "%d messages read successfully - resetting count", msgCount);
 			msgCount = 0;
 			mon_yday = mon_nextyday;
@@ -603,4 +621,22 @@ bool timespec_subtract(struct timespec *result, struct timespec *x, struct times
 
 	/* Return 1 if result is negative. */
 	return x->tv_sec < y->tv_sec;
+}
+
+/*!
+ * @brief Push software version into message queue
+ * 
+ * @param[in] q Log queue
+ * @return True on success
+ */
+
+bool log_softwareVersion(msgqueue *q) {
+	const char *version = "Logger version: " GIT_VERSION_STRING;
+	msg_t *verMsg = msg_new_string(SLSOURCE_LOCAL, SLCHAN_LOG_INFO, strlen(version), version);
+	if (!queue_push(q, verMsg)) {
+		msg_destroy(verMsg);
+		free(verMsg);
+		return false;
+	}
+	return true;
 }

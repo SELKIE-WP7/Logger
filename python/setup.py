@@ -27,7 +27,8 @@ setup(
     include_package_data=True,
     entry_points = {
         "console_scripts": [
-            "SLDump = SELKIELogger.scripts.SLDump:SLDump"
+            "SLDump = SELKIELogger.scripts.SLDump:SLDump",
+            "SLClassify = SELKIELogger.scripts.SLClassify:SLClassify"
             ]
         }
 )

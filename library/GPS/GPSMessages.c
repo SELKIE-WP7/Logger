@@ -144,3 +144,57 @@ void ubx_print_hex(const ubx_message *msg) {
 		out = NULL;
 	}
 }
+
+/*!
+ *
+ * Decode data in ubx_message object into individual fields
+ *
+ * @param[in] msg UBX Message to decode (must be NAV-PVT)
+ * @param[out] out Pointer to output message (allocated by caller)
+ */
+bool ubx_decode_nav_pvt(const ubx_message *msg, ubx_nav_pvt *out) {
+	if (out == NULL || msg == NULL) {
+		return false;
+	}
+
+	if (msg->msgClass != UBXNAV || msg->msgID != 0x07 || msg->length != 92) {
+		return false;
+	}
+
+	const uint8_t *d = msg->data;
+	out->tow = d[0] + (d[1] << 8) + (d[2] << 16) + (d[3] << 24);
+	out->year = d[4] + (d[5] << 8);
+	out->month = d[6];
+	out->day = d[7];
+	out->hour = d[8];
+	out->minute = d[9];
+	out->second = d[10];
+	out->validDate = d[11] & 0x01;
+	out->validTime = d[11] & 0x02;
+	out->validMagDec = d[11] & 0x08;
+	out->accuracy = d[12] + (d[13] << 8) + (d[14] << 16) + (d[15] << 24);
+	out->nanosecond = (int32_t) (d[16] + (d[17] << 8) + (d[18] << 16) + (d[19] << 24));
+	out->fixType = d[20];
+	out->fixFlags = d[21];
+	out->fixFlags2 = d[22];
+	out->numSV = d[23];
+	out->longitude = ((int32_t) (d[24] + (d[25] << 8) + (d[26] << 16) + (d[27] << 24))) * 1E-7;
+	out->latitude = ((int32_t) (d[28] + (d[29] << 8) + (d[30] << 16) + (d[31] << 24))) * 1E-7;
+	out->height = (int32_t)(d[32] + (d[33] << 8) + (d[34] << 16) + (d[35] << 24));
+	out->ASL = (int32_t)(d[36] + (d[37] << 8) + (d[38] << 16) + (d[39] << 24));
+	out->horizAcc = d[40] + (d[41] << 8) + (d[42] << 16) + (d[43] << 24);
+	out->vertAcc = d[44] + (d[45] << 8) + (d[46] << 16) + (d[47] <<24);
+	out->northV = (int32_t)(d[48] + (d[49] << 8) + (d[50] << 16) + (d[51] << 24));
+	out->eastV = (int32_t)(d[52] + (d[53] << 8) + (d[54] << 16) + (d[55] << 24));
+	out->downV = (int32_t)(d[56] + (d[57] << 8) + (d[58] << 16) + (d[59] << 24));
+	out->groundSpeed = (int32_t)(d[60] + (d[61] << 8) + (d[62] << 16) + (d[63] << 24));
+	out->heading = ((int32_t)(d[64] + (d[65] << 8) + (d[66] << 16) + (d[67] << 24))) * 1E-5;
+	out->speedAcc = (int32_t)(d[68] + (d[69] << 8) + (d[70] << 16) + (d[71] << 24));
+	out->headingAcc = (int32_t)(d[72] + (d[73] << 8) + (d[74] << 16) + (d[75] << 24));
+	out->pDOP = d[76] + (d[77] << 8);
+	out->pvtFlags = d[78];
+	out->vehicleHeading = ((int32_t)(d[84] + (d[85] << 8) + (d[86] << 16) + (d[87] << 24))) * 1E-5;
+	out->magneticDeclination = ((int32_t)(d[88] + (d[89] << 8))) * 1E-2;
+	out->magDecAcc = ((int32_t)(d[90] + (d[91] << 8) + (d[92] << 16) + (d[93] << 24))) * 1E-2;
+	return true;
+}

@@ -33,5 +33,9 @@ char * ubx_string_hex(const ubx_message *msg);
 
 //! Print UBX message in hexadecimal form
 void ubx_print_hex(const ubx_message *msg);
+
+//! Decode UBX NAV-PVT message
+bool ubx_decode_nav_pvt(const ubx_message *msg, ubx_nav_pvt *out);
+
 //! @}
 #endif

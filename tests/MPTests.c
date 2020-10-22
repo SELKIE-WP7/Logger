@@ -48,11 +48,15 @@ int main(int argc, char *argv[]) {
 	msg_t *mdb = msg_new_bytes(SLSOURCE_TEST1, 4, 20, bytes);
 	assert(mdb);
 
+	float f[3] = {1.1, 2.2, 3.14159};
+	msg_t *mfa = msg_new_float_array(SLSOURCE_TEST1, 5, 3, f);
+
 	assert(mp_writeMessage(fileno(stdout), msn));
 	assert(mp_writeMessage(fileno(stdout), msa));
 	assert(mp_writeMessage(fileno(stdout), mts));
 	assert(mp_writeMessage(fileno(stdout), mdf));
 	assert(mp_writeMessage(fileno(stdout), mdb));
+	assert(mp_writeMessage(fileno(stdout), mfa));
 
 	FILE *tmp = tmpfile();
 	int tmpfd = fileno(tmp);
@@ -61,6 +65,7 @@ int main(int argc, char *argv[]) {
 	assert(mp_writeMessage(tmpfd, mts));
 	assert(mp_writeMessage(tmpfd, mdf));
 	assert(mp_writeMessage(tmpfd, mdb));
+	assert(mp_writeMessage(tmpfd, mfa));
 
 	msg_destroy(msn);
 	free(msn);
@@ -72,6 +77,8 @@ int main(int argc, char *argv[]) {
 	free(mdf);
 	msg_destroy(mdb);
 	free(mdb);
+	msg_destroy(mfa);
+	free(mfa);
 
 	sa_destroy(SA);
 	free(SA);
@@ -107,7 +114,7 @@ int main(int argc, char *argv[]) {
 		}
 		msg_destroy(&tMessage);
 	}
-	assert(count == 5);
+	assert(count == 6);
 
 	return EXIT_SUCCESS;
 }

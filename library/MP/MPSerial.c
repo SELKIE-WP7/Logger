@@ -225,6 +225,7 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 	// MSG_TIMESTAMP -> MSGPACK_OBECT_POSITIVE_INTEGER
 	// MSG_STRING -> MSGPACK_OBJECT_STR
 	// MSG_STRARRAY -> MSGPACK_OBJECT_ARRAY (of MSG_PACK_OBJECT_STRs)
+	// MSG_NUMARRAY -> MSGPACK_OBJECT_ARRAY (of MSG_PACK_OBJECT_FLOAT32)
 	bool valid = false;
 	switch (inArr[3].type) {
 		case MSGPACK_OBJECT_FLOAT32:
@@ -244,8 +245,24 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 			valid = str_update(&(out->data.string), inArr[3].via.str.size, inArr[3].via.str.ptr);
 			break;
 		case MSGPACK_OBJECT_ARRAY:
-			out->dtype = MSG_STRARRAY;
-			valid = mp_unpack_strarray(&(out->data.names), &(inArr[3].via.array));
+			// Switch based on first item type
+			switch (inArr[3].via.array.ptr[0].type) {
+				case MSGPACK_OBJECT_STR:
+					out->dtype = MSG_STRARRAY;
+					valid = mp_unpack_strarray(&(out->data.names), &(inArr[3].via.array));
+					break;
+				case MSGPACK_OBJECT_FLOAT32:
+				case MSGPACK_OBJECT_FLOAT64:
+					out->dtype = MSG_NUMARRAY;
+					out->length = mp_unpack_numarray(&(out->data.farray), &(inArr[3].via.array));
+					if (out->length > 0) {
+						valid = true;
+					}
+					break;
+				default:
+					valid = false;
+					break;
+			}
 			break;
 		case MSGPACK_OBJECT_BIN:
 			out->dtype = MSG_BYTES;
@@ -325,7 +342,9 @@ bool mp_writeMessage(int handle, const msg_t *out) {
 		case MSG_STRARRAY:
 			mp_pack_strarray(&pack, &(out->data.names));
 			break;
-
+		case MSG_NUMARRAY:
+			mp_pack_numarray(&pack, out->length, out->data.farray);
+			break;
 		case MSG_ERROR:
 		case MSG_UNDEF:
 		default:
@@ -355,6 +374,22 @@ void mp_pack_strarray(msgpack_packer *pack, const strarray *sa) {
 		}
 		msgpack_pack_str(pack, sl);
 		msgpack_pack_str_body(pack, s->data, sl);
+	}
+}
+
+/*!
+ * Helper function for mp_writeMessage()
+ *
+ * Packs float array into supplied msgpack_packer object
+ *
+ * @param[in] pack    Pointer to msgpack packer object - must already be initialised
+ * @param[in] entries Number of entries in array
+ * @param[in] fa      Pointer to float array to be packed
+ */
+void mp_pack_numarray(msgpack_packer *pack, const size_t entries, const float *fa) {
+	msgpack_pack_array(pack, entries);
+	for (int ix = 0; ix < entries; ix++) {
+		msgpack_pack_float(pack, fa[ix]);
 	}
 }
 
@@ -391,3 +426,31 @@ bool mp_unpack_strarray(strarray *sa, msgpack_object_array *obj) {
 	return true;
 }
 
+/*!
+ * Helper function for mp_readMessage_buf()
+ *
+ * Unpacks a msgpack_object_array into an array of floats, provided all
+ * msgpack_objects are strings.
+ *
+ * @param[out] fa  Pointer to float pointer (will be set to base address of array)
+ * @param[in] obj MessagePacked array
+ * @return Number of entries in array, -1 on failure
+ */
+size_t mp_unpack_numarray(float **fa, msgpack_object_array *obj) {
+	const int nEntries = obj->size;
+	(*fa) = calloc(nEntries, sizeof(float));
+
+	if ((*fa) == NULL) {
+		return -1;
+	}
+
+	for (int ix = 0; ix < nEntries; ix++) {
+		if (!((obj->ptr[ix].type == MSGPACK_OBJECT_FLOAT32) || (obj->ptr[ix].type == MSGPACK_OBJECT_FLOAT64))) {
+			free((*fa));
+			(*fa) = NULL;
+			return -1;
+		}
+		(*fa)[ix] = obj->ptr[ix].via.f64;
+	}
+	return nEntries;
+}

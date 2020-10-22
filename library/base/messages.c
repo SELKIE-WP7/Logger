@@ -131,6 +131,34 @@ msg_t * msg_new_bytes(const uint8_t source, const uint8_t type, const size_t len
 }
 
 /*!
+ * Allocates a new msg_t, copies in the source, type and array and sets the data type to MSG_NUMARRAY
+ *
+ * The original array can be freed by the caller after creating the message.
+ *
+ * @param[in] source  Message source
+ * @param[in] type    Message type
+ * @param[in] entries Number of entries in array
+ * @param[in] array   Pointer to array of floats
+ * @return Pointer to new message
+ */
+msg_t * msg_new_float_array(const uint8_t source, const uint8_t type, const size_t entries, const float *array) {
+	msg_t *newmsg = calloc(1, sizeof(msg_t));
+	newmsg->source = source;
+	newmsg->type = type;
+	newmsg->dtype = MSG_NUMARRAY;
+	newmsg->length = entries;
+	newmsg->data.farray = calloc(entries, sizeof(float));
+	errno = 0;
+	memcpy(newmsg->data.farray, array, entries*sizeof(float));
+	if (errno) {
+		free(newmsg->data.farray);
+		free(newmsg);
+		return NULL;
+	}
+	return newmsg;
+}
+
+/*!
  * Destroy a message, regardless of data type.
  *
  * Note that this function does not free the message itself, only the data
@@ -155,8 +183,13 @@ void msg_destroy(msg_t* msg) {
 		case MSG_BYTES:
 			free(msg->data.bytes);
 			break;
+		case MSG_NUMARRAY:
+			free(msg->data.farray);
+			break;
 		default:
 			fprintf(stderr, "Unhandled message type in msg_destroy!\n");
 			break;
 	}
+	msg->length = 0;
+	msg->dtype = MSG_UNDEF;
 }

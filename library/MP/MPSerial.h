@@ -28,6 +28,12 @@ bool mp_writeMessage(int handle, const msg_t *out);
 //! Pack string array
 void mp_pack_strarray(msgpack_packer *pack, const strarray *sa);
 
+//! Pack numeric/floating point array
+void mp_pack_numarray(msgpack_packer *pack, const size_t entries, const float *fa);
+
 //! Unpack msgpack array into string array
 bool mp_unpack_strarray(strarray *sa, msgpack_object_array *obj);
+
+//! Allocate array of floats and unpack a msgpack array into it
+size_t mp_unpack_numarray(float **sa, msgpack_object_array *obj);
 #endif

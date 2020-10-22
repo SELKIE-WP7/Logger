@@ -21,6 +21,7 @@ typedef union {
 	uint8_t *bytes; //!< Our "raw" binary type
 	string string; //!< Single character array with length
 	strarray names; //!< Array of strings, intended for use to provide channel names
+	float *farray; //!< Array of floats
 } msg_data_t;
 
 //! Each data type should map to an entry in the msg_data_t union
@@ -32,6 +33,7 @@ typedef enum {
 	MSG_BYTES, //!< Raw binary data
 	MSG_STRING, //!< Single string @sa string
 	MSG_STRARRAY, //!< Array of strings. @sa strarray
+	MSG_NUMARRAY, //!< Array of floating point values
 } msg_dtype_t;
 
 //! Queuable message
@@ -61,6 +63,9 @@ msg_t * msg_new_string_array(const uint8_t source, const uint8_t type, const str
 
 //! Create a new message containing raw binary data
 msg_t * msg_new_bytes(const uint8_t source, const uint8_t type, const size_t len, const uint8_t *bytes);
+
+//! Create a new message containing an array of floating point data
+msg_t * msg_new_float_array(const uint8_t source, const uint8_t type, const size_t entries, const float *array);
 
 //! Destroy a message
 void msg_destroy(msg_t *msg);

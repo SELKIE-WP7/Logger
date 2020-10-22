@@ -11,7 +11,7 @@
  *
  * Once the baud rate is configured, set up the messages we need and poll for
  * some status information for the log.
- */ 
+ */
 void *gps_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	gps_params *gpsInfo = (gps_params *) args->dParams;
@@ -31,7 +31,7 @@ void *gps_setup(void *ptargs) {
 		msgSuccess &= ubx_enableLogMessages(gpsInfo->handle);
 		// The usleep commands are probably not required, but mindful
 		// that there's a limited RX buffer on the GPS module
-		usleep(5E3); 
+		usleep(5E3);
 		msgSuccess &= ubx_enableGalileo(gpsInfo->handle);
 		log_info(args->pstate, 2, "[GPS:%s] Enabling Galileo (GNSS Reset)", gpsInfo->portName);
 		sleep(3); // This one *is* necessary, as enabling Galileo can require a GNSS reset
@@ -67,7 +67,7 @@ void *gps_setup(void *ptargs) {
 }
 
 /*!
- * Takes a gps_params struct (passed via log_thread_args_t) 
+ * Takes a gps_params struct (passed via log_thread_args_t)
  * messages from a device configured with gps_setup() and pushes them to the
  * message queue.
  *
@@ -88,7 +88,7 @@ void *gps_logging(void *ptargs) {
 		if (ubx_readMessage_buf(gpsInfo->handle, &out, buf, &ubx_index, &ubx_hw)) {
 			uint8_t *data = NULL;
 			ssize_t len = ubx_flat_array(&out, &data);
-
+			bool handled = false;
 			if (out.msgClass == UBXNAV && out.msgID == 0x21) {
 				// Extract GPS ToW
 				uint32_t ts = out.data[3] + (out.data[2] << 8) + (out.data[1] << 16) + (out.data[2] << 24);
@@ -99,26 +99,64 @@ void *gps_logging(void *ptargs) {
 					args->returnCode = -1;
 					pthread_exit(&(args->returnCode));
 				}
+				// Not setting "handled" yet - need to extract rest of date time
+			} else if (out.msgClass == UBXNAV && out.msgID == 0x07) {
+				// NAV-PVT
+				ubx_nav_pvt nav = {0};
+				if (! ubx_decode_nav_pvt(&out, &nav)) {
+					log_error(args->pstate, "[GPS:%s] Unable to decode NAV-PVT message", gpsInfo->portName);
+				} else {
+					float posData[6] = {
+						nav.longitude,
+						nav.latitude,
+						nav.height,
+						nav.ASL,
+						nav.horizAcc,
+						nav.vertAcc
+					};
+					float velData[7] = {
+						nav.northV,
+						nav.eastV,
+						nav.downV,
+						nav.groundSpeed,
+						nav.heading,
+						nav.speedAcc,
+						nav.headingAcc
+					};
+
+					msg_t *mnav = msg_new_float_array(gpsInfo->sourceNum, 4, 6, posData);
+					msg_t *mvel = msg_new_float_array(gpsInfo->sourceNum, 5, 7, velData);
+
+					if (!queue_push(args->logQ, mnav) || !queue_push(args->logQ, mvel)) {
+						log_error(args->pstate, "[GPS:%s] Error pushing messages to queue", gpsInfo->portName);
+						msg_destroy(mnav);
+						msg_destroy(mvel);
+						args->returnCode = -1;
+						pthread_exit(&(args->returnCode));
+					}
+					handled = true;
+				}
 			}
-			// This will also push the raw NAV-TIMEUTC message used for the timestamp above, so we can extract the UBX data later
-			msg_t *sm = msg_new_bytes(gpsInfo->sourceNum, 3, len, data);
-			if (!queue_push(args->logQ, sm)) {
-				log_error(args->pstate, "[GPS:%s] Error pushing message to queue", gpsInfo->portName);
-				msg_destroy(sm);
-				args->returnCode = -1;
-				pthread_exit(&(args->returnCode));
+			if (!handled || gpsInfo->dumpAll) {
+				msg_t *sm = msg_new_bytes(gpsInfo->sourceNum, 3, len, data);
+				if (!queue_push(args->logQ, sm)) {
+					log_error(args->pstate, "[GPS:%s] Error pushing message to queue", gpsInfo->portName);
+					msg_destroy(sm);
+					args->returnCode = -1;
+					pthread_exit(&(args->returnCode));
+				}
 			}
 			if (data) {
 				free(data); // Copied into message, so can safely free here
 			}
-			// Do not destroy or free sm here
+			// Do not destroy or free sm (or other msg_t objects) here
 			// After pushing it to the queue, it is the responsibility of the consumer
 			// to dispose of it after use.
 		} else {
 			if (!(out.sync1 == 0xFF || out.sync1 == 0xFD || out.sync1 == 0xEE)) {
 				// 0xFF, 0xFD and 0xEE are used to signal recoverable states that resulted
 				// in no valid message.
-				// 
+				//
 				// 0xFF and 0xFD indicate an out of data error, which is not a problem
 				// for serial monitoring, but might indicate EOF when reading from file
 				//
@@ -177,11 +215,13 @@ void *gps_channels(void *ptargs) {
 		pthread_exit(&(args->returnCode));
 	}
 
-	strarray *channels = sa_new(4);
+	strarray *channels = sa_new(6);
 	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
 	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");
 	sa_create_entry(channels, SLCHAN_TSTAMP, 9, "Timestamp");
 	sa_create_entry(channels, SLCHAN_RAW, 7, "Raw UBX");
+	sa_create_entry(channels, 4, 8, "Position");
+	sa_create_entry(channels, 5, 8, "Velocity");
 
 	msg_t *m_cmap = msg_new_string_array(gpsInfo->sourceNum, SLCHAN_MAP, channels);
 
@@ -215,7 +255,8 @@ gps_params gps_getParams() {
 		.sourceNum = SLSOURCE_GPS,
 		.initialBaud = 9600,
 		.targetBaud = 115200,
-		.handle = -1
+		.handle = -1,
+		.dumpAll = false
 	};
 	return gp;
 }

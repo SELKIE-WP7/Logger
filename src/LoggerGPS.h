@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 #include "SELKIELoggerBase.h"
@@ -17,6 +18,7 @@ typedef struct {
 	int initialBaud; //!< Baud rate for initial configuration
 	int targetBaud; //!< Baud rate for operations (currently unused)
 	int handle; //!< Handle for currently opened device
+	bool dumpAll; //!< Dump all GPS messages to output queue
 } gps_params;
 
 //! GPS Setup

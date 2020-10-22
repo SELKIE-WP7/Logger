@@ -109,18 +109,18 @@ void *gps_logging(void *ptargs) {
 					float posData[6] = {
 						nav.longitude,
 						nav.latitude,
-						nav.height,
-						nav.ASL,
-						nav.horizAcc,
-						nav.vertAcc
+						nav.height * 1E-3,
+						nav.ASL * 1E-3,
+						nav.horizAcc * 1E-3,
+						nav.vertAcc * 1E-3
 					};
 					float velData[7] = {
-						nav.northV,
-						nav.eastV,
-						nav.downV,
-						nav.groundSpeed,
+						nav.northV * 1E-3,
+						nav.eastV * 1E-3,
+						nav.downV * 1E-3,
+						nav.groundSpeed * 1E-3,
 						nav.heading,
-						nav.speedAcc,
+						nav.speedAcc * 1E-3,
 						nav.headingAcc
 					};
 

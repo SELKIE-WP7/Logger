@@ -629,7 +629,7 @@ int main(int argc, char *argv[]) {
 		}
 		msgCount++;
 		mp_writeMessage(fileno(monitorFile), res);
-		if (res->type == SLCHAN_MAP) {
+		if (res->type == SLCHAN_MAP || res->type == SLCHAN_NAME) {
 			mp_writeMessage(fileno(varFile), res);
 		}
 		msg_destroy(res);

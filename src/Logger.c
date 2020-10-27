@@ -229,6 +229,32 @@ int main(int argc, char *argv[]) {
 	state.logverbose = 3;
 	log_info(&state, 2, "Using log file %s.log", monFileStem);
 
+	errno = 0;
+	FILE *varFile = NULL;
+	{
+		char *varFileName = NULL;
+		if (asprintf(&varFileName, "%s.%s", monFileStem, "var") < 0) {
+			log_error(&state, "Failed to allocate memory for variable file name: %s", strerror(errno));
+		}
+		varFile = fopen(varFileName, "w+x");
+		free(varFileName);
+	}
+	if (!varFile) {
+		if (errno == EEXIST) {
+			log_error(&state, "Unable to open variable file. Variable file and data file names out of sync?");
+		} else {
+			log_error(&state, "Unable to open variable file: %s", strerror(errno));
+		}
+		free(gpsParams.portName);
+		free(mpParams.portName);
+		free(nmeaParams.portName);
+		free(i2cParams.busName);
+		free(monPrefix);
+		free(stateName);
+		return EXIT_FAILURE;
+	}
+	log_info(&state, 2, "Using variable file %s.var", monFileStem);
+
 	log_info(&state, 1, "Version: " GIT_VERSION_STRING); // Preprocessor concatenation, not a format string!
 	if (saveState) {
 		log_info(&state, 1, "Using state file %s", stateName);
@@ -551,6 +577,31 @@ int main(int argc, char *argv[]) {
 				log_info(&state, 2, "Using log file %s.log", monFileStem);
 			}
 
+			FILE *newVar = NULL;
+			errno = 0;
+			{
+				char *varFileName = NULL;
+				if (asprintf(&varFileName, "%s.%s", monFileStem, "var") < 0) {
+					log_error(&state, "Failed to allocate memory for variable file name: %s", strerror(errno));
+				}
+				newVar = fopen(varFileName, "w+x");
+				free(varFileName);
+			}
+			if (newVar == NULL) {
+				// As above, if the issue is log file names then we continue with the existing file
+				if (errno == EEXIST) {
+					log_error(&state, "Unable to open variable file - mismatch between variable file and data file names?");
+				} else {
+					log_error(&state, "Unable to open variable file: %s", strerror(errno));
+					return -1;
+				}
+			} else {
+				// We're the only thread writing to the .var file, so fewer shenanigans required.
+				fclose(varFile);
+				log_info(&state, 2, "Using variable file %s.var", monFileStem);
+				varFile = newVar;
+			}
+
 			// Re-request channel names for the new files
 			for (int tix=0; tix < nThreads; tix++) {
 				if (ltargs[tix].funcs.channels) {
@@ -578,6 +629,9 @@ int main(int argc, char *argv[]) {
 		}
 		msgCount++;
 		mp_writeMessage(fileno(monitorFile), res);
+		if (res->type == SLCHAN_MAP) {
+			mp_writeMessage(fileno(varFile), res);
+		}
 		msg_destroy(res);
 		free(res);
 	}
@@ -617,6 +671,8 @@ int main(int argc, char *argv[]) {
 	free(monPrefix);
 	free(stateName);
 	log_info(&state, 2, "Monitor file closed");
+	fclose(varFile);
+	log_info(&state, 2, "Variable file closed");
 	log_info(&state, 0, "%d messages read successfully\n\n", msgCount);
 	fclose(state.log);
 	return 0;

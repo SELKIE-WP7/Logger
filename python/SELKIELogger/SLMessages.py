@@ -113,6 +113,9 @@ class SLMessageSink:
 
     def ChannelName(self, source, channel):
         """Update the map of known channel names"""
+        if not isinstance(channel, int):
+            self._log.warning(f"Non-integer channel number requested: {channel}")
+            return f"[Invalid:{channel}]"
         if source in self.Sources:
             if channel < (len(self.Sources[source]['channels'])):
                 return self.Sources[source]['channels'][channel]

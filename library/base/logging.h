@@ -31,7 +31,7 @@ void log_warning(const program_state *s, const char *format, ...) __attribute__ 
 void log_info(const program_state *s, const int level, const char *format, ...) __attribute__ ((format (gnu_printf, 3, 4)));
 
 //! Open dated, serial numbered file with given prefix and extension
-FILE *openSerialNumberedFile(const char *prefix, const char *extension);
+FILE *openSerialNumberedFile(const char *prefix, const char *extension, char **name);
 
 //!@}
 #endif

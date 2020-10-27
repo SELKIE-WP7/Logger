@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <errno.h>
 
@@ -129,8 +130,13 @@ void log_info(const program_state *s, const int level, const char *format, ...) 
  *
  * If no valid file name can be generated, or if any other error is
  * encountered, the function returns NULL.
+ *
+ * @param[in] prefix    File name prefix (can include a path)
+ * @param[in] extension File extension
+ * @param[out] name     File name (without extension) used, if successful
+ * @returns Opened file handle, or null on failure
  */
-FILE *openSerialNumberedFile(const char *prefix, const char *extension) {
+FILE *openSerialNumberedFile(const char *prefix, const char *extension, char **name) {
 	time_t now = time(NULL);
 	struct tm *tm = localtime(&now);
 	char *fileName = NULL;
@@ -147,6 +153,10 @@ FILE *openSerialNumberedFile(const char *prefix, const char *extension) {
 		errno = 0;
 		file = fopen(fileName, "w+x"); //w+x = rw + create. Fail if exists
 		if (file) {
+			if (name) {
+				char *fStem = strndup(fileName, strlen(fileName) - strlen(extension) - 1);
+				(*name) = fStem;
+			}
 			free(fileName);
 			return file;
 		}

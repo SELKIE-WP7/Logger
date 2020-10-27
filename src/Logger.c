@@ -180,8 +180,31 @@ int main(int argc, char *argv[]) {
 		mon_nextyday = mon_yday;
 	}
 
+	FILE *monitorFile = NULL;
+	char *monFileStem = NULL;
+
 	errno = 0;
-	state.log = openSerialNumberedFile(monPrefix, "log");
+	log_info(&state, 1, "Using %s as output file prefix", monPrefix);
+	monitorFile = openSerialNumberedFile(monPrefix, "dat", &monFileStem);
+
+	if (monitorFile == NULL) {
+		if (errno == EEXIST) {
+			log_error(&state, "Unable to open data file - too many files created with this prefix today?");
+		} else {
+			log_error(&state, "Unable to open data file: %s", strerror(errno));
+		}
+		free(gpsParams.portName);
+		free(mpParams.portName);
+		free(nmeaParams.portName);
+		free(i2cParams.busName);
+		free(monPrefix);
+		free(stateName);
+		return -1;
+	}
+	log_info(&state, 1, "Using data file %s.dat", monFileStem);
+
+	errno = 0;
+	state.log = openSerialNumberedFile(monPrefix, "log", NULL);
 	state.logverbose = 3;
 	if (!state.log) {
 		if (errno == EEXIST) {
@@ -197,12 +220,12 @@ int main(int argc, char *argv[]) {
 		free(stateName);
 		return EXIT_FAILURE;
 	}
+	log_info(&state, 2, "Using log file %s.log", monFileStem);
 
 	log_info(&state, 1, "Version: " GIT_VERSION_STRING); // Preprocessor concatenation, not a format string!
 	if (saveState) {
 		log_info(&state, 1, "Using state file %s", stateName);
 	}
-	log_info(&state, 1, "Using %s as monitor and log file prefix", monPrefix);
 
 	// Block signal handling until we're up and running
 	signalHandlersBlock();
@@ -338,27 +361,6 @@ int main(int argc, char *argv[]) {
 		}
 		tix++;
 
-	}
-
-	FILE *monitorFile = NULL;
-
-	errno = 0;
-	monitorFile = openSerialNumberedFile(monPrefix, "dat");
-
-	if (monitorFile == NULL) {
-		if (errno == EEXIST) {
-			log_error(&state, "Unable to open data file - too many files created with this prefix today?");
-		} else {
-			log_error(&state, "Unable to open data file: %s", strerror(errno));
-		}
-		free(gpsParams.portName);
-		free(mpParams.portName);
-		free(nmeaParams.portName);
-		free(i2cParams.busName);
-		free(monPrefix);
-		free(stateName);
-		free(threads);
-		return -1;
 	}
 
 	log_info(&state, 1, "Initialisation complete, starting log threads");
@@ -497,7 +499,8 @@ int main(int argc, char *argv[]) {
 			errno = 0;
 
 			FILE *newMonitor = NULL;
-			newMonitor  = openSerialNumberedFile(monPrefix, "dat");
+			char *newMonFileStem = NULL;
+			newMonitor  = openSerialNumberedFile(monPrefix, "dat", &newMonFileStem);
 
 			if (newMonitor == NULL) {
 				// If the error is likely to be too many data files, continue with the old handle.
@@ -511,16 +514,25 @@ int main(int argc, char *argv[]) {
 			} else {
 				fclose(monitorFile);
 				monitorFile = newMonitor;
+				monFileStem= newMonFileStem;
+				log_info(&state, 2, "Using data file %s.dat", monFileStem);
 			}
 
 			// As above, but for the log file
 			FILE *newLog = NULL;
 			errno = 0;
-			newLog = openSerialNumberedFile(monPrefix, "log");
+			{
+				char *logFileName = NULL;
+				if (asprintf(&logFileName, "%s.%s", monFileStem, "log") < 0) {
+					log_error(&state, "Failed to allocate memory log file name: %s", strerror(errno));
+				}
+				newLog = fopen(logFileName, "w+x");
+				free(logFileName);
+			}
 			if (newLog == NULL) {
 				// As above, if the issue is log file names then we continue with the existing file
 				if (errno == EEXIST) {
-					log_error(&state, "Unable to open log file - too many files created with this prefix today?");
+					log_error(&state, "Unable to open log file - mismatch between log files and data file?");
 				} else {
 					log_error(&state, "Unable to open log file: %s", strerror(errno));
 					return -1;
@@ -529,6 +541,7 @@ int main(int argc, char *argv[]) {
 				FILE * oldLog = state.log;
 				state.log = newLog;
 				fclose(oldLog);
+				log_info(&state, 2, "Using log file %s.log", monFileStem);
 			}
 
 			// Re-request channel names for the new files

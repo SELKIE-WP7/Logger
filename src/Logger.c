@@ -204,11 +204,17 @@ int main(int argc, char *argv[]) {
 	log_info(&state, 1, "Using data file %s.dat", monFileStem);
 
 	errno = 0;
-	state.log = openSerialNumberedFile(monPrefix, "log", NULL);
-	state.logverbose = 3;
+	{
+		char *logFileName = NULL;
+		if (asprintf(&logFileName, "%s.%s", monFileStem, "log") < 0) {
+			log_error(&state, "Failed to allocate memory for log file name: %s", strerror(errno));
+		}
+		state.log = fopen(logFileName, "w+x");
+		free(logFileName);
+	}
 	if (!state.log) {
 		if (errno == EEXIST) {
-			log_error(&state, "Unable to open log file - too many files created with this prefix today?");
+			log_error(&state, "Unable to open log file. Log file and data file names out of sync?");
 		} else {
 			log_error(&state, "Unable to open log file: %s", strerror(errno));
 		}
@@ -220,6 +226,7 @@ int main(int argc, char *argv[]) {
 		free(stateName);
 		return EXIT_FAILURE;
 	}
+	state.logverbose = 3;
 	log_info(&state, 2, "Using log file %s.log", monFileStem);
 
 	log_info(&state, 1, "Version: " GIT_VERSION_STRING); // Preprocessor concatenation, not a format string!
@@ -524,7 +531,7 @@ int main(int argc, char *argv[]) {
 			{
 				char *logFileName = NULL;
 				if (asprintf(&logFileName, "%s.%s", monFileStem, "log") < 0) {
-					log_error(&state, "Failed to allocate memory log file name: %s", strerror(errno));
+					log_error(&state, "Failed to allocate memory for log file name: %s", strerror(errno));
 				}
 				newLog = fopen(logFileName, "w+x");
 				free(logFileName);
@@ -532,7 +539,7 @@ int main(int argc, char *argv[]) {
 			if (newLog == NULL) {
 				// As above, if the issue is log file names then we continue with the existing file
 				if (errno == EEXIST) {
-					log_error(&state, "Unable to open log file - mismatch between log files and data file?");
+					log_error(&state, "Unable to open log file - mismatch between log files and data file names?");
 				} else {
 					log_error(&state, "Unable to open log file: %s", strerror(errno));
 					return -1;

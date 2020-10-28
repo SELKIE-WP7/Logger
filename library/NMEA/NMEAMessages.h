@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "NMEATypes.h"
 
@@ -39,5 +40,8 @@ void nmea_print_hex(const nmea_msg_t *msg);
 
 //! Parse raw data into fields
 strarray * nmea_parse_fields(const nmea_msg_t *nmsg);
+
+//! Get date/time from NMEA ZDA message
+struct tm * nmea_parse_zda(const nmea_msg_t *msg);
 //! @}
 #endif

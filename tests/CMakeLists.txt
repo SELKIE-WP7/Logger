@@ -36,4 +36,7 @@ add_executable(NMEAMessagesFromFile NMEAMessagesFromFile.c)
 target_link_libraries(NMEAMessagesFromFile PUBLIC SELKIELoggerNMEA)
 file(COPY NMEASample.dat DESTINATION .)
 add_test(NAME NMEAMessagesFromFile COMMAND NMEAMessagesFromFile NMEASample.dat)
-set_property(TEST NMEAMessagesFromFile PROPERTY PASS_REGULAR_EXPRESSION "100 messages read")
+# This tests three lines of output, in order. Note the \n and use of APPEND_STRING to build a single regex
+set_property(TEST NMEAMessagesFromFile APPEND_STRING PROPERTY PASS_REGULAR_EXPRESSION "Thu Oct  8 16:15:07 2020\n")
+set_property(TEST NMEAMessagesFromFile APPEND_STRING PROPERTY PASS_REGULAR_EXPRESSION "Thu Oct  8 16:15:27 2020\n")
+set_property(TEST NMEAMessagesFromFile APPEND_STRING PROPERTY PASS_REGULAR_EXPRESSION "100 messages read")

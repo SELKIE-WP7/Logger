@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
 
+#include "SELKIELoggerBase.h"
 #include "SELKIELoggerNMEA.h"
 
 /*! @file NMEAMessagesFromFile.c
@@ -42,6 +44,22 @@ int main(int argc, char *argv[]) {
 		if (nmea_readMessage(fileno(testFile), &tmp)) {
 			// Successfully read message
 			count++;
+			strarray *f = nmea_parse_fields(&tmp);
+			if (f == NULL) {
+				return -1;
+			}
+			if (strncmp(tmp.message, "ZDA", 3) == 0) {
+				struct tm *t = nmea_parse_zda(&tmp);
+				if (t == NULL) {
+					sa_destroy(f);
+					free(f);
+					return -1;
+				}
+				fprintf(stdout, "%s", asctime(t));
+				free(t);
+			}
+			sa_destroy(f);
+			free(f);
 		} else {
 			switch (tmp.raw[0]) {
 				case 0xAA:

@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <errno.h>
+
 #include "NMEAMessages.h"
 
 /*!
@@ -210,4 +212,148 @@ strarray *nmea_parse_fields(const nmea_msg_t *nmsg) {
 		}
 	}
 	return sa;
+}
+
+/*!
+ * Converts time encoded in message to a libc struct tm representation
+ *
+ * Caller to free returned structure
+ *
+ * @param[in] msg Input message
+ * @returns Pointer to struct tm, or NULL on failure
+ */
+struct tm * nmea_parse_zda(const nmea_msg_t *msg) {
+	const char *tk = "II";
+	const char *mt = "ZDA";
+	if ((strncmp(msg->talker, tk, 2) != 0)  || (strncmp(msg->message, mt, 3) != 0)) {
+		return NULL;
+	}
+	strarray *sa = nmea_parse_fields(msg);
+	if (sa == NULL) {
+		return NULL;
+	}
+	if (sa->entries != 6) {
+		sa_destroy(sa);
+		free(sa);
+		return NULL;
+	}
+	/*
+	 * Should have 6 fields:
+	 * - HHMMSS[.sss]
+	 * - DD
+	 * - MM
+	 * - YYYY
+	 * - TZ Hours+-
+	 * - TZ Minutes+-
+	 *
+	 * struct tm has no fractional seconds, so those will be discarded if present
+	 */
+
+	// Check lengths of required fields
+	if (sa->strings[0].length < 6 || sa->strings[1].length < 1 || sa->strings[2].length < 1 || sa->strings[3].length != 4 ) {
+		sa_destroy(sa);
+		free(sa);
+		return NULL;
+	}
+
+	struct tm *tout = calloc(1, sizeof(struct tm));
+	if (tout == NULL) {
+		sa_destroy(sa);
+		free(sa);
+		return NULL;
+	}
+
+	{
+		errno = 0;
+		int day = strtol(sa->strings[1].data, NULL, 10);
+		if (errno || day < 0 || day > 31) {
+			free(tout);
+			sa_destroy(sa);
+			free(sa);
+			return NULL;
+		}
+		tout->tm_mday = day;
+	}
+	{
+		errno = 0;
+		int mon = strtol(sa->strings[2].data, NULL, 10);
+		if (errno || mon < 0 || mon > 12) {
+			free(tout);
+			sa_destroy(sa);
+			free(sa);
+			return NULL;
+		}
+		tout->tm_mon = mon - 1; //Months since January 1, not month number
+	}
+	{
+		errno = 0;
+		int year = strtol(sa->strings[3].data, NULL, 10);
+		// Year boundaries are arbitrary, but allows for some historical and future usage
+		// If anyone is using this software in the year 2100 then:
+		// a) I'm surprised!
+		// b) Update the upper bound below
+		if (errno || year < 1970 || year > 2100) {
+			free(tout);
+			sa_destroy(sa);
+			free(sa);
+			return NULL;
+		}
+		tout->tm_year = year - 1900;
+	}
+
+	/*
+	 * At this point, we take advantage of mktime to tidy things up and
+	 * fill out some of the other tm_ fields for us rather than working out
+	 * day of week, year etc.
+	 *
+	 * mktime would obliterate timezone details though, so we'll set the
+	 * time and zone information afterwards.
+	 */
+	if (mktime(tout) == (time_t)(-1)) {
+		free(tout);
+		sa_destroy(sa);
+		free(sa);
+		return NULL;
+	}
+
+	{
+		errno = 0;
+		int time = strtol(sa->strings[0].data, NULL, 10);
+		if (errno || time < 0 || time > 235960) {
+			free(tout);
+			sa_destroy(sa);
+			free(sa);
+			return NULL;
+		}
+		tout->tm_hour = time / 10000;
+		tout->tm_min = (time % 10000) / 100;
+		tout->tm_sec = (time % 100);
+	}
+
+	{
+		errno = 0;
+		int tzhours = 0;
+		int tzmins = 0;
+
+		// Assume no offset if strings not present
+		if (sa->strings[4].length > 0) {
+			strtol(sa->strings[4].data, NULL, 10);
+		}
+		if (sa->strings[5].length > 0) {
+			strtol(sa->strings[5].data, NULL, 10);
+		}
+		if (errno || tzhours < -13 || tzhours > 13 || tzmins < -60 || tzmins > 60) {
+			free(tout);
+			sa_destroy(sa);
+			free(sa);
+			return NULL;
+		}
+
+		tout->tm_gmtoff = 3600 * tzhours + 60 * tzmins;
+	}
+
+	sa_destroy(sa);
+	free(sa);
+
+	return tout;
 }

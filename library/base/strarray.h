@@ -18,6 +18,9 @@ typedef struct{
 //! Allocate storage for a new array
 strarray * sa_new(int entries);
 
+//! Initialise an already allocated array
+bool sa_init(strarray *dst, const int entries);
+
 //! Copy an array of strings from src to dst
 bool sa_copy(strarray *dst, const strarray *src);
 

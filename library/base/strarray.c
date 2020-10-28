@@ -5,7 +5,7 @@
 #include "strarray.h"
 
 /*!
- * Allocate a new string array and storage for the stated number of entries.
+ * Allocate a new string array and initialise with sa_init()
  *
  * All allocated data is zeroed.
  *
@@ -19,14 +19,35 @@ strarray * sa_new(int entries) {
 	if (newarray == NULL) {
 		return NULL;
 	}
-	newarray->entries = entries;
-	newarray->strings = calloc(entries, sizeof(string));
-	if (newarray->strings == NULL) {
+	if (!sa_init(newarray, entries)) {
 		free(newarray);
 		return NULL;
 	}
 	return newarray;
 }
+
+/*!
+ * Take an array and initialise internal storage for the stated number of
+ * entries.
+ *
+ * Will destroy existing contents
+ *
+ * @param[in] dst Pointer to array
+ * @param[in] entries Number of strings to allocate
+ * @returns True on success, false on error
+ */
+bool sa_init(strarray *dst, const int entries) {
+	if (dst->entries) {
+		sa_destroy(dst);
+	}
+	dst->entries = entries;
+	dst->strings = calloc(entries, sizeof(string));
+	if (dst->strings == NULL) {
+		return false;
+	}
+	return true;
+}
+
 
 /*!
  * Destroys the existing contents of the destination array, which cannot be

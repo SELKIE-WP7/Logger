@@ -214,18 +214,25 @@ string * str_new(const size_t len, const char *ca) {
 		return NULL;
 	}
 
-	ns->length = len;
-	if (ca[len -1] != 0) {
-		ns->length++;
+	if (len == 0) {
+		ns->length = 0;
+		ns->data = NULL;
+		return ns;
 	}
-	ns->data = malloc(ns->length);
+
+	ns->length = len;
+	int alen = len;
+	if (ca[len -1] != 0) {
+		alen++;
+	}
+	ns->data = malloc(alen);
 	if (ns->data == NULL) {
 		free(ns);
 		return NULL;
 	}
 
 	strncpy(ns->data, ca, len);
-	ns->data[ns->length-1] = 0; // Force last byte to zero
+	ns->data[alen-1] = 0; // Force last byte to zero
 	return ns;
 }
 
@@ -242,12 +249,13 @@ string * str_new(const size_t len, const char *ca) {
 bool str_copy(string *dst, const string *src) {
 	str_destroy(dst);
 	dst->length = src->length;
-	dst->data = malloc(dst->length);
+	dst->data = malloc(dst->length + 1);
 	if (dst->data == NULL) {
 		dst->length = 0;
 		return false;
 	}
 	strncpy(dst->data, src->data, dst->length);
+	dst->data[dst->length] = 0;
 	return true;
 }
 
@@ -273,18 +281,20 @@ string * str_duplicate(const string *src) {
  */
 bool str_update(string *str, const size_t len, const char *src) {
 	str_destroy(str);
-	str->length = len;
 	if (len == 0) {
 		str->data = NULL;
+		str->length = 0;
 		return true;
 	}
-	str->data = malloc(len+1);
+	str->length = len+1;
+	str->data = malloc(str->length);
 	if (str->data == NULL) {
 		str->length = 0;
 		return false;
 	}
-	strncpy(str->data, src, len);
-	str->data[len] = 0;
+	strncpy(str->data, src, str->length);
+	str->data[str->length-1] = 0;
+	str->length = strlen(str->data);
 	return true;
 }
 
@@ -296,7 +306,7 @@ bool str_update(string *str, const size_t len, const char *src) {
  * @param[in] str Pointer to string to be destroyed
  */
 void str_destroy(string *str) {
-	if (str == NULL || str->length == 0) {
+	if (str == NULL) {
 		return;
 	}
 	str->length = 0;

@@ -372,7 +372,7 @@ void mp_pack_strarray(msgpack_packer *pack, const strarray *sa) {
 	for (int ix = 0; ix < sa->entries; ix++) {
 		string *s = &(sa->strings[ix]);
 		size_t sl = s->length;
-		if (strlen(s->data) < sl) {
+		if (sl > 0 && strlen(s->data) < sl) {
 			sl = strlen(s->data);
 		}
 		msgpack_pack_str(pack, sl);

@@ -669,6 +669,7 @@ int main(int argc, char *argv[]) {
 	log_info(&state, 2, "Message queue destroyed");
 	fclose(monitorFile);
 	free(monPrefix);
+	free(monFileStem);
 	free(stateName);
 	log_info(&state, 2, "Monitor file closed");
 	fclose(varFile);

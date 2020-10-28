@@ -77,6 +77,9 @@ bool mp_readMessage(int handle, msg_t *out) {
  */
 bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int *index, int *hw) {
 	int ti = 0;
+	if (out == NULL || (*index) < 0 || (*hw) < 0 || buf==NULL) {
+		return false;
+	}
 	if ((*hw) < MP_SERIAL_BUFF - 1) {
 		errno = 0;
 		ti = read(handle, &(buf[(*hw)]), MP_SERIAL_BUFF - (*hw));
@@ -409,7 +412,6 @@ bool mp_unpack_strarray(strarray *sa, msgpack_object_array *obj) {
 	sa->strings = calloc(nEntries, sizeof(string));
 
 	if (sa->strings == NULL) {
-		sa_destroy(sa);
 		return false;
 	}
 

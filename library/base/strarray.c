@@ -200,10 +200,9 @@ void sa_destroy(strarray *sa) {
 /*!
  * Allocates a new string structure and copies in the character array.
  *
- * Note that no null termination is performed - that should be done before
- * handing the array to this function. The declared length represents an upper
- * bound on the string length - the copy will stop at the first null byte found
- * (strncpy() used internally)
+ * If last character of ca is not null then an extra byte is allocated and zeroed.
+ * The declared length represents an upper bound on the string length - the
+ * copy will stop at the first null byte found (strncpy() used internally)
  *
  * @param[in] len Maximum length of character array to be copied
  * @param[in] ca  Pointer to character array
@@ -216,13 +215,17 @@ string * str_new(const size_t len, const char *ca) {
 	}
 
 	ns->length = len;
-	ns->data = malloc(len);
+	if (ca[len -1] != 0) {
+		ns->length++;
+	}
+	ns->data = malloc(ns->length);
 	if (ns->data == NULL) {
 		free(ns);
 		return NULL;
 	}
 
 	strncpy(ns->data, ca, len);
+	ns->data[ns->length-1] = 0; // Force last byte to zero
 	return ns;
 }
 
@@ -271,12 +274,17 @@ string * str_duplicate(const string *src) {
 bool str_update(string *str, const size_t len, const char *src) {
 	str_destroy(str);
 	str->length = len;
-	str->data = malloc(len);
+	if (len == 0) {
+		str->data = NULL;
+		return true;
+	}
+	str->data = malloc(len+1);
 	if (str->data == NULL) {
 		str->length = 0;
 		return false;
 	}
 	strncpy(str->data, src, len);
+	str->data[len] = 0;
 	return true;
 }
 

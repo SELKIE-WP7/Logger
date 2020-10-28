@@ -47,6 +47,7 @@ int main(int argc, char *argv[]) {
 			count++;
 			sources[tmp.source]++;
 			types[tmp.type]++;
+			msg_destroy(&tmp);
 		} else {
 			switch ((uint8_t) tmp.data.value) {
 				case 0xAA:
@@ -77,5 +78,6 @@ int main(int argc, char *argv[]) {
 			fprintf(stdout, "%d messages read were of type 0x%02x\n", types[i], i);
 		}
 	}
+	fclose(testFile);
 	return 0;
 }

@@ -62,5 +62,6 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	fprintf(stdout, "%d messages read\n", count);
+	fclose(testFile);
 	return 0;
 }

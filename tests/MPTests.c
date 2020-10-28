@@ -116,5 +116,6 @@ int main(int argc, char *argv[]) {
 	}
 	assert(count == 6);
 
+	fclose(tmp);
 	return EXIT_SUCCESS;
 }

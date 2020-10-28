@@ -38,6 +38,6 @@ char * nmea_string_hex(const nmea_msg_t *msg);
 void nmea_print_hex(const nmea_msg_t *msg);
 
 //! Parse raw data into fields
-bool nmea_parse_fields(nmea_msg_t *nmsg);
+strarray * nmea_parse_fields(const nmea_msg_t *nmsg);
 //! @}
 #endif

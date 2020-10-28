@@ -176,11 +176,38 @@ void nmea_print_hex(const nmea_msg_t *msg) {
 }
 
 /*!
- * Parses fields from raw[] into the fields array
+ * Parses fields from raw into a string array
  *
  * @param[in] nmsg Pointer to NMEA message
+ * @returns Pointer to string array (NULL on failure)
  */
-bool nmea_parse_fields(nmea_msg_t *nmsg) {
-	//! TODO
-	return false;
+strarray *nmea_parse_fields(const nmea_msg_t *nmsg) {
+	const uint8_t *fields[80] = {0};
+	int lengths[80] = {0};
+	int fc = 0;
+	const uint8_t *sp = nmsg->raw;
+	for (int fp = 0; fp < nmsg->rawlen; fp++) {
+		if ((nmsg->raw[fp] == ',') || (nmsg->raw[fp] == 0)) {
+			fields[fc] = sp;
+			lengths[fc] = &(nmsg->raw[fp]) - sp;
+			fc++;
+			sp = &(nmsg->raw[fp+1]);
+		}
+	}
+	fields[fc] = sp;
+	lengths[fc] = &(nmsg->raw[nmsg->rawlen]) - sp;
+	fc++;
+
+	strarray *sa = sa_new(fc);
+	if (sa == NULL) {
+		return false;
+	}
+	for (int fn = 0; fn < fc; fn++) {
+		if (!sa_create_entry(sa, fn, lengths[fn], (const char *)fields[fn])) {
+			sa_destroy(sa);
+			free(sa);
+			return NULL;
+		}
+	}
+	return sa;
 }

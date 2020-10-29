@@ -65,6 +65,9 @@ float i2c_ina219_read_shuntVoltage(const int busHandle, const int devAddr) {
 	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) {
 		return NAN;
 	}
+	if (!i2c_ina219_configure(busHandle, devAddr)) {
+		return NAN;
+	}
 
 	int32_t res = i2c_smbus_read_word_data(busHandle, INA219_REG_SHUNT);
 	if (res < 0) {
@@ -102,6 +105,9 @@ float i2c_ina219_read_busVoltage(const int busHandle, const int devAddr) {
 	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) {
 		return NAN;
 	}
+	if (!i2c_ina219_configure(busHandle, devAddr)) {
+		return NAN;
+	}
 
 	int32_t res = i2c_smbus_read_word_data(busHandle, INA219_REG_BUS);
 	if (res < 0) {
@@ -134,6 +140,9 @@ float i2c_ina219_read_power(const int busHandle, const int devAddr) {
 	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) {
 		return NAN;
 	}
+	if (!i2c_ina219_configure(busHandle, devAddr)) {
+		return NAN;
+	}
 
 	int32_t res = i2c_smbus_read_word_data(busHandle, INA219_REG_POWER);
 	if (res < 0) {
@@ -154,6 +163,9 @@ float i2c_ina219_read_power(const int busHandle, const int devAddr) {
  */
 float i2c_ina219_read_current(const int busHandle, const int devAddr) {
 	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) {
+		return NAN;
+	}
+	if (!i2c_ina219_configure(busHandle, devAddr)) {
 		return NAN;
 	}
 

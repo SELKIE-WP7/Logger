@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "queue.h"
 #include "messages.h"
@@ -16,10 +17,20 @@ bool queue_init(msgqueue *queue) {
 	if (queue->valid || queue->head || queue->tail) {
 		return false;
 	}
+	pthread_mutexattr_t ma = {0};
+	pthread_mutexattr_init(&ma);
+	pthread_mutexattr_settype(&ma, PTHREAD_MUTEX_ERRORCHECK);
+	pthread_mutex_init(&(queue->lock), &ma);
+	pthread_mutexattr_destroy(&ma);
+
+	if (pthread_mutex_lock(&(queue->lock))) {
+		perror("queue_init");
+		return false;
+	}
 	queue->head = NULL;
 	queue->tail = NULL;
-	pthread_mutex_init(&(queue->lock), NULL);
 	queue->valid = true;
+	pthread_mutex_unlock(&(queue->lock));
 	return queue->valid;
 }
 
@@ -33,7 +44,11 @@ bool queue_init(msgqueue *queue) {
  */
 void queue_destroy(msgqueue *queue) {
 	queue->valid = false;
-	pthread_mutex_lock(&(queue->lock));
+	if (pthread_mutex_lock(&(queue->lock))) {
+		perror("queue_destroy");
+		// Not returning, as we should still invalidate the queue
+		// Just means that we're already in an odd case
+	}
 	if (queue->head == NULL) {
 		// Queue is empty
 		// Tail should already be null, but set it just in case
@@ -96,7 +111,10 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 
 	queueitem *qi = NULL;
 
-	pthread_mutex_lock(&(queue->lock));
+	if (pthread_mutex_lock(&(queue->lock))) {
+		perror("queue_push_qi");
+		return false;
+	}
 	if (queue->head == NULL) {
 		queue->head = item;
 		queue->tail = item;
@@ -131,13 +149,18 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
  * @return Pointer to previously queued message
  */
 msg_t * queue_pop(msgqueue *queue) {
+	int e = pthread_mutex_lock(&(queue->lock));
+	if (e != 0) {
+		perror("queue_pop");
+		return NULL;
+	}
 	queueitem *head = queue->head;
 	if (head == NULL || !queue->valid) {
 		// Empty or invalid queue
+		pthread_mutex_unlock(&(queue->lock));
 		return NULL;
 	}
 
-	pthread_mutex_lock(&(queue->lock));
 	msg_t * item = head->item;
 	queue->head = head->next;
 

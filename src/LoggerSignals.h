@@ -3,6 +3,7 @@
 
 #include <signal.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 
 /*!
  * \addtogroup loggerTriggers Logger: Global triggers/signal handlers
@@ -19,9 +20,9 @@
  * @{
  */
 
-extern volatile bool shutdownFlag;
-extern volatile bool rotateNow;
-extern volatile bool pauseLog;
+extern atomic_bool shutdownFlag;
+extern atomic_bool rotateNow;
+extern atomic_bool pauseLog;
 
 /*! @brief Set safe shutdown flag
  *

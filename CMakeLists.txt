@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12...3.17)
 
 project(SELKIELogger LANGUAGES C)
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
-add_compile_options(--std=c99 -Wall -pedantic -Werror -g -O2)
+add_compile_options(--std=c11 -Wall -pedantic -Werror -g -O2)
 add_compile_definitions(_GNU_SOURCE)
 add_compile_definitions(_FORTIFY_SOURCE=2)
 
@@ -39,6 +39,8 @@ if (USE_STABLECODER_SCRIPTS)
 	add_code_coverage_all_targets()
 
 	include(sanitizers)
+else()
+	set(CODE_COVERAGE OFF)
 endif()
 
 add_subdirectory(library)

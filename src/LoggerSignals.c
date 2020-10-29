@@ -4,16 +4,16 @@
 #include "LoggerSignals.h"
 
 //! Trigger clean software shutdown
-volatile bool shutdownFlag = false;
+atomic_bool shutdownFlag = false;
 
 //! Trigger immediate log rotation
-volatile bool rotateNow = false;
+atomic_bool rotateNow = false;
 
 //! Pause logging
 /*!
  * Will not rotate or close log files, but will stop reading from inputs while this variable is set.
  */
-volatile bool pauseLog = false;
+atomic_bool pauseLog = false;
 
 // Signal handlers documented in header file
 void signalShutdown(int signnum __attribute__((unused))) {

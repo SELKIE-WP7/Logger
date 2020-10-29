@@ -547,6 +547,7 @@ int main(int argc, char *argv[]) {
 			} else {
 				fclose(monitorFile);
 				monitorFile = newMonitor;
+				free(monFileStem);
 				monFileStem= newMonFileStem;
 				log_info(&state, 2, "Using data file %s.dat", monFileStem);
 			}
@@ -667,15 +668,28 @@ int main(int argc, char *argv[]) {
 	}
 	queue_destroy(&log_queue);
 	log_info(&state, 2, "Message queue destroyed");
+
 	fclose(monitorFile);
 	free(monPrefix);
 	free(monFileStem);
-	free(stateName);
 	log_info(&state, 2, "Monitor file closed");
+
 	fclose(varFile);
 	log_info(&state, 2, "Variable file closed");
+
 	log_info(&state, 0, "%d messages read successfully\n\n", msgCount);
 	fclose(state.log);
+	free(stateName);
+
+	/***
+	 * While this isn't necessary for the program to run, it keeps Valgrind
+	 * happy and makes it easier to spot real bugs and leaks
+	 *
+	 */
+	free(gpsParams.portName);
+	free(mpParams.portName);
+	free(nmeaParams.portName);
+	free(i2cParams.busName);
 	return 0;
 }
 

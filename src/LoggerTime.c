@@ -51,6 +51,7 @@ void *timer_logging(void *ptargs) {
 		nextIter.tv_nsec -= (nextIter.tv_nsec % incr_nsec);
 
 		struct timespec target = {0};
+		clock_gettime(CLOCK_MONOTONIC, &now);
 		if (timespec_subtract(&target, &nextIter, &now)) {
 			// Target has passed! Update ASAP and continue
 			log_warning(args->pstate, "[Timer] Deadline missed");

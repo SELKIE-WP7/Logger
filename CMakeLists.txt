@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.12...3.17)
 
 project(SELKIELogger LANGUAGES C)
-
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
-add_compile_options(-Wall -pedantic -Werror -g -O2)
+add_compile_options(--std=c99 -Wall -pedantic -Werror -g -O2)
 add_compile_definitions(_GNU_SOURCE)
 add_compile_definitions(_FORTIFY_SOURCE=2)
 
@@ -30,6 +29,17 @@ endif()
 include(GNUInstallDirs)
 
 include_directories(${CMAKE_BINARY_DIR})
+
+option(USE_STABLECODER_SCRIPTS "Use CMake scripts from https://github.com/StableCoder/cmake-scripts to provide convenient features" OFF)
+if (USE_STABLECODER_SCRIPTS)
+	set(STABLECODER_PATH "../cmake-scripts/" CACHE PATH "Path to StableCoder CMake scripts")
+	set(CMAKE_MODULE_PATH APPEND "${STABLECODER_PATH}")
+	include(code-coverage)
+	add_code_coverage()
+	add_code_coverage_all_targets()
+
+	include(sanitizers)
+endif()
 
 add_subdirectory(library)
 add_subdirectory(src)

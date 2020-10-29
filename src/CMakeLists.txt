@@ -26,3 +26,8 @@ install(TARGETS Logger RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Pow
 
 set(CPACK_COMPONENT_POWERHAT_GROUP "Applications")
 set(CPACK_COMPONENT_POWERHAT_DESCRIPTION "Read values from an INA219 based ADC Hat")
+
+if (CODE_COVERAGE)
+	target_code_coverage(Logger)
+	target_code_coverage(PowerHatRead)
+endif()

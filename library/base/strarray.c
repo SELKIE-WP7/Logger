@@ -254,6 +254,12 @@ bool str_copy(string *dst, const string *src) {
 		dst->length = 0;
 		return false;
 	}
+	if (src->data == NULL) {
+		dst->length = 0;
+		free(dst->data);
+		dst->data = NULL;
+		return true; // Odd scenario, but still a valid string
+	}
 	strncpy(dst->data, src->data, dst->length);
 	dst->data[dst->length] = 0;
 	return true;

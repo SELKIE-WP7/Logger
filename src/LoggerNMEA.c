@@ -50,13 +50,34 @@ void *nmea_logging(void *ptargs) {
 		if (nmea_readMessage_buf(nmeaInfo->handle, &out, buf, &nmea_index, &nmea_hw)) {
 			char *data = NULL;
 			ssize_t len = nmea_flat_array(&out, &data);
+			bool handled = false;
 
-			msg_t *sm = msg_new_bytes(nmeaInfo->sourceNum, 3, len, (uint8_t *)data);
-			if (!queue_push(args->logQ, sm)) {
-				log_error(args->pstate, "[NMEA:%s] Error pushing message to queue", nmeaInfo->portName);
-				msg_destroy(sm);
-				args->returnCode = -1;
-				pthread_exit(&(args->returnCode));
+			if ((strncmp(out.talker, "II", 2) == 0) && (strncmp(out.message, "ZDA", 3) == 0)) {
+				struct tm *t = nmea_parse_zda(&out);
+				if (t != NULL) {
+					time_t epoch = mktime(t) - t->tm_gmtoff;
+					if (epoch != (time_t)(-1)) {
+						msg_t *tm = msg_new_timestamp(nmeaInfo->sourceNum, 4, epoch);
+						if (!queue_push(args->logQ, tm)) {
+							log_error(args->pstate, "[NMEA:%s] Error pushing message to queue", nmeaInfo->portName);
+							msg_destroy(tm);
+							free(t);
+							args->returnCode = -1;
+							pthread_exit(&(args->returnCode));
+						}
+						handled = true; // Suppress ZDA messages
+					}
+
+				}
+			}
+			if (!handled) {
+				msg_t *sm = msg_new_bytes(nmeaInfo->sourceNum, 3, len, (uint8_t *)data);
+				if (!queue_push(args->logQ, sm)) {
+					log_error(args->pstate, "[NMEA:%s] Error pushing message to queue", nmeaInfo->portName);
+					msg_destroy(sm);
+					args->returnCode = -1;
+					pthread_exit(&(args->returnCode));
+				}
 			}
 			if (data) {
 				free(data); // Copied into message, so can safely free here
@@ -123,11 +144,12 @@ void *nmea_channels(void *ptargs) {
 		pthread_exit(&(args->returnCode));
 	}
 
-	strarray *channels = sa_new(4);
+	strarray *channels = sa_new(5);
 	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
 	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");
 	sa_create_entry(channels, SLCHAN_TSTAMP, 9, "Timestamp");
 	sa_create_entry(channels, SLCHAN_RAW, 8, "Raw NMEA");
+	sa_create_entry(channels, 4, 5, "Epoch");
 
 	msg_t *m_cmap = msg_new_string_array(nmeaInfo->sourceNum, SLCHAN_MAP, channels);
 

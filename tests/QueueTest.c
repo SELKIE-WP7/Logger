@@ -56,6 +56,7 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	msg_destroy(out);
+	free(out);
 	out = NULL;
 
 	count = queue_count(&QT);
@@ -106,6 +107,7 @@ int main(int argc, char *argv[]) {
 			return EXIT_FAILURE;
 		}
 		msg_destroy(item);
+		free(item);
 	}
 
 	count = queue_count(&QT);
@@ -122,6 +124,7 @@ int main(int argc, char *argv[]) {
 	out = queue_pop(&QT);
 	fprintf(stdout, "Logged message: %s\n", out->data.string.data);
 	msg_destroy(out);
+	free(out);
 
 	queue_destroy(&QT);
 

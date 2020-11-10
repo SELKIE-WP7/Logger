@@ -22,6 +22,9 @@ bool mp_readMessage(int handle, msg_t *out);
 //! Read data from handle, and parse message if able
 bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int *index, int *hw);
 
+//! Pack a message into a buffer
+bool mp_packMessage(msgpack_sbuffer *sbuf, const msg_t *out);
+
 //! Send message to attached device
 bool mp_writeMessage(int handle, const msg_t *out);
 

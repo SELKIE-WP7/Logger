@@ -301,19 +301,21 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 	return valid;
 }
 
+
 /*!
- * Takes a message, validates the source and message type and then writes MessagePacked data
- * to the device or file connected to `handle`.
+ * Pack a message into the provided buffer, ready for writing.
+ * The buffer is initialised by this function, and destroyed on error.
  *
- * @param[in] handle File descriptor from mp_openConnection()
- * @param[in] out Pointer to message structure to be sent.
- * @return True if data successfullt written to `handle`
+ * Caller is responsible for destroying buffer after use
+ *
+ * @param[out] sbuf 	msgpack_sbuffer to write into
+ * @param[in]  out	Message to pack into buffer
+ * @returns true on success, false on error
  */
-bool mp_writeMessage(int handle, const msg_t *out) {
-	msgpack_sbuffer sbuf;
-	msgpack_packer pack;
-	msgpack_sbuffer_init(&sbuf);
-	msgpack_packer_init(&pack, &sbuf, msgpack_sbuffer_write);
+bool mp_packMessage(msgpack_sbuffer *sbuf, const msg_t *out) {
+	msgpack_packer pack = {0};
+	msgpack_sbuffer_init(sbuf);
+	msgpack_packer_init(&pack, sbuf, msgpack_sbuffer_write);
 	msgpack_pack_array(&pack,4); // MP_SYNC_BYTE1
 	msgpack_pack_int(&pack, MP_SYNC_BYTE2);
 	msgpack_pack_int(&pack, out->source);
@@ -351,8 +353,23 @@ bool mp_writeMessage(int handle, const msg_t *out) {
 		case MSG_ERROR:
 		case MSG_UNDEF:
 		default:
-			msgpack_sbuffer_destroy(&sbuf);
+			msgpack_sbuffer_destroy(sbuf);
 			return false;
+	}
+	return true;
+}
+
+/*!
+ * Packs message using mp_packMessage and writes it to a file descriptor
+ *
+ * @param[in] handle File descriptor from mp_openConnection()
+ * @param[in] out Pointer to message structure to be sent.
+ * @return True if data successfullt written to `handle`
+ */
+bool mp_writeMessage(int handle, const msg_t *out) {
+	msgpack_sbuffer sbuf;
+	if (!mp_packMessage(&sbuf, out)) {
+		return false;
 	}
 	int ret = write(handle, sbuf.data, sbuf.size);
 	msgpack_sbuffer_destroy(&sbuf);
@@ -360,7 +377,7 @@ bool mp_writeMessage(int handle, const msg_t *out) {
 }
 
 /*!
- * Helper function for mp_writeMessage()
+ * Helper function for mp_packMessage()
  *
  * Packs string array into supplied msgpack_packer object
  *
@@ -381,7 +398,7 @@ void mp_pack_strarray(msgpack_packer *pack, const strarray *sa) {
 }
 
 /*!
- * Helper function for mp_writeMessage()
+ * Helper function for mp_packMessage()
  *
  * Packs float array into supplied msgpack_packer object
  *

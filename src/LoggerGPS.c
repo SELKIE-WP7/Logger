@@ -91,7 +91,7 @@ void *gps_logging(void *ptargs) {
 			bool handled = false;
 			if (out.msgClass == UBXNAV && out.msgID == 0x21) {
 				// Extract GPS ToW
-				uint32_t ts = out.data[3] + (out.data[2] << 8) + (out.data[1] << 16) + (out.data[2] << 24);
+				uint32_t ts = out.data[0] + (out.data[1] << 8) + (out.data[2] << 16) + (out.data[3] << 24);
 				msg_t *utc = msg_new_timestamp(gpsInfo->sourceNum, SLCHAN_TSTAMP, ts);
 				if (!queue_push(args->logQ, utc)) {
 					log_error(args->pstate, "[GPS:%s] Error pushing message to queue", gpsInfo->portName);

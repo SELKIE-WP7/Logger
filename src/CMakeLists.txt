@@ -27,6 +27,15 @@ install(TARGETS PowerHatRead RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONE
 set(CPACK_COMPONENT_POWERHAT_GROUP "Applications")
 set(CPACK_COMPONENT_POWERHAT_DESCRIPTION "Read values from an INA219 based ADC Hat")
 
+find_package(ZLIB REQUIRED)
+add_executable(dat2csv dat2csv.c)
+target_link_libraries(dat2csv PUBLIC ZLIB::ZLIB)
+target_link_libraries(dat2csv PUBLIC SELKIELoggerBase SELKIELoggerMP)
+install(TARGETS dat2csv RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
+
+set(CPACK_COMPONENT_CONVERSION_GROUP "Applications")
+set(CPACK_COMPONONT_CONVERSION_DESCRIPTION "Data format conversion utilities")
+
 if (CODE_COVERAGE)
 	target_code_coverage(Logger)
 	target_code_coverage(PowerHatRead)

@@ -12,8 +12,15 @@
 #include "version.h"
 
 int sort_uint(const void *a, const void *b);
+
 char * csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const char *sourceName, const char *channelName);
 char * csv_all_timestamp_data(const msg_t *msg);
+char * csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+char * csv_gps_position_data(const msg_t *msg);
+char * csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+char * csv_gps_velocity_data(const msg_t *msg);
+char * csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+char * csv_gps_datetime_data(const msg_t *msg);
 
 typedef char *(*csv_header_fn)(const uint8_t, const uint8_t, const char *, const char *);
 typedef char *(*csv_data_fn)(const msg_t *);
@@ -201,7 +208,15 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
-
+	// GPS sources
+	for (int i = 0; i < nSources; i++) {
+		if (usedSources[i] >= SLSOURCE_GPS && usedSources[i] < (SLSOURCE_GPS + 0x10)) {
+			// Source ID in correct range, assume this is GPS device
+			handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], 4, &csv_gps_position_headers, &csv_gps_position_data};
+			handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], 5, &csv_gps_velocity_headers, &csv_gps_velocity_data};
+			handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], 6, &csv_gps_datetime_headers, &csv_gps_datetime_data};
+		}
+	}
 
 	if (outfileName == NULL) {
 		// Work out output file name
@@ -433,6 +448,67 @@ char * csv_all_timestamp_data(const msg_t *msg) {
 	}
 
 	if (asprintf(&out, "%d", msg->data.timestamp) <= 0) {
+		return NULL;
+	}
+	return out;
+}
+
+char * csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName) {
+	char *fields = NULL;
+	if (asprintf(&fields, "Longitude:%1$02X,Latitude:%1$02X,Height:%1$02X,HAcc:%1$02X,VAcc:%1$02X", source) <= 0) {
+		return NULL;
+	}
+	return fields;
+}
+
+char * csv_gps_position_data(const msg_t *msg) {
+	char *out = NULL;
+	if (msg == NULL) {
+		return strdup(",,,,");
+	}
+	const float *d = msg->data.farray;
+	if (asprintf(&out, "%.5f,%.5f,%.3f,%.3f,%.3f", d[0], d[1], d[2], d[4], d[5]) <= 0) {
+		return NULL;
+	}
+	return out;
+}
+
+char * csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName) {
+	char *fields = NULL;
+	if (asprintf(&fields, "Velocity_N:%1$02X,Velocity_E:%1$02X,Velocity_D:%1$02X,SpeedAcc:%1$02X,Heading:%1$02X,HeadAcc:%1$02X", source) <= 0) {
+		return NULL;
+	}
+	return fields;
+}
+
+char * csv_gps_velocity_data(const msg_t *msg) {
+	char *out = NULL;
+	if (msg == NULL) {
+		return strdup(",,,,,");
+	}
+	const float *d = msg->data.farray;
+	if (asprintf(&out, "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f", d[0], d[1], d[2], d[5], d[4], d[6]) <= 0) {
+		return NULL;
+	}
+	return out;
+}
+
+char * csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName) {
+	char *fields = NULL;
+	if (asprintf(&fields, "Date:%1$02X,Time:%1$02X,DTAcc:%1$02X", source) <= 0) {
+		return NULL;
+	}
+	return fields;
+}
+
+char * csv_gps_datetime_data(const msg_t *msg) {
+	char *out = NULL;
+	if (msg == NULL) {
+		return strdup(",,");
+	}
+	const float *d = msg->data.farray;
+	//if (asprintf(&out, "\"%04.0f-%02.0f-%02.0f\",\"%02.0f:%02.0f:%02.0f.%06.0f\",%09.0f", d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7]) <= 0) {
+	if (asprintf(&out, "%04.0f-%02.0f-%02.0f,%02.0f:%02.0f:%02.0f.%06.0f,%09.0f", d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7]) <= 0) {
 		return NULL;
 	}
 	return out;

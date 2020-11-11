@@ -190,7 +190,7 @@ bool ubx_decode_nav_pvt(const ubx_message *msg, ubx_nav_pvt *out) {
 	out->groundSpeed = (int32_t)(d[60] + (d[61] << 8) + (d[62] << 16) + (d[63] << 24));
 	out->heading = ((int32_t)(d[64] + (d[65] << 8) + (d[66] << 16) + (d[67] << 24))) * 1E-5;
 	out->speedAcc = (int32_t)(d[68] + (d[69] << 8) + (d[70] << 16) + (d[71] << 24));
-	out->headingAcc = (int32_t)(d[72] + (d[73] << 8) + (d[74] << 16) + (d[75] << 24));
+	out->headingAcc = ((int32_t)(d[72] + (d[73] << 8) + (d[74] << 16) + (d[75] << 24))) * 1E-5;
 	out->pDOP = d[76] + (d[77] << 8);
 	out->pvtFlags = d[78];
 	out->vehicleHeading = ((int32_t)(d[84] + (d[85] << 8) + (d[86] << 16) + (d[87] << 24))) * 1E-5;

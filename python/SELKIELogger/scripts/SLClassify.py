@@ -20,12 +20,23 @@ def SLClassify():
     # Dict of Dicts gpsSeen[class][msg] = count and similar for NMEA
     gpsSeen = {}
     nmeaSeen = {}
+    mpSeen = {}
     gpsProcessed = 0
     nmeaProcessed = 0
+    mpProcessed = 0
     for msg in unpacker:
         msg = out.Process(msg, output="raw")
         if msg is None:
             continue
+        mpProcessed += 1
+        if msg.SourceID in mpSeen:
+            if msg.ChannelID in mpSeen[msg.SourceID]:
+                mpSeen[msg.SourceID][msg.ChannelID] += 1
+            else:
+                mpSeen[msg.SourceID][msg.ChannelID] = 1
+        else:
+            mpSeen[msg.SourceID] = {}
+            mpSeen[msg.SourceID][msg.ChannelID] = 1
 
         if msg.SourceID >= 0x10 and msg.SourceID < 0x20:
             # Assume GPS
@@ -72,7 +83,14 @@ def SLClassify():
                 nmeaSeen[talker][message] = 1
 
 
-    print("===== GPS Messages Seen =====")
+    print("======= Messages Seen =======")
+    print(f"Total processed:\t{mpProcessed:d}")
+    print(f"By Source and Type:")
+    for ms in mpSeen:
+        for mt in mpSeen[ms]:
+            print(f"\t0x{ms:02x}\t0x{mt:02x}\t{mpSeen[ms][mt]:d}")
+
+    print("\n\n===== GPS Messages Seen =====")
     print(f"Converted:\t\t{gpsProcessed:d}")
     print(f"Not Converted:")
     for uC in gpsSeen:

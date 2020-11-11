@@ -99,7 +99,7 @@ void *gps_logging(void *ptargs) {
 					args->returnCode = -1;
 					pthread_exit(&(args->returnCode));
 				}
-				// Not setting "handled" yet - need to extract rest of date time
+				handled = true;
 			} else if (out.msgClass == UBXNAV && out.msgID == 0x07) {
 				// NAV-PVT
 				ubx_nav_pvt nav = {0};
@@ -124,13 +124,26 @@ void *gps_logging(void *ptargs) {
 						nav.headingAcc
 					};
 
+					float dt[8] = {
+						nav.year,
+						nav.month,
+						nav.day,
+						nav.hour,
+						nav.minute,
+						nav.second,
+						nav.nanosecond,
+						nav.accuracy
+					};
+
 					msg_t *mnav = msg_new_float_array(gpsInfo->sourceNum, 4, 6, posData);
 					msg_t *mvel = msg_new_float_array(gpsInfo->sourceNum, 5, 7, velData);
+					msg_t *mdt = msg_new_float_array(gpsInfo->sourceNum, 6, 8, dt);
 
-					if (!queue_push(args->logQ, mnav) || !queue_push(args->logQ, mvel)) {
+					if (!queue_push(args->logQ, mnav) || !queue_push(args->logQ, mvel) || !queue_push(args->logQ, mdt)) {
 						log_error(args->pstate, "[GPS:%s] Error pushing messages to queue", gpsInfo->portName);
 						msg_destroy(mnav);
 						msg_destroy(mvel);
+						msg_destroy(mdt);
 						args->returnCode = -1;
 						pthread_exit(&(args->returnCode));
 					}
@@ -215,13 +228,14 @@ void *gps_channels(void *ptargs) {
 		pthread_exit(&(args->returnCode));
 	}
 
-	strarray *channels = sa_new(6);
+	strarray *channels = sa_new(7);
 	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
 	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");
 	sa_create_entry(channels, SLCHAN_TSTAMP, 9, "Timestamp");
 	sa_create_entry(channels, SLCHAN_RAW, 7, "Raw UBX");
 	sa_create_entry(channels, 4, 8, "Position");
 	sa_create_entry(channels, 5, 8, "Velocity");
+	sa_create_entry(channels, 6, 8, "DateTime");
 
 	msg_t *m_cmap = msg_new_string_array(gpsInfo->sourceNum, SLCHAN_MAP, channels);
 

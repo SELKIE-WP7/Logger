@@ -40,24 +40,26 @@ int main(int argc, char *argv[]) {
 	char *outfileName = NULL;
 	bool doGZ = true;
 	bool clobberOutput = false;
+	uint8_t primaryClock = 0x02;
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-f] [-c varfile] [-z|-Z] [-o outfile] datfile\n"
+        char *usage =  "Usage: %1$s [-v] [-q] [-f] [-c varfile] [-z|-Z] [-T source] [-o outfile] datfile\n"
                 "\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
 		"\t-f\tOverwrite existing output files\n"
 		"\t-c\tRead source and channel names from specified file\n"
 		"\t-z\tEnable gzipped output\n"
 		"\t-Z\tDisable gzipped output\n"
+		"\t-T\tUse specified source as primary clock\n"
 		"\t-o\tWrite output to named file\n"
                 "\nVersion: " GIT_VERSION_STRING "\n"
 		"Default options equivalent to:\n"
-		"\t%1$s -z datfile\n"
+		"\t%1$s -z -T 0x02 datafile\n"
 		"Output file name will be generated based on input file name and compression flags, unless set by -o option\n";
 
         opterr = 0; // Handle errors ourselves
         int go = 0;
 	bool doUsage = false;
-        while ((go = getopt(argc, argv, "vqfzZc:o:")) != -1) {
+        while ((go = getopt(argc, argv, "vqfzZc:o:T:")) != -1) {
                 switch(go) {
                         case 'v':
                                 state.verbose++;
@@ -80,6 +82,15 @@ int main(int argc, char *argv[]) {
 			case 'o':
 				outfileName = strdup(optarg);
 				break;
+			case 'T':
+				errno = 0;
+				primaryClock = strtol(optarg, NULL, 0);
+				if (errno || primaryClock == 0 || primaryClock >= 128) {
+					log_error(&state, "Bad clock source value ('%s')", optarg);
+					doUsage = true;
+				}
+				break;
+
 			case '?':
 				log_error(&state, "Unknown option `-%c'", optopt);
 				doUsage = true;
@@ -188,7 +199,6 @@ int main(int argc, char *argv[]) {
 		return -2;
 	}
 
-	uint8_t masterClock = 0x02; //TODO: Make configurable
 	int nHandlers = 0;
 	int maxHandlers = 100;
 	csv_msg_handler *handlers = calloc(maxHandlers, sizeof(csv_msg_handler));
@@ -351,7 +361,7 @@ int main(int argc, char *argv[]) {
 		msgCount++;
 
 		// Check whether we're updating the current timestep
-		if (tmp->source == masterClock && tmp->type == SLCHAN_TSTAMP) {
+		if (tmp->source == primaryClock && tmp->type == SLCHAN_TSTAMP) {
 			nextstep = tmp->data.timestamp;
 		}
 
@@ -403,6 +413,7 @@ int main(int argc, char *argv[]) {
 	}
 	fclose(inFile);
 	gzclose(outFile);
+
 	for (int i = 0; i < 128; i++) {
 		if (sourceNames[i] != NULL) {
 			free(sourceNames[i]);

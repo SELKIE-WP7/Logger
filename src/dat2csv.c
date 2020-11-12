@@ -302,6 +302,9 @@ int main(int argc, char *argv[]) {
 		log_error(&state, "%s", strerror(errno));
 		return -1;
 	}
+	log_info(&state, 1, "Writing %s output to %s", doGZ ? "compressed" : "uncompressed", outfileName);
+	free(outfileName);
+	outfileName = NULL;
 
 	state.started = 1;
 	int msgCount = 0;
@@ -314,13 +317,13 @@ int main(int argc, char *argv[]) {
 	long inPos = 0;
 	int progress = 0;
 	if (inSize >= 1E9) {
-		log_info(&state, 1, "Reading %.2fGB from %s", inSize / 1.0E9, infileName);
+		log_info(&state, 1, "Reading %.2fGB of data from %s", inSize / 1.0E9, infileName);
 	} else if (inSize >= 1E6) {
-		log_info(&state, 1, "Reading %.2fMB from %s", inSize / 1.0E6, infileName);
+		log_info(&state, 1, "Reading %.2fMB of data from %s", inSize / 1.0E6, infileName);
 	} else if (inSize >= 1E3) {
-		log_info(&state, 1, "Reading %.2fkB from %s", inSize / 1.0E3, infileName);
+		log_info(&state, 1, "Reading %.2fkB of data from %s", inSize / 1.0E3, infileName);
 	} else {
-		log_info(&state, 1, "Reading %ld bytes from %s", inSize, infileName);
+		log_info(&state, 1, "Reading %ld bytes of data from %s", inSize, infileName);
 	}
 
 
@@ -348,10 +351,14 @@ int main(int argc, char *argv[]) {
 		free(fieldTitle);
 	}
 
-	msg_t currentTimestep[1000];
+	const int ctsLimit = 1000;
+	msg_t currentTimestep[ctsLimit];
 	int currMsg = 0;
 	log_info(&state, 2, "%s", header);
 	gzprintf(outFile, "%s\n", header);
+	free(header);
+	header = NULL;
+
 	while (!(feof(inFile))) {
 		// Read message from data file
 		msg_t *tmp = &(currentTimestep[currMsg++]);
@@ -373,6 +380,11 @@ int main(int argc, char *argv[]) {
 			nextstep = tmp->data.timestamp;
 		}
 
+		// If we accumulate too many messages (bad clock choice?), force a record to be output
+		if (currMsg >= (ctsLimit - 1) && (timestep == nextstep)) {
+			log_warning(&state, "Too many messages processed during %d. Forcing output.", timestep);
+			nextstep++;
+		}
 
 		// Time for a new record? Write it out
 		if (nextstep != timestep) {
@@ -436,8 +448,8 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	log_info(&state, 1, "%d messages processed", msgCount);
-	free(outfileName);
 	free(infileName);
+	free(handlers);
 	return 0;
 }
 

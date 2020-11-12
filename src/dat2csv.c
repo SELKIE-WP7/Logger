@@ -21,6 +21,8 @@ char * csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const 
 char * csv_gps_velocity_data(const msg_t *msg);
 char * csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
 char * csv_gps_datetime_data(const msg_t *msg);
+char * csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+char * csv_all_float_data(const msg_t *msg);
 
 typedef char *(*csv_header_fn)(const uint8_t, const uint8_t, const char *, const char *);
 typedef char *(*csv_data_fn)(const msg_t *);
@@ -132,6 +134,8 @@ int main(int argc, char *argv[]) {
 	uint8_t usedSources[128] = {0};
 
 	if (varfileName == NULL) {
+		log_warning(&state, "Reading entire data file to generate channel list.");
+		log_warning(&state, "Provide .var file using '-c' option to avoid this");
 		varfileName = strdup(infileName);
 		if (varfileName == NULL) {
 			log_error(&state, "Error processing variable file name: %s", strerror(errno));
@@ -224,15 +228,45 @@ int main(int argc, char *argv[]) {
 				log_error(&state, "Unable to expand handler map: %s", strerror(errno));
 				return -1;
 			}
+			maxHandlers += 50;
 		}
 	}
-	// GPS sources
+
 	for (int i = 0; i < nSources; i++) {
 		if (usedSources[i] >= SLSOURCE_GPS && usedSources[i] < (SLSOURCE_GPS + 0x10)) {
 			// Source ID in correct range, assume this is GPS device
+			if (nHandlers >= maxHandlers - 4) {
+				handlers = reallocarray(handlers, 50+maxHandlers, sizeof(csv_msg_handler));
+				if (handlers == NULL) {
+					log_error(&state, "Unable to expand handler map: %s", strerror(errno));
+					return -1;
+				}
+				maxHandlers += 50;
+			}
 			handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], 4, &csv_gps_position_headers, &csv_gps_position_data};
 			handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], 5, &csv_gps_velocity_headers, &csv_gps_velocity_data};
 			handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], 6, &csv_gps_datetime_headers, &csv_gps_datetime_data};
+		}
+		// Although these sources have to be communicated with differently, both output named channels with single floating point values
+		if ( (usedSources[i] >= SLSOURCE_I2C && usedSources[i] < (SLSOURCE_I2C + 0x10)) ||
+			(usedSources[i] >= SLSOURCE_IMU && usedSources[i] < (SLSOURCE_IMU + 0x10))) {
+			// Start at first valid data channel (3)
+			for (int c = 3; c < 128; c++) {
+				// If the channel name is empty, assume we're not using this one
+				if (channelNames[usedSources[i]][c] == NULL) {
+					continue;
+				}
+				// Generic handler for any single floating point channels
+				handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], c, &csv_all_float_headers, &csv_all_float_data};
+				if (nHandlers >= maxHandlers) {
+					handlers = reallocarray(handlers, 50+maxHandlers, sizeof(csv_msg_handler));
+					if (handlers == NULL) {
+						log_error(&state, "Unable to expand handler map: %s", strerror(errno));
+						return -1;
+					}
+					maxHandlers += 50;
+				}
+			}
 		}
 	}
 
@@ -353,6 +387,9 @@ int main(int argc, char *argv[]) {
 
 	const int ctsLimit = 1000;
 	msg_t currentTimestep[ctsLimit];
+	for (int i=0; i < ctsLimit; i++) {
+		currentTimestep[i] = (msg_t) {0};
+	}
 	int currMsg = 0;
 	log_info(&state, 2, "%s", header);
 	gzprintf(outFile, "%s\n", header);
@@ -414,6 +451,7 @@ int main(int argc, char *argv[]) {
 						return -1;
 					}
 					gzprintf(outFile, ",%s", out);
+					free(out);
 				}
 			}
 			gzprintf(outFile, "\n");
@@ -538,9 +576,28 @@ char * csv_gps_datetime_data(const msg_t *msg) {
 		return strdup(",,");
 	}
 	const float *d = msg->data.farray;
-	//if (asprintf(&out, "\"%04.0f-%02.0f-%02.0f\",\"%02.0f:%02.0f:%02.0f.%06.0f\",%09.0f", d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7]) <= 0) {
 	if (asprintf(&out, "%04.0f-%02.0f-%02.0f,%02.0f:%02.0f:%02.0f.%06.0f,%09.0f", d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7]) <= 0) {
 		return NULL;
 	}
 	return out;
 }
+
+char * csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName) {
+	char *fields = NULL;
+	if (asprintf(&fields, "%s:%02X", channelName, source) <= 0) {
+		return NULL;
+	}
+	return fields;
+}
+
+char * csv_all_float_data(const msg_t *msg) {
+	char *out = NULL;
+	if (msg == NULL) {
+		return strdup("");
+	}
+	if (asprintf(&out, "%.6f", msg->data.value) <= 0) {
+		return NULL;
+	}
+	return out;
+}
+

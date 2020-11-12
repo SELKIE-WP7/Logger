@@ -40,7 +40,8 @@
 
 #define SLSOURCE_I2C	0x40 //!< I2C Bus
 
-#define SLSOURCE_IMU	0x70 //!< IMUs (e.g. SURFTEC IMU devices)
+#define SLSOURCE_MP	0x70 //!< Devices with suitable MessagePack output returning single value channels
+#define SLSOURCE_IMU	SLSOURCE_MP //!< IMUs (e.g. SURFTEC IMU devices). Alias for SLSOURCE_MP
 
 //! @}
 

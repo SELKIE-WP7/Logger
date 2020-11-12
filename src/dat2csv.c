@@ -54,7 +54,8 @@ int main(int argc, char *argv[]) {
                 "\nVersion: " GIT_VERSION_STRING "\n"
 		"Default options equivalent to:\n"
 		"\t%1$s -z -T 0x02 datafile\n"
-		"Output file name will be generated based on input file name and compression flags, unless set by -o option\n";
+		"Output file name will be generated based on input file name and compression flags, unless set by -o option\n"
+		"If no var file is provided using the -c option, the data file will be parsed twice in order to discover active channels\n";
 
         opterr = 0; // Handle errors ourselves
         int go = 0;
@@ -129,7 +130,17 @@ int main(int argc, char *argv[]) {
 
 	int nSources = 0;
 	uint8_t usedSources[128] = {0};
-	if (varfileName != NULL) {
+
+	if (varfileName == NULL) {
+		varfileName = strdup(infileName);
+		if (varfileName == NULL) {
+			log_error(&state, "Error processing variable file name: %s", strerror(errno));
+			return -1;
+		}
+	}
+
+	// No longer run conditionally, but keeping variables in own scope
+	{
 		log_info(&state, 1, "Reading channel and source names from %s", varfileName);
 		FILE *varFile = fopen(varfileName, "rb");
 		if (varFile == NULL) {
@@ -194,9 +205,6 @@ int main(int argc, char *argv[]) {
 		free(varfileName);
 		varfileName = NULL;
 		qsort(&usedSources, nSources, sizeof(uint8_t), &sort_uint);
-	} else {
-		log_error(&state, "Running without a pre-supplied variable file not yet supported");
-		return -2;
 	}
 
 	int nHandlers = 0;

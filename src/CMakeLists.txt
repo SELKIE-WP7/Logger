@@ -33,6 +33,12 @@ target_link_libraries(dat2csv PUBLIC ZLIB::ZLIB)
 target_link_libraries(dat2csv PUBLIC SELKIELoggerBase SELKIELoggerMP)
 install(TARGETS dat2csv RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
 
+find_package(ZLIB REQUIRED)
+add_executable(ExtractSatInfo ExtractSatInfo.c)
+target_link_libraries(ExtractSatInfo PUBLIC ZLIB::ZLIB)
+target_link_libraries(ExtractSatInfo PUBLIC SELKIELoggerBase SELKIELoggerMP)
+install(TARGETS ExtractSatInfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
+
 set(CPACK_COMPONENT_CONVERSION_GROUP "Applications")
 set(CPACK_COMPONONT_CONVERSION_DESCRIPTION "Data format conversion utilities")
 

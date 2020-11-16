@@ -1,7 +1,10 @@
 #ifndef SELKIELoggerNMEA_Messages
 #define SELKIELoggerNMEA_Messages
 
-//! @file NMEAMessages.h Utility functions for processing NMEA messages
+/*!
+ * @file NMEAMessages.h Utility functions for processing NMEA messages
+ * @ingroup SELKIELoggerNMEA
+ */
 
 #include <stddef.h>
 #include <stdint.h>
@@ -11,7 +14,8 @@
 #include "NMEATypes.h"
 
 /*!
- * \addtogroup nmea NMEA Message support functions
+ * @addtogroup nmea NMEA Message support functions
+ * @ingroup SELKIELoggerNMEA
  *
  * Convert and verify NMEA protocol messages
  * @{

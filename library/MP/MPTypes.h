@@ -1,9 +1,17 @@
 #ifndef SELKIELoggerMP_Types
 #define SELKIELoggerMP_Types
 
-//! @file MPTypes.h Serial Data types and definitions for communication with compatible MessagePack data sources
+/*!
+ * @file MPTypes.h Serial Data types and definitions for communication with compatible MessagePack data sources
+ * @ingroup SELKIELoggerMP
+ */
 
 #include "SELKIELoggerBase.h"
+
+/*!
+ * @addtogroup SELKIELoggerMP
+ * @{
+ */
 
 /*! @brief MP Serial synchronisation byte 1
  *
@@ -40,5 +48,5 @@
  * There is no checksumming of transmitted messages under this scheme.
  */
 typedef msg_t mp_message_t;
-
+//! @}
 #endif

@@ -1,10 +1,19 @@
 #ifndef SELKIELoggerGPS_Types
 #define SELKIELoggerGPS_Types
 
-//! @file GPSTypes.h Data types and definitions for use with UBX protocol messages
+/*!
+ * @file GPSTypes.h Data types and definitions for use with UBX protocol messages
+ * @ingroup SELKIELoggerGPS
+ */
 
 #include <stdint.h>
 #include <stdbool.h>
+
+/*!
+ * @addtogroup SELKIELoggerGPS
+ * @{
+ */
+
 
 /*! @brief UBX Serial synchronisation byte 1
  *
@@ -105,4 +114,5 @@ typedef struct ubx_nav_pvt {
 	float magneticDeclination; //!< Local magnetic field declination
 	float magDecAcc; //!< Estimated accuracty of magnetic field declination
 } ubx_nav_pvt;
+//! @}
 #endif

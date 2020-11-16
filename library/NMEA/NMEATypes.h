@@ -1,9 +1,10 @@
 #ifndef SELKIELoggerNMEA_Types
 #define SELKIELoggerNMEA_Types
 
-//! @file NMEATypes.h Serial Data types and definitions for communication with NMEA devices
-
 /*!
+ * @file NMEATypes.h Serial Data types and definitions for communication with NMEA devices
+ * @ingroup SELKIELoggerNMEA
+ * 
  * It should be noted that this library has not been written based on the
  * official NMEA specifications, but based on the information available from
  * the gpsd project at https://gpsd.gitlab.io/gpsd/NMEA.html
@@ -13,6 +14,11 @@
  */
 
 #include "SELKIELoggerBase.h"
+
+/*!
+ * @addtogroup SELKIELoggerNMEA
+ * @{
+ */
 
 //! @brief NMEA0183 Start Byte 1
 #define NMEA_START_BYTE1 0x24
@@ -59,4 +65,5 @@ typedef struct {
 	uint8_t checksum; //!< Message Checksum
 } nmea_msg_t;
 
+//! @}
 #endif

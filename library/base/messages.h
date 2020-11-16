@@ -3,9 +3,16 @@
 #include <stdint.h>
 #include "strarray.h"
 
-//! @file messages.h Message data types and handling functions
+/*!
+ * @file messages.h Message data types and handling functions
+ * @ingroup SELKIELoggerBase
+ */
 
-//! Generic message data
+/*!
+ * @addtogroup MPMessages Internal message format and functions
+ * @ingroup SELKIELoggerBase
+ * @{
+ */
 
 /*!
  * Messages are queueable items that can be serialised to file if required
@@ -69,4 +76,5 @@ msg_t * msg_new_float_array(const uint8_t source, const uint8_t type, const size
 
 //! Destroy a message
 void msg_destroy(msg_t *msg);
+//! @}
 #endif

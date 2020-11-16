@@ -4,15 +4,19 @@
 #include <stdbool.h>
 
 /*!
+ * @file I2C-INA219.h
+ * @ingroup SELKIELoggerI2C
+ *
  * Sources used for INA219 interface:
  * - https://www.kernel.org/doc/html/latest/i2c/smbus-protocol.html
  * - https://www.kernel.org/doc/html/latest/i2c/dev-interface.html
  * - https://www.waveshare.com/w/upload/1/10/Ina219.pdf
+ *
  */
 
 /*!
- * @addtogroup ina219reg INA219 Register addresses
- *
+ * @defgroup ina219reg INA219: Register addresses
+ * @ingroup SELKIELoggerI2C
  * @{
  */
 //! INA219 configuration register
@@ -36,8 +40,8 @@
 //! @}
 
 /*!
- * @addtogroup ina219conf INA219 Configuration values
- *
+ * @addtogroup ina219conf INA219: Configuration values
+ * @ingroup SELKIELoggerI2C
  * @{
  */
 
@@ -61,8 +65,8 @@
 //! @}
 
 /*!
- * @addtogroup ina219 INA219 interface functions
- *
+ * @addtogroup ina219 INA219: Interface functions
+ * @ingroup SELKIELoggerI2C
  * @{
  */
 //! Send configuration command to the specified device

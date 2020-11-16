@@ -1,11 +1,20 @@
 #ifndef SELKIELoggerGPS_Serial
 #define SELKIELoggerGPS_Serial
 
-//! @file GPSSerial.h Serial Input/Output functions for communication with u-blox GPS modules
+/*!
+ * @file GPSSerial.h Serial Input/Output functions for communication with u-blox GPS modules
+ * @ingroup SELKIELoggerGPS
+ */
 
 #include "SELKIELoggerBase.h"
 #include "GPSTypes.h"
 
+/*!
+ * @addtogroup SELKIELoggerGPS
+ * @{
+ */
+
+//! Serial buffer size
 #define UBX_SERIAL_BUFF 4096
 
 //! Set up a connection to a UBlox module on a given port
@@ -26,4 +35,5 @@ bool ubx_waitForMessage(const int handle, const uint8_t msgClass, const uint8_t 
 
 //! Send message to attached device
 bool ubx_writeMessage(int handle, const ubx_message *out);
+//! @}
 #endif

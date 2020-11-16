@@ -1,11 +1,19 @@
 #ifndef SELKIELoggerMP_Serial
 #define SELKIELoggerMP_Serial
 
-//! @file MPSerial.h Serial Input/Output functions for communication with compatible MessagePack data sources
+/*!
+ * @file MPSerial.h Serial Input/Output functions for communication with compatible MessagePack data sources
+ * @ingroup SELKIELoggerMP
+ */
 
 #include "SELKIELoggerBase.h"
 
 #include <msgpack.h>
+
+/*!
+ * @addtogroup SELKIELoggerMP
+ * @{
+ */
 
 #include "MPTypes.h"
 #define MP_SERIAL_BUFF 4096
@@ -39,4 +47,5 @@ bool mp_unpack_strarray(strarray *sa, msgpack_object_array *obj);
 
 //! Allocate array of floats and unpack a msgpack array into it
 size_t mp_unpack_numarray(float **sa, msgpack_object_array *obj);
+//! @}
 #endif

@@ -1,10 +1,16 @@
 #ifndef SELKIELoggerBase_Sources
 #define SELKIELoggerBase_Sources
 
-//! @file sources.h Predefined message source ID information. @sa loggerSources
+/*!
+ * @file sources.h Predefined message source ID information.
+ * @ingroup SELKIELoggerBase
+ * @sa loggerSources
+ */
 
 /*!
- * \addtogroup loggerSources Logger Source IDs
+ * @addtogroup loggerSources Logger Source IDs
+ * @ingroup MPMessages
+ *
  * The protocol used for data transmission requires each message to be tagged
  * with a source ID, that should be unique on any given system
  *
@@ -46,7 +52,9 @@
 //! @}
 
 /*!
- * \addtogroup loggerChannels Logger Channel IDs
+ * @addtogroup loggerChannels Logger Channel IDs
+ * @ingroup MPMessages
+ *
  * The protocol used for data transmission requires each message to be tagged
  * with a channel and source ID. While source IDs are required to be unique on
  * a given system, some channel numbers are common to all sources.

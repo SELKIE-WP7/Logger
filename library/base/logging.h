@@ -4,10 +4,14 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-//! @file logging.h Output logging and file handling functions
+/*!
+ * @file logging.h Output logging and file handling functions
+ * @ingroup SELKIELoggerBase
+ */
 
 /*!
- * \addtogroup logging Logging support functions
+ * @addtogroup logging Logging support functions
+ * @ingroup SELKIELoggerBase
  *
  * @{
  */

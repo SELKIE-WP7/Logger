@@ -3,7 +3,15 @@
 
 #include <stdint.h>
 
-//! @file I2CConnection.h General connection functions for I2C bus connected sensors
+/*!
+ * @file I2CConnection.h General connection functions for I2C bus connected sensors
+ * @ingroup SELKIELoggerI2C
+ */
+
+/*!
+ * @addtogroup SELKIELoggerI2C
+ * @{
+ */
 
 //! Device specific callback functions
 typedef float (*i2c_dev_read_fn)(const int, const int);
@@ -16,4 +24,5 @@ void i2c_closeConnection(int handle);
 
 //! Swap word byte order
 int16_t i2c_swapbytes(const int16_t in);
+//! @}
 #endif

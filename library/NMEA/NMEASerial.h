@@ -1,11 +1,19 @@
 #ifndef SELKIELoggerNMEA_Serial
 #define SELKIELoggerNMEA_Serial
 
-//! @file NMEASerial.h Serial Input/Output functions for communication with NMEA devices
+/*!
+ * @file NMEASerial.h Serial Input/Output functions for communication with NMEA devices
+ * @ingroup SELKIELoggerNMEA
+ */
 
 #include "SELKIELoggerBase.h"
 
 #include "NMEATypes.h"
+
+/*!
+ * @addtogroup SELKIELoggerNMEA
+ * @{
+ */
 #define NMEA_SERIAL_BUFF 1024
 
 //! Set up a connection to the specified port
@@ -22,4 +30,5 @@ bool nmea_readMessage_buf(int handle, nmea_msg_t *out, uint8_t buf[NMEA_SERIAL_B
 
 //! Send message to attached device
 bool nmea_writeMessage(int handle, const nmea_msg_t *out);
+//! @}
 #endif

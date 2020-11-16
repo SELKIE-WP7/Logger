@@ -2,7 +2,16 @@
 #define SELKIELoggerBase_StrArray
 #include <stdbool.h>
 
-//! @file strarray.h String and String Array types and handling functions
+/*!
+ * @file strarray.h String and String Array types and handling functions
+ * @ingroup SELKIELoggerBase
+ */
+
+/*!
+ * @defgroup strarray Strings and String arrays
+ * @ingroup SELKIELoggerBase
+ * @{
+ */
 
 //! Simple string type
 typedef struct {
@@ -53,4 +62,5 @@ bool str_update(string *str, const size_t len, const char *src);
 
 //! Destroy a string and free its contents
 void str_destroy(string *str);
+//! @}
 #endif

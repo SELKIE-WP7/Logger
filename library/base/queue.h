@@ -6,7 +6,16 @@
 
 #include "messages.h"
 
-//! @file queue.h Queue definition and handling functions
+/*!
+ * @file queue.h Queue definition and handling functions
+ * @ingroup SELKIELoggerBase
+ */
+
+/*!
+ * @addtogroup queue Message queues
+ * @ingroup SELKIELoggerBase
+ * @{
+ */
 
 typedef struct queueitem queueitem;
 
@@ -48,5 +57,5 @@ msg_t * queue_pop(msgqueue *queue);
 
 //! Iterate over queue and return current number of items
 int queue_count(const msgqueue *queue);
-
+//! @}
 #endif

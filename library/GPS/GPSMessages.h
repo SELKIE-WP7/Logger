@@ -1,7 +1,10 @@
 #ifndef SELKIELoggerGPS_Messages
 #define SELKIELoggerGPS_Messages
 
-//! @file GPSMessages.h Utility functions for processing UBX messages
+/*!
+ * @file GPSMessages.h Utility functions for processing UBX messages
+ * @ingroup SELKIELoggerGPS
+ */
 
 #include <stddef.h>
 #include <stdint.h>
@@ -10,7 +13,8 @@
 #include "GPSTypes.h"
 
 /*!
- * \addtogroup ubx UBX Message support functions
+ * @defgroup ubx UBX Message handling
+ * @ingroup SELKIELoggerGPS
  *
  * Convert and verify UBX protocol messages
  * @{

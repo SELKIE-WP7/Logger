@@ -1,13 +1,23 @@
 #ifndef SELKIELoggerGPS_Commands
 #define SELKIELoggerGPS_Commands
 
-//! @file GPSCommands.h Functions representing u-blox GPS module commands
+/*!
+ * @file GPSCommands.h Functions representing u-blox GPS module commands
+ * @ingroup SELKIELoggerGPS
+ */
 
 #include <stdbool.h>
 #include <stdint.h>
 
 #include "GPSTypes.h"
 
+/*!
+ * @defgroup ubxCommands UBX Commands
+ * @ingroup SELKIELoggerGPS
+ *
+ * Send commands to a connected GPS module
+ * @{
+ */
 //! Send UBX port configuration to switch baud rate
 bool ubx_setBaudRate(const int handle, const uint32_t baud);
 
@@ -31,5 +41,6 @@ bool ubx_disableLogMessages(const int handle);
 
 //! Set I2C address
 bool ubx_setI2CAddress(const int handle, const uint8_t addr);
-#endif
 
+//! @}
+#endif

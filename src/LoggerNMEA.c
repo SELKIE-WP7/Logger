@@ -4,13 +4,11 @@
 
 
 /*!
- * Perform initial setup of a u-blox NMEA device.
+ * Set up connection to an NMEA serial gateway device.
  *
- * It's not unusual for these devices to be configured for a lower baud rate on
- * startup, so connect at a lower rate and switch to something faster.
+ * No other steps required.
  *
- * Once the baud rate is configured, set up the messages we need and poll for
- * some status information for the log.
+ * @param ptargs Pointer to log_thread_args_t
  */ 
 void *nmea_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
@@ -34,6 +32,8 @@ void *nmea_setup(void *ptargs) {
  * message queue.
  *
  * Exits on error or when shutdown is signalled.
+ *
+ * @param ptargs Pointer to log_thread_args_t
  */
 void *nmea_logging(void *ptargs) {
 	signalHandlersBlock();
@@ -117,6 +117,8 @@ void *nmea_logging(void *ptargs) {
 
 /*!
  * Calls nmea_closeConnection(), which will do any cleanup required.
+ *
+ * @param ptargs Pointer to log_thread_args_t
  */
 void *nmea_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
@@ -130,6 +132,8 @@ void *nmea_shutdown(void *ptargs) {
 
 /*!
  * Populate list of channels and push to queue as a map message
+ *
+ * @param ptargs Pointer to log_thread_args_t
  */
 void *nmea_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;

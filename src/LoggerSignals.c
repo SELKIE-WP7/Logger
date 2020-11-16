@@ -32,11 +32,18 @@ void signalUnpause(int signnum __attribute__((unused))) {
 	pauseLog = false;
 }
 
+/*!
+ * Called from main logging thread to establish the signal handlers.
+ */
 void signalHandlersInstall() {
 	sigset_t *hMask = signalHandlerMask();
 
-	// While handling signals, we still want to pay attention to shutdown requests on more standard signals.
-	// As it doesn't matter if multiple shutdown signals are received, we just clear these for all handlers.
+	/*!
+	 * While handling pause, unpause and rotate signals, we still want to
+	 * pay attention to shutdown requests. As it doesn't matter if multiple
+	 * shutdown signals are received, we just clear the mask for SIGINT and
+	 * SIGQUIT.
+	 */
 	sigdelset(hMask, SIGINT);
 	sigdelset(hMask, SIGQUIT);
 
@@ -45,19 +52,22 @@ void signalHandlersInstall() {
 	const struct sigaction saPause = {.sa_handler = signalPause, .sa_mask = *hMask, .sa_flags = SA_RESTART};
 	const struct sigaction saUnpause = {.sa_handler = signalUnpause, .sa_mask = *hMask, .sa_flags = SA_RESTART};
 
-	// As well as the "standard" signals, we use SIGRTMIN+n to make each handler available directly
+	//! As well as the "standard" signals, we use SIGRTMIN+n to make each handler available directly
 
-	// Shutdown on SIGINT and SIGQUIT (standard) and SIGRTMIN+1
+	//! Shutdown signalled on SIGINT and SIGQUIT (standard) and SIGRTMIN+1
 	sigaction(SIGINT, &saShutdown, NULL);
 	sigaction(SIGQUIT, &saShutdown, NULL);
 	sigaction(SIGRTMIN + 1, &saShutdown, NULL);
 
-	// Log rotate on common signals (SIGUSR1, SIGHUP) and SIGRTMIN+2
+	//! Log rotate on common signals (SIGUSR1, SIGHUP) and SIGRTMIN+2
 	sigaction(SIGUSR1, &saRotate, NULL);
 	sigaction(SIGHUP, &saRotate, NULL);
 	sigaction(SIGRTMIN + 2, &saRotate, NULL);
 
-	// No real standard pause/resume signals except SIGSTOP/CONT which the system handles
+	/*!
+	 * There isn't really a standard pause/resume signals except SIGSTOP/CONT which the system handles (and is somewhat more forceful).
+	 * We use SIGRTMIN+3 and +4 for pause and unpause respectively
+	 */
 	sigaction(SIGRTMIN + 3, &saPause, NULL);
 	sigaction(SIGRTMIN + 4, &saUnpause, NULL);
 

@@ -10,6 +10,17 @@
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerNMEA.h"
 
+/*!
+ * @addtogroup loggerNMEA Logger: NMEA Support
+ * @ingroup logger
+ *
+ * Adds support for reading messages from an NMEA0183 serial device.
+ *
+ * Reading messages from the device and parsing to the internal message pack
+ * format used by the logger is handled in SELKIELoggerNMEA.h
+ * @{
+ */
+
 //! NMEA Device specific parameters
 typedef struct {
 	char *portName; //!< Target port name
@@ -36,4 +47,5 @@ device_callbacks nmea_getCallbacks();
 
 //! Fill out default NMEA parameters
 nmea_params nmea_getParams();
+//! @}
 #endif

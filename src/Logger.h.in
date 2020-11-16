@@ -20,6 +20,12 @@
 
 #include "version.h"
 
+/*!
+ * @defgroup logger Logger internal functions
+ * @ingroup Executables
+ * @{
+ */
+
 //! If no output file prefix is specified, this will be used as a default
 #define DEFAULT_MON_PREFIX "@DEFAULT_MON_PREFIX@"
 
@@ -84,4 +90,5 @@ bool log_softwareVersion(msgqueue *q);
 #include "LoggerTime.h"
 #include "LoggerSignals.h"
 
+//! @}
 #endif

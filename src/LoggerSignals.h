@@ -6,7 +6,8 @@
 #include <stdatomic.h>
 
 /*!
- * \addtogroup loggerTriggers Logger: Global triggers/signal handlers
+ * @addtogroup loggerTriggers Logger: Global triggers/signal handlers
+ * @ingroup logger
  *
  * In order to allow the behaviour of the main logging thread to be controlled,
  * it will check the state of defined trigger variables and react accordingly.

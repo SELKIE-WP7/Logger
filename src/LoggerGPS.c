@@ -6,11 +6,15 @@
 /*!
  * Perform initial setup of a u-blox GPS device.
  *
- * It's not unusual for these devices to be configured for a lower baud rate on
- * startup, so connect at a lower rate and switch to something faster.
+ * The serial set up is carried out by ubx_openConnection().
  *
- * Once the baud rate is configured, set up the messages we need and poll for
- * some status information for the log.
+ * The module is configured for Galileo support, and to output required
+ * navigation information. Satellite information is also requested, but at a
+ * lower rate (Once per 100 navigation updates - approximately every 50
+ * seconds).
+ *
+ * GPS module information is also requested at initial startup, but not on a
+ * regular basis.
  */
 void *gps_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;

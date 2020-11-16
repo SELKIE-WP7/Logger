@@ -8,6 +8,16 @@
 
 #include "SELKIELoggerI2C.h"
 
+/*!
+ * @file PowerHatRead.c
+ * @brief Read values from a Raspberry Pi power hat (or compatible sensors)
+ * @ingroup Executables
+ *
+ * Assumes that four INA219 chips are connected to /dev/i2c-1 using addresses
+ * 0x40 to 0x43, and polls for current values. Identifies some out of range
+ * conditions and will report an appropriate error message.
+ *
+ */
 int main(int argc, char *argv[]) {
 	int handle = i2c_openConnection("/dev/i2c-1");
 

@@ -1,6 +1,15 @@
 #include "Logger.h"
 
-//! @file Logger.c Generates main data logging executable
+/*!
+ * @addtogroup Executables
+ * @{
+ * @file Logger.c
+ *
+ * @brief Generates main data logging executable
+ *
+ * Reads data from connected sensors, generates timestamps and writes the resulting messages to file for later conversion and analysis.
+ * @}
+ */
 
 int main(int argc, char *argv[]) {
         char *monPrefix = NULL;

@@ -11,6 +11,20 @@
 #include "SELKIELoggerMP.h"
 #include "SELKIELoggerI2C.h"
 
+/*!
+ * @addtogroup loggerI2C Logger: I2C Support
+ * @ingroup logger
+ *
+ * Adds support for reading messages from an I2C bus directly connected to the logging machine.
+ *
+ * General support functions are detailed in SELKIELoggerI2C.h. As the I2C bus
+ * must be polled rather than streaming data to the logger, each sensor and
+ * value that needs to be logged must be registered into the channel map in
+ * i2c_params before i2c_logging is called.
+ *
+ * @{
+ */
+
 //! Map device functions to message IDs
 typedef struct {
 	uint8_t messageID; //!< Message ID to report
@@ -29,9 +43,16 @@ typedef struct {
 	i2c_msg_map *chanmap; //!< Map of device functions to poll
 } i2c_params;
 
+//! I2C Connection setup
 void *i2c_setup(void *ptargs);
+
+//! I2C main logging loop
 void *i2c_logging(void *ptargs);
+
+//! I2C shutdown
 void *i2c_shutdown(void *ptargs);
+
+//! Generate I2C channel map
 void *i2c_channels(void *ptargs);
 
 //! Fill out device callback functions for logging
@@ -45,4 +66,5 @@ bool i2c_validate_chanmap(i2c_params *ip);
 
 //! Add INA219 voltage and current readings to channel map
 bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID);
+//!@}
 #endif

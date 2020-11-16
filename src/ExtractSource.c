@@ -11,6 +11,16 @@
 
 #include "version.h"
 
+/*!
+ * @file ExtractSource.c
+ *
+ * @brief Extract subset of messages from .dat file
+ *
+ * Writes a new .dat file containing only messages with a specific source ID.
+ * @ingroup Executables
+ */
+
+
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;

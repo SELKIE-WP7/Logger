@@ -11,6 +11,19 @@
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerGPS.h"
 
+/*!
+ * @addtogroup loggerGPS Logger: GPS Support
+ * @ingroup logger
+ *
+ * Adds support for reading messages from a u-blox GPS receiver.
+ *
+ * These functions are device agnostic, but it uses the functions from
+ * SELKIELoggerGPS.h to communicate with the module and these are currently
+ * u-blox specific.
+ *
+ * @{
+ */
+
 //! GPS Device specific parameters
 typedef struct {
 	char *portName; //!< Target port name
@@ -38,4 +51,5 @@ device_callbacks gps_getCallbacks();
 
 //! Fill out default GPS parameters
 gps_params gps_getParams();
+//! @}
 #endif

@@ -2,6 +2,13 @@
 #include "LoggerI2C.h"
 #include "LoggerSignals.h"
 
+/*!
+ * Connects to specified I2C bus after validating the configured channel map.
+ *
+ * Device specific parameters need to be specified in an i2c_params structure
+ *
+ * @param ptargs Pointer to log_thread_args_t
+ */
 void *i2c_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	i2c_params *i2cInfo = (i2c_params *) args->dParams;
@@ -23,6 +30,15 @@ void *i2c_setup(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * Iterates over all registered channels, calling the appropriate read function against the registered I2C device ID.
+ * 
+ * After each conversion function has been called, this thread will sleep in an
+ * attempt to keep the poll frequency at the rate requested. This is a best
+ * effort attempt.
+ *
+ * @param ptargs Pointer to log_thread_args_t
+ */
 void *i2c_logging(void *ptargs) {
 	signalHandlersBlock();
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
@@ -69,6 +85,8 @@ void *i2c_logging(void *ptargs) {
 
 /*!
  * Simple wrapper around i2c_closeConnection(), which will do any cleanup required.
+ *
+ * @param ptargs Pointer to log_thread_args_t
  */
 void *i2c_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
@@ -82,6 +100,7 @@ void *i2c_shutdown(void *ptargs) {
 
 /*!
  * Populate list of channels and push to queue as a map message
+ * @param ptargs Pointer to log_thread_args_t
  */
 void *i2c_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
@@ -152,6 +171,8 @@ i2c_params i2c_getParams() {
 /*!
  * Ensures that the only one message is set for each channel, that no reserved
  * channels are used and that device addresses and read functions are set.
+ *
+ * @param[in] ip Pointer to i2c_params structure
  */
 bool i2c_validate_chanmap(i2c_params *ip) {
 	i2c_msg_map *cmap = ip->chanmap;

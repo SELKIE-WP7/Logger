@@ -11,28 +11,99 @@
 
 #include "version.h"
 
+/*!
+ * @file dat2csv.c
+ * @brief Simple CSV conversion utility
+ * @ingroup Executables
+ *
+ * Groups messages from a recorded .dat file based on ticks of a nominated
+ * timestamp source (defaults to local timestamps). First message in each tick
+ * wins. Output files are gzip compressed by default.
+ */
+
+ /*!
+ * @defgroup dat2csv dat2csv internal functions
+ * @ingroup Executables
+ * @{
+ */
+
+ //! qsort() comparison function
 int sort_uint(const void *a, const void *b);
 
-char * csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const char *sourceName, const char *channelName);
-char * csv_all_timestamp_data(const msg_t *msg);
-char * csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
-char * csv_gps_position_data(const msg_t *msg);
-char * csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
-char * csv_gps_velocity_data(const msg_t *msg);
-char * csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
-char * csv_gps_datetime_data(const msg_t *msg);
-char * csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
-char * csv_all_float_data(const msg_t *msg);
-
+/*!
+ * CSV Header generating functions
+ *
+ * Each function with this type is provided with the message source and type
+ * ID, along with the corresponding names (in that order).  The function must
+ * then allocate an return a string to be incorporated into the CSV header
+ * line.
+ *
+ * Commas are only to be included to separate fields internal to this string,
+ * not as first or last character.
+ *
+ * Strings will be freed by caller
+ */
 typedef char *(*csv_header_fn)(const uint8_t, const uint8_t, const char *, const char *);
+
+/*!
+ * CSV field generating functions
+ *
+ * These functions are passed a pointer to a msg_t structure that matches the
+ * source and type registered.  Commas are only to be included to separate
+ * fields internal to this string, not as first or last character.
+ *
+ * If no message of this type was received, the input pointer will be NULL. In
+ * this case, the function must generate an appropriate number of empty fields
+ * to ensure the output fields remain aligned - or an empty string if the
+ * function normally only outputs a single value.
+ *
+ * Strings will be freed by caller
+ */
 typedef char *(*csv_data_fn)(const msg_t *);
 
+
+//! Generate CSV header for timestamp messages (SLCHAN_TSTAMP)
+char * csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const char *sourceName, const char *channelName);
+
+//! Convert timestamp (SLCHAN_TSTAMP) to string
+char * csv_all_timestamp_data(const msg_t *msg);
+
+//! Generate CSV header for GPS position fields
+char * csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+
+//! Convert GPS position information to CSV string
+char * csv_gps_position_data(const msg_t *msg);
+
+//! Generate CSV header for GPS velocity information
+char * csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+
+//! Convert GPS velocity information to CSV string
+char * csv_gps_velocity_data(const msg_t *msg);
+
+//! Generate CSV header for GPS date and time information
+char * csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+
+//! Convert GPS date and time information to appropriate CSV string
+char * csv_gps_datetime_data(const msg_t *msg);
+
+//! Generate CSV header for any single value floating point channel
+char * csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+
+//! Convert single value floating point data channel to CSV string
+char * csv_all_float_data(const msg_t *msg);
+
+/*!
+ * Represents the functions required to convert a specified message type to CSV format.
+ *
+ * Source and type will be exact matches, not ranges.
+ */
 typedef struct {
-	uint8_t source;
-	uint8_t type;
-	csv_header_fn header;
-	csv_data_fn data;
+	uint8_t source; //!< Message source
+	uint8_t type; //!< Message type
+	csv_header_fn header; //!< CSV Header generator
+	csv_data_fn data; //!< CSV field generator
 } csv_msg_handler;
+//! @}
 
 int main(int argc, char *argv[]) {
 	program_state state = {0};
@@ -491,6 +562,10 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
+/*!
+ * @param[in] a Pointer to uint8_t
+ * @param[in] b Pointer to uint8_t
+ */
 int sort_uint(const void *a, const void *b) {
 	const uint8_t *ai = a;
 	const uint8_t *bi = b;
@@ -600,4 +675,3 @@ char * csv_all_float_data(const msg_t *msg) {
 	}
 	return out;
 }
-

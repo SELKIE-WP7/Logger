@@ -2,6 +2,12 @@
 #include "LoggerMP.h"
 #include "LoggerSignals.h"
 
+/*!
+ * Uses mp_openConnection to connect to a device providing messge pack formatted data.
+ * It is assumed that no other setup is required for these devices.
+ *
+ * @param ptargs Pointer to log_thread_args_t
+ */
 void *mp_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	mp_params *mpInfo = (mp_params *) args->dParams;
@@ -18,6 +24,12 @@ void *mp_setup(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * Reads messages from the serial connection established by mp_setup(), and pushes them to the queue.
+ * As messages are already in the right format, no further processing is done here.
+ *
+ * @param ptargs Pointer to log_thread_args_t
+ */
 void *mp_logging(void *ptargs) {
 	signalHandlersBlock();
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
@@ -76,6 +88,8 @@ void *mp_logging(void *ptargs) {
 
 /*!
  * Simple wrapper around mp_closeConnection(), which will do any cleanup required.
+ *
+ * @param ptargs Pointer to log_thread_args_t
  */
 void *mp_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
@@ -92,7 +106,7 @@ device_callbacks mp_getCallbacks() {
 		.startup = &mp_setup,
 		.logging = &mp_logging,
 		.shutdown = &mp_shutdown,
-		.channels = NULL
+		.channels = NULL // No channel map - will be supplied by connected device(s)
 	};
 	return cb;
 }

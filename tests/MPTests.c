@@ -9,9 +9,17 @@
 
 /*! @file MPTests.c
  *
- * @brief msgpack tests
+ * @brief Test message creation and destruction
  *
- * @addtogroup testing Test programs for use with CTest
+ * This script creates a variety of msg_t objects with different types and values, dumps them to file and then recreates them.
+ *
+ * Return codes:
+ *
+ * -  0 for tests passed
+ * - -1 for tests failed
+ * - -2 for a failure to run the test (system error, unexpected condition etc.)
+ *
+ * @ingroup testing
  */
 int main(int argc, char *argv[]) {
 

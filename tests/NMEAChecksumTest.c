@@ -14,7 +14,7 @@
  *
  * Sample values used have been verified against hardware results.
  *
- * @addtogroup testing Test programs for use with CTest
+ * @ingroup testing
  */
 int main(int argc, char *argv[]) {
 	bool passed = true;

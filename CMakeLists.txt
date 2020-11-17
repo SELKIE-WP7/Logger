@@ -64,7 +64,7 @@ if (BUILD_DOCUMENTATION)
 	set(DOXYGEN_MACRO_EXPANSION YES)
 	set(DOXYGEN_EXPAND_ONLY_PREDEF YES)
 	set(DOXYGEN_PREDEFINED "__attribute__(x)=")
-	doxygen_add_docs(doxygen ALL ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/library/ ${PROJECT_SOURCE_DIR}/docs/ COMMENT "Generate developer documentation")
+	doxygen_add_docs(doxygen ALL ${PROJECT_SOURCE_DIR}/docs/ ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/library/ ${PROJECT_SOURCE_DIR}/tests/ ${PROJECT_SOURCE_DIR}/python/ COMMENT "Generate developer documentation")
 endif()
 
 #find_library(MATH_LIBRARY m)

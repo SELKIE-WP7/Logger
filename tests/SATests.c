@@ -18,7 +18,7 @@
  * Ideally this test should also be checked with valgrind to ensure memory is
  * not being leaked through basic operations.
  *
- * @addtogroup testing Test programs for use with CTest
+ * @ingroup testing
  */
 int main(int argc, char *argv[]) {
 

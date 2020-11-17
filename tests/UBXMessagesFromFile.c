@@ -19,7 +19,7 @@
  *
  * Exact outputs dependent on supplied test data
  *
- * @addtogroup testing Test programs for use with CTest
+ * @ingroup testing
  */
 int main(int argc, char *argv[]) {
 	if (argc < 2) {

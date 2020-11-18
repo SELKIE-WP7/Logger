@@ -5,6 +5,7 @@
  * @file sources.h Predefined message source ID information.
  * @ingroup SELKIELoggerBase
  * @sa loggerSources
+ * @sa loggerChannels
  */
 
 /*!
@@ -59,7 +60,7 @@
  * with a channel and source ID. While source IDs are required to be unique on
  * a given system, some channel numbers are common to all sources.
  *
- * As with source IDs, chnnel IDs range between 0 and 127. The mandatory
+ * As with source IDs, channel IDs range between 0 and 127. The mandatory
  * channels are described here, with the remaining numbers available for use as
  * required by any given source.
  *

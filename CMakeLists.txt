@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.12...3.17)
 
 project(SELKIELogger LANGUAGES C)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_EXTENSIONS OFF)
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
-add_compile_options(--std=c11 -Wall -pedantic -Werror -g -O2)
+add_compile_options(-Wall -pedantic -Werror -g -O2)
 add_compile_definitions(_GNU_SOURCE)
 add_compile_definitions(_FORTIFY_SOURCE=2)
 

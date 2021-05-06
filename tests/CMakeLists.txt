@@ -45,6 +45,7 @@ add_test(NAME SATests COMMAND SATests)
 
 add_executable(MPTests MPTests.c)
 target_link_libraries(MPTests PUBLIC SELKIELoggerBase SELKIELoggerMP)
+target_compile_options(MPTests PRIVATE "-UNDEBUG")
 instrumented(MPTests MPTests)
 add_test(NAME MPTestsOutput COMMAND bash -c "$<TARGET_FILE:MPTests>|md5sum")
 set_property(TEST MPTestsOutput PROPERTY PASS_REGULAR_EXPRESSION "ee530c7e4b7a2c8f16524c0bf1e274cd")

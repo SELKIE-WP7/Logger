@@ -189,6 +189,12 @@ void sa_destroy(strarray *sa) {
 		}
 		return;
 	}
+	if (sa->strings == NULL) {
+		// Bonus - we don't have an array here at all
+		sa->entries = 0;
+		return;
+	}
+
 	for (int ix=0; ix < sa->entries; ix++) {
 		str_destroy(&(sa->strings[ix]));
 	}

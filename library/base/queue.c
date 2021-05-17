@@ -115,6 +115,9 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 		perror("queue_push_qi");
 		return false;
 	}
+
+	// If head is NULL, the queue is empty, so point head and tail at our
+	// queueitem, unlock the queue and return.
 	if (queue->head == NULL) {
 		queue->head = item;
 		queue->tail = item;
@@ -122,15 +125,23 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 		return true;
 	}
 
+	// If head wasn't empty, find the tail
 	qi = queue->tail;
 	if (qi) {
+		// There is a slim chance that tail wasn't up to date, so follow queued items all the way down
 		if (qi->next) {
+			// qi->next is valid, so can re-assign it to qi
+			// The new qi->next is either valid (so loop and
+			// reassign), or NULL and we fall out of the loop
 			do {
 				qi = qi->next;
 			} while (qi->next);
 		}
+		// Once we've run out of valid qi->next pointers, we make our new item the end of the queue
 		qi->next = item;
 	}
+	// Update the tail pointer so the next push should jump direct to the end
+	// Note that item is a pointer, so assigning it to qi->next and queue->tail is valid
 	queue->tail = item;
 	pthread_mutex_unlock(&(queue->lock));
 	return true;

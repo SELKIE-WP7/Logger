@@ -63,3 +63,6 @@ set_property(TEST NMEAMessagesFromFile APPEND_STRING PROPERTY PASS_REGULAR_EXPRE
 set_property(TEST NMEAMessagesFromFile APPEND_STRING PROPERTY PASS_REGULAR_EXPRESSION "Thu Oct  8 16:15:27 2020\n")
 set_property(TEST NMEAMessagesFromFile APPEND_STRING PROPERTY PASS_REGULAR_EXPRESSION "100 messages read")
 
+add_executable(DWHexPairs DWHexPairs.c)
+target_link_libraries(DWHexPairs PUBLIC SELKIELoggerDW)
+instrumented(DWHexPairs DWHexPairs)

@@ -5,6 +5,7 @@ include_directories($<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SELKIELogger>)
 
 add_subdirectory(base)
+add_subdirectory(DW)
 add_subdirectory(GPS)
 add_subdirectory(MP)
 add_subdirectory(NMEA)

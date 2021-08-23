@@ -66,3 +66,7 @@ set_property(TEST NMEAMessagesFromFile APPEND_STRING PROPERTY PASS_REGULAR_EXPRE
 add_executable(DWHexPairs DWHexPairs.c)
 target_link_libraries(DWHexPairs PUBLIC SELKIELoggerDW)
 instrumented(DWHexPairs DWHexPairs)
+
+add_executable(DWSample DWSample.c)
+target_link_libraries(DWSample PUBLIC SELKIELoggerDW)
+instrumented(DWSample DWSample)

@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 /*!
  * @addtogroup SELKIELoggerDW
@@ -74,6 +75,10 @@ typedef struct dw_hxv {
 	uint8_t data[8]; //!< 8 bytes of data
 } dw_hxv;
 
+//! Convert a string of hexadecimal characters to corresponding value
 bool hexpair_to_uint(const char *in, uint8_t *out);
+
+//! Read a line of HXV data from string and convert
+bool dw_string_hxv(const char *in, size_t *end, dw_hxv *out);
 //! @}
 #endif

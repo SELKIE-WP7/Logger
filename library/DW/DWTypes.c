@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <unistd.h>
 
 #include "DWTypes.h"
 
@@ -45,5 +46,38 @@ bool hexpair_to_uint(const char *in, uint8_t *out) {
 	}
 	(*out) = v;
 	return true;
+}
+
+bool dw_string_hxv(const char *in, size_t *end, dw_hxv *out) {
+	if (in == NULL || out == NULL || (*end) < 25) {
+		return false;
+	}
+
+	ssize_t le = -1; // Line end
+	for (int i = 0; i < (*end); ++i) {
+		if (in[i] == '\r') {
+			le = i;
+			break;
+		}
+	}
+	if (le < 0) {
+		return false;
+	}
+
+	// Work backwards from the carriage return
+	bool ret = true;
+	ret &= hexpair_to_uint(&(in[le-24]), &(out->status));
+	ret &= hexpair_to_uint(&(in[le-22]), &(out->lines));
+	ret &= hexpair_to_uint(&(in[le-19]), &(out->data[0]));
+	ret &= hexpair_to_uint(&(in[le-17]), &(out->data[1]));
+	ret &= hexpair_to_uint(&(in[le-14]), &(out->data[2]));
+	ret &= hexpair_to_uint(&(in[le-12]), &(out->data[3]));
+	ret &= hexpair_to_uint(&(in[le-9]), &(out->data[4]));
+	ret &= hexpair_to_uint(&(in[le-7]), &(out->data[5]));
+	ret &= hexpair_to_uint(&(in[le-4]), &(out->data[6]));
+	ret &= hexpair_to_uint(&(in[le-2]), &(out->data[7]));
+
+	(*end) = le++;
+	return ret;
 }
 

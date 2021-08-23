@@ -1,5 +1,5 @@
-list(APPEND SL_DW_SRC DWTypes.c)
-list(APPEND SL_DW_INC DWTypes.h)
+list(APPEND SL_DW_SRC DWTypes.c DWMessages.c)
+list(APPEND SL_DW_INC DWTypes.h DWMessages.h)
 
 add_library(SELKIELoggerDW ${SL_DW_SRC})
 set_target_properties(SELKIELoggerDW PROPERTIES VERSION ${PROJECT_VERSION})

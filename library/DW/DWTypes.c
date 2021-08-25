@@ -77,7 +77,7 @@ bool dw_string_hxv(const char *in, size_t *end, dw_hxv *out) {
 	ret &= hexpair_to_uint(&(in[le-4]), &(out->data[6]));
 	ret &= hexpair_to_uint(&(in[le-2]), &(out->data[7]));
 
-	(*end) = le++;
+	(*end) = ++le;
 	return ret;
 }
 

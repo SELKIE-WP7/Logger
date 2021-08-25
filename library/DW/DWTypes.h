@@ -34,6 +34,12 @@
 
 //! @}
 
+typedef enum dw_types {
+	DW_TYPE_UNKNOWN = -1,
+	DW_TYPE_HVA = 0,
+	DW_TYPE_HVX,
+	DW_TYPE_BVA,
+} dw_types;
 
 /*!
  * @brief Internal representation of a Datawell HVA message

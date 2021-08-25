@@ -14,5 +14,5 @@
  */
 
 #include "DW/DWTypes.h"
-
+#include "DW/DWMessages.h"
 #endif

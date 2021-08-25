@@ -44,6 +44,10 @@ add_executable(ExtractSource ExtractSource.c)
 target_link_libraries(ExtractSource PUBLIC SELKIELoggerBase SELKIELoggerMP)
 install(TARGETS ExtractSource RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
 
+add_executable(DWRead DWRead.c)
+target_link_libraries(DWRead PUBLIC SELKIELoggerBase SELKIELoggerDW)
+install(TARGETS DWRead RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion) # In the absence of a better group
+
 set(CPACK_COMPONENT_CONVERSION_GROUP "Applications")
 set(CPACK_COMPONONT_CONVERSION_DESCRIPTION "Data format conversion utilities")
 

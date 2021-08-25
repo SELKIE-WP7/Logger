@@ -364,7 +364,7 @@ bool mp_packMessage(msgpack_sbuffer *sbuf, const msg_t *out) {
  *
  * @param[in] handle File descriptor from mp_openConnection()
  * @param[in] out Pointer to message structure to be sent.
- * @return True if data successfullt written to `handle`
+ * @return True if data successfully written to `handle`
  */
 bool mp_writeMessage(int handle, const msg_t *out) {
 	msgpack_sbuffer sbuf;
@@ -374,6 +374,56 @@ bool mp_writeMessage(int handle, const msg_t *out) {
 	int ret = write(handle, sbuf.data, sbuf.size);
 	msgpack_sbuffer_destroy(&sbuf);
 	return (ret==sbuf.size);
+}
+
+/*!
+ * Extract message data and writes it (unformatted) to a file descriptor
+ *
+ * @param[in] handle File descriptor from mp_openConnection()
+ * @param[in] out Pointer to message structure containing data to be extracted.
+ * @return True if data successfully written to `handle`
+ */
+bool mp_writeData(int handle, const msg_t *out) {
+	size_t sl = 0;
+	switch (out->dtype) {
+		case MSG_FLOAT:
+			return (write(handle, &(out->data.value), sizeof(out->data.value)) == sizeof(out->data.value));
+
+		case MSG_TIMESTAMP:
+			return (write(handle, &(out->data.timestamp), sizeof(out->data.timestamp)) == sizeof(out->data.timestamp));
+
+		case MSG_BYTES:
+			return (write(handle, out->data.bytes, out->length) == out->length);
+
+		case MSG_STRING:
+			sl = out->data.string.length;
+			if (strlen(out->data.string.data) < sl) {
+				sl = strlen(out->data.string.data);
+			}
+			return (write(handle, &(out->data.string.data), sl) == sl);
+
+		case MSG_STRARRAY:
+			for (int ix = 0; ix < out->data.names.entries; ix++) {
+				sl = out->data.names.strings[ix].length;
+				if (sl > 0 && strlen(out->data.names.strings[ix].data) < sl) {
+					sl = strlen(out->data.names.strings[ix].data);
+				}
+				if (!(write(handle, out->data.names.strings[ix].data, sl) == sl)) {
+					return false;
+				}
+			}
+			return true;
+
+		case MSG_NUMARRAY:
+			return (write(handle, out->data.farray, sizeof(out->data.farray[0]) * out->length) == sizeof(out->data.farray[0]) * out->length);
+
+		case MSG_ERROR:
+		case MSG_UNDEF:
+		default:
+			return false;
+	}
+
+	return false;
 }
 
 /*!

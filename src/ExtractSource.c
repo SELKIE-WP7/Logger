@@ -28,22 +28,26 @@ int main(int argc, char *argv[]) {
 	char *outfileName = NULL;
 	bool clobberOutput = false;
 	uint8_t source = 0;
+	bool type[255] = {0};
+	bool raw = false;
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-f] [-o outfile] -S source datfile\n"
+        char *usage =  "Usage: %1$s [-v] [-q] [-f] [-r] [-o outfile] -S source [-T type [-T type ...]] datfile\n"
                 "\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
 		"\t-f\tOverwrite existing output files\n"
+		"\t-r\tWrite raw data (No message formatting)\n"
 		"\t-S\tSource number to extract\n"
+		"\t-T\tMessage type(s) to extract\n"
 		"\t-o\tWrite output to named file\n"
                 "\nVersion: " GIT_VERSION_STRING "\n"
-		"Default options equivalent to:\n"
-		"\t%1$s -z datafile\n"
-		"Output file name will be generated based on input file name, unless set by -o option\n";
+		"\nOutput file name will be generated based on input file name, unless set by -o option\n";
 
         opterr = 0; // Handle errors ourselves
         int go = 0;
 	bool doUsage = false;
-        while ((go = getopt(argc, argv, "vqfo:S:")) != -1) {
+	uint8_t tmp = 0;
+	uint8_t typeCount = 0;
+        while ((go = getopt(argc, argv, "vqfro:S:T:")) != -1) {
                 switch(go) {
                         case 'v':
                                 state.verbose++;
@@ -54,6 +58,9 @@ int main(int argc, char *argv[]) {
 			case 'f':
 				clobberOutput = true;
 				break;
+			case 'r':
+				raw = true;
+				break;
 			case 'S':
 				source = strtol(optarg, NULL, 0);
 				if (source < 2 || source > 128) {
@@ -61,6 +68,16 @@ int main(int argc, char *argv[]) {
 					doUsage = true;
 				}
 				break;
+			case 'T':
+				tmp = strtol(optarg, NULL, 0);
+				if (tmp < 1 || tmp >= 128) {
+					log_error(&state, "Invalid message type requested (%s)", optarg);
+					doUsage = true;
+				}
+				type[tmp] = true;
+				typeCount++;
+				break;
+
 			case 'o':
 				outfileName = strdup(optarg);
 				break;
@@ -88,9 +105,9 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	if (source < 2 || source > 128) {
-		log_error(&state, "Invalid source requested (0x%02X)", source);
-		return -1;
+	if (raw && typeCount != 1) {
+		log_warning(&state, "Raw mode requested without a message type filter");
+		log_warning(&state, "Different message types will not be distinguished in output file");
 	}
 
 	if (outfileName == NULL) {
@@ -137,6 +154,15 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	log_info(&state, 1, "Writing messages from source 0x%02x to %s", source, outfileName);
+	log_info(&state, 1, "Raw mode %s", raw ? "enabled" : "disabled");
+	if (typeCount > 0) {
+		log_info(&state, 2, "Filtering for %d message types", typeCount);
+		for (int i = 0; i < 128; i++) {
+			if (type[i]) {
+				log_info(&state, 3, "Message type 0x%02x enabled", i);
+			}
+		}
+	}
 	free(outfileName);
 	outfileName = NULL;
 
@@ -174,11 +200,25 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		if (tmp.source == source) {
-			if (!mp_writeMessage(fileno(outFile), &tmp)) {
-				log_error(&state, "Unable to write output: %s", strerror(errno));
-				return -1;
+			bool writeMsg = true;
+			if (typeCount > 0) {
+				writeMsg = type[tmp.type];
 			}
-			msgCount++;
+
+			if (writeMsg) {
+				if (raw) {
+					if (!mp_writeData(fileno(outFile), &tmp)) {
+						log_error(&state, "Unable to write output: %s", strerror(errno));
+						return -1;
+					}
+				} else {
+					if (!mp_writeMessage(fileno(outFile), &tmp)) {
+						log_error(&state, "Unable to write output: %s", strerror(errno));
+						return -1;
+					}
+				}
+				msgCount++;
+			}
 		}
 		msg_destroy(&tmp);
 		inPos = ftell(inFile);

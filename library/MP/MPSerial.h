@@ -36,6 +36,9 @@ bool mp_packMessage(msgpack_sbuffer *sbuf, const msg_t *out);
 //! Send message to attached device
 bool mp_writeMessage(int handle, const msg_t *out);
 
+//! Send message data (only!) to attached device
+bool mp_writeData(int handle, const msg_t *out);
+
 //! Pack string array
 void mp_pack_strarray(msgpack_packer *pack, const strarray *sa);
 

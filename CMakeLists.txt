@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12...3.17)
+cmake_minimum_required(VERSION 3.12...3.20)
 
 project(SELKIELogger LANGUAGES C)
 set(CMAKE_C_STANDARD 11)

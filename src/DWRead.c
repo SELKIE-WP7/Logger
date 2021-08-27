@@ -70,6 +70,8 @@ int main(int argc, char *argv[]) {
 	uint16_t cycdata[20] = {0};
 	uint8_t cycCount = 0;
 
+	uint16_t sysdata[16] = {0};
+
 	while (processing || hw > 25) {
 		if (processing && (hw < BUFSIZE)) {
 			ssize_t ret = fread(&(buf[hw]), sizeof(char), BUFSIZE - hw, inFile);
@@ -104,6 +106,26 @@ int main(int argc, char *argv[]) {
 						break;
 					}
 					// TODO: print cycdata
+					uint8_t sysWord = (cycdata[1] & 0xF000) >> 12;
+					fprintf(stdout, "Cyclic data collected, containing system data word 0x%02x\n", sysWord);
+					sysdata[sysWord] = (cycdata[1] & 0x0FFF);
+
+					uint8_t count = 0;
+					for (int i = 0; i < 16; ++i) {
+						if (sysdata[i]) {
+							++count;
+						} else {
+							// First gap found, no point continuing to count
+							break;
+						}
+					}
+					if (count == 16) {
+						fprintf(stdout, "System data found\n");
+						memset(&sysdata, 0, 16*sizeof(uint16_t));
+					}
+
+					memset(&cycdata, 0, 18*sizeof(uint16_t));
+					cycCount -= 18;
 
 				}
 				break;

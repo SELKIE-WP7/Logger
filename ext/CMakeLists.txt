@@ -1,0 +1,16 @@
+add_library(inih inih/ini.c)
+set_target_properties(inih PROPERTIES PUBLIC_HEADER inih/ini.h)
+
+include(GNUInstallDirs)
+
+target_include_directories(inih PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/ext/> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SELKIELogger/ext/>)
+install(TARGETS inih
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT inih
+	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/SELKIELogger/ext/inih/ COMPONENT inihdev
+	)
+
+set(CPACK_COMPONENT_INIH_GROUP "Libraries")
+set(CPACK_COMPONENT_INIH_DISPLAY_NAME "External Library - inih")
+set(CPACK_COMPONENT_INIHDEV_GROUP "Headers")
+set(CPACK_COMPONENT_INIHDEV_DISPLAY_NAME "External Library Headers - inih")
+set(CPACK_COMPONENT_INIHDEV_DEPENDS inih)

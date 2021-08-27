@@ -83,6 +83,8 @@ bool timespec_subtract (struct timespec *result, struct timespec *x, struct time
 //! Push current software version into message queue
 bool log_softwareVersion(msgqueue *q);
 
+#include "LoggerConfig.h" // Include first, so types are available below
+
 #include "LoggerGPS.h"
 #include "LoggerMP.h"
 #include "LoggerNMEA.h"

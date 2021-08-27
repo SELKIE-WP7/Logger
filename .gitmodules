@@ -1,0 +1,3 @@
+[submodule "ext/inih"]
+	path = ext/inih
+	url = git@github.com:benhoyt/inih.git

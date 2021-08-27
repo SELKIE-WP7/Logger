@@ -149,6 +149,15 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (doUsage) {
+		ini_config conf = {0};
+		if (!new_config(&conf)) {
+			fprintf(stderr, "Failed to allocated new config\n");
+		} else {
+			int rv = ini_parse("config.ini", config_handler, &conf);
+			fprintf(stderr, "=== INI TEST: %d\n\n", rv);
+			print_config(&conf);
+			destroy_config(&conf);
+		}
 		fprintf(stderr, usage, argv[0]);
 		free(gpsParams.portName);
 		free(mpParams.portName);

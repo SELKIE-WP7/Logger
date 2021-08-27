@@ -46,6 +46,7 @@ else()
 endif()
 
 add_subdirectory(library)
+add_subdirectory(ext)
 add_subdirectory(src)
 
 enable_testing()

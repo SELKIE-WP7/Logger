@@ -42,4 +42,6 @@ config_kv *config_get_key(const config_section *cs, const char *kn);
 config_kv *config_get_option(const ini_config *in, const char *sn, const char *kn);
 
 int config_parse_bool(const char *b);
+
+char *config_qstrdup(const char * c);
 #endif

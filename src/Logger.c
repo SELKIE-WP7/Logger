@@ -11,15 +11,16 @@
  * @}
  */
 
+
+
 int main(int argc, char *argv[]) {
-        char *monPrefix = NULL;
-	char *stateName = NULL;
+	struct global_opts go = {0};
 
 	program_state state = {0};
 	state.verbose = 1;
 
-	bool saveState = true;
-	bool rotateMonitor = true;
+	go.saveState = true;
+	go.rotateMonitor = true;
 
 	gps_params gpsParams = gps_getParams();
 	mp_params mpParams = mp_getParams();
@@ -50,22 +51,23 @@ int main(int argc, char *argv[]) {
 	setvbuf(stdout, NULL, _IONBF, 0); // Unbuffered stdout = more accurate journalling/reporting
 
         opterr = 0; // Handle errors ourselves
-        int go = 0;
+        int gov = 0;
 	bool doUsage = false;
-        while ((go = getopt (argc, argv, "vqb:f:g:i:m:n:p:s:SRL")) != -1) {
-                switch(go) {
-                        case 'v':
-                                state.verbose++;
-                                break;
-			case 'q':
-				state.verbose--;
-				break;
+        while ((gov = getopt (argc, argv, "b:c:f:g:i:m:n:p:s:SRL")) != -1) {
+                switch(gov) {
 			case 'b':
 				errno = 0;
 				gpsParams.initialBaud = strtol(optarg, NULL, 10);
 				if (errno) {
 					log_error(&state, "Bad initial baud value ('%s')", optarg);
 					doUsage = true;
+				}
+				break;
+			case 'c':
+				if (go.configFileName) {
+					log_error(&state, "Only a single configuration file can be specified");
+				} else {
+					go.configFileName = strdup(optarg);
 				}
 				break;
 			case 'f':
@@ -93,11 +95,11 @@ int main(int argc, char *argv[]) {
 				}
 				break;
 			case 'm':
-				if (monPrefix) {
+				if (go.dataPrefix) {
 					log_error(&state, "Only a single monitor file prefix can be specified");
 					doUsage = true;
 				} else {
-					monPrefix = strdup(optarg);
+					go.dataPrefix = strdup(optarg);
 				}
 				break;
 			case 'n':
@@ -117,18 +119,18 @@ int main(int argc, char *argv[]) {
 				}
                                 break;
 			case 's':
-				if (stateName) {
+				if (go.stateName) {
 					log_error(&state, "Only a single state file name can be specified");
 					doUsage = true;
 				} else {
-					stateName = strdup(optarg);
+					go.stateName = strdup(optarg);
 				}
 				break;
 			case 'S':
-				saveState = false;
+				go.saveState = false;
 				break;
 			case 'R':
-				rotateMonitor = false;
+				go.rotateMonitor = false;
 				break;
 			case '?':
 				log_error(&state, "Unknown option `-%c'", optopt);
@@ -142,43 +144,134 @@ int main(int argc, char *argv[]) {
 		doUsage = true;
         }
 
+/***************************
+	Extract global config options from "" section
+****************************/
+
+	ini_config conf = {0};
+	if (!new_config(&conf)) {
+		log_error(&state, "Failed to allocated new config");
+		free(go.configFileName);
+		free(go.dataPrefix);
+		free(go.stateName);
+		return EXIT_FAILURE;
+	}
+
+	if (go.configFileName) {
+		log_info(&state, 1, "Reading configuration from file \"%s\"", go.configFileName);
+		if (ini_parse(go.configFileName, config_handler, &conf)) {
+			log_error(&state, "Unable to read configuration file");
+			free(go.configFileName);
+			free(go.dataPrefix);
+			free(go.stateName);
+			return EXIT_FAILURE;
+		}
+
+		config_section *def = config_get_section(&conf, "");
+		if (def != NULL) { 
+			config_kv *kv = NULL;
+			if ((kv = config_get_key(def, "verbose"))) {
+				errno = 0;
+				state.verbose = strtol(kv->value, NULL, 0);
+				if (errno) {
+					log_error(&state, "Error parsing verbosity: %s", strerror(errno));
+					doUsage = true;
+				}
+			}
+
+			kv = NULL;
+			if ((kv = config_get_key(def, "frequency"))) {
+				errno = 0;
+				go.coreFreq = strtol(kv->value, NULL, 0);
+				if (errno) {
+					log_error(&state, "Error parsing core sample frequency: %s", strerror(errno));
+					doUsage = true;
+				}
+			}
+
+			kv = NULL;
+			if ((kv = config_get_key(def, "prefix"))) {
+				go.dataPrefix = strdup(kv->value);
+			}
+
+			kv = NULL;
+			if ((kv = config_get_key(def, "statefile"))) {
+				go.stateName = strdup(kv->value);
+			}
+
+			kv = NULL;
+			if ((kv = config_get_key(def, "savestate"))) {
+				int st = config_parse_bool(kv->value);
+				if (st < 0) {
+					log_error(&state, "Error parsing option savestate: %s", strerror(errno));
+					doUsage = true;
+				}
+				go.saveState = st;
+			}
+
+			kv = NULL;
+			if ((kv = config_get_key(def, "rotate"))) {
+				int rm = config_parse_bool(kv->value);
+				if (rm < 0) {
+					log_error(&state, "Error parsing option rotate: %s", strerror(errno));
+					doUsage = true;
+				}
+				go.rotateMonitor = rm;
+			}
+		}
+
+		print_config(&conf);
+	}
+
 	// Check for conflicting options
-	if (stateName && !saveState) {
+	if (go.stateName && !go.saveState) {
 		log_error(&state, "-s and -S are mutually exclusive");
 		doUsage = true;
 	}
 
 	if (doUsage) {
-		ini_config conf = {0};
-		if (!new_config(&conf)) {
-			fprintf(stderr, "Failed to allocated new config\n");
-		} else {
-			int rv = ini_parse("config.ini", config_handler, &conf);
-			fprintf(stderr, "=== INI TEST: %d\n\n", rv);
-			print_config(&conf);
-			destroy_config(&conf);
-		}
 		fprintf(stderr, usage, argv[0]);
 		free(gpsParams.portName);
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(monPrefix);
-		free(stateName);
+		free(go.configFileName);
+		free(go.dataPrefix);
+		free(go.stateName);
 		return EXIT_FAILURE;
 	}
+
+	destroy_config(&conf);
 
 	// Set defaults if no argument provided
 	// Defining the defaults as compiled in constants at the top of main() causes issues
 	// with overwriting them later
-	if (!monPrefix) {
-		monPrefix = strdup(DEFAULT_MON_PREFIX);
+	if (!go.dataPrefix) {
+		go.dataPrefix = strdup(DEFAULT_MON_PREFIX);
 	}
 
 	// Default state file name is derived from the port name
-	if (!stateName) {
-		stateName = strdup(DEFAULT_STATE_NAME);
+	if (!go.stateName) {
+		go.stateName = strdup(DEFAULT_STATE_NAME);
 	}
+
+	// Set default frequency if not already set
+	if (!go.coreFreq) {
+		go.coreFreq = DEFAULT_MARK_FREQUENCY;
+	}
+
+/***************************
+	For each section:
+		Allocate log_thread_args_t structure (lta)
+		Set lta->tag to section name
+		Set lta->logQ to queue
+		Set lta->pstate to &state
+		Identify device type
+		Get callback functions and set lta->funcs
+		If set, call lta->funcs->parse() with config section to populate lta->dparams
+			parse() must allocate memory for dparams
+****************************/
+
 
 	int mon_yday = -1; //!< Log rotation markers: Day for currently opened files
 	int mon_nextyday = -2; //!< Log rotation markers: Day for next files
@@ -202,8 +295,8 @@ int main(int argc, char *argv[]) {
 	char *monFileStem = NULL;
 
 	errno = 0;
-	log_info(&state, 1, "Using %s as output file prefix", monPrefix);
-	monitorFile = openSerialNumberedFile(monPrefix, "dat", &monFileStem);
+	log_info(&state, 1, "Using %s as output file prefix", go.dataPrefix);
+	monitorFile = openSerialNumberedFile(go.dataPrefix, "dat", &monFileStem);
 
 	if (monitorFile == NULL) {
 		if (errno == EEXIST) {
@@ -215,8 +308,8 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(monPrefix);
-		free(stateName);
+		free(go.dataPrefix);
+		free(go.stateName);
 		return -1;
 	}
 	log_info(&state, 1, "Using data file %s.dat", monFileStem);
@@ -240,8 +333,8 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(monPrefix);
-		free(stateName);
+		free(go.dataPrefix);
+		free(go.stateName);
 		return EXIT_FAILURE;
 	}
 	state.logverbose = 3;
@@ -267,15 +360,15 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(monPrefix);
-		free(stateName);
+		free(go.dataPrefix);
+		free(go.stateName);
 		return EXIT_FAILURE;
 	}
 	log_info(&state, 2, "Using variable file %s.var", monFileStem);
 
 	log_info(&state, 1, "Version: " GIT_VERSION_STRING); // Preprocessor concatenation, not a format string!
-	if (saveState) {
-		log_info(&state, 1, "Using state file %s", stateName);
+	if (go.saveState) {
+		log_info(&state, 1, "Using state file %s", go.stateName);
 	}
 
 	// Block signal handling until we're up and running
@@ -288,8 +381,8 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(monPrefix);
-		free(stateName);
+		free(go.dataPrefix);
+		free(go.stateName);
 		return EXIT_FAILURE;
 	}
 
@@ -316,8 +409,8 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(monPrefix);
-		free(stateName);
+		free(go.dataPrefix);
+		free(go.stateName);
 		free(threads);
 		return EXIT_FAILURE;
 	}
@@ -337,8 +430,8 @@ int main(int argc, char *argv[]) {
 			free(mpParams.portName);
 			free(nmeaParams.portName);
 			free(i2cParams.busName);
-			free(monPrefix);
-			free(stateName);
+			free(go.dataPrefix);
+			free(go.stateName);
 			free(threads);
 			return EXIT_FAILURE;
 		}
@@ -359,8 +452,8 @@ int main(int argc, char *argv[]) {
 			free(mpParams.portName);
 			free(nmeaParams.portName);
 			free(i2cParams.busName);
-			free(monPrefix);
-			free(stateName);
+			free(go.dataPrefix);
+			free(go.stateName);
 			free(threads);
 			return EXIT_FAILURE;
 		}
@@ -380,8 +473,8 @@ int main(int argc, char *argv[]) {
 			free(mpParams.portName);
 			free(nmeaParams.portName);
 			free(i2cParams.busName);
-			free(monPrefix);
-			free(stateName);
+			free(go.dataPrefix);
+			free(go.stateName);
 			free(threads);
 			return EXIT_FAILURE;
 		}
@@ -405,8 +498,8 @@ int main(int argc, char *argv[]) {
 			free(mpParams.portName);
 			free(nmeaParams.portName);
 			free(i2cParams.busName);
-			free(monPrefix);
-			free(stateName);
+			free(go.dataPrefix);
+			free(go.stateName);
 			free(threads);
 			return EXIT_FAILURE;
 		}
@@ -423,8 +516,8 @@ int main(int argc, char *argv[]) {
 			free(mpParams.portName);
 			free(nmeaParams.portName);
 			free(i2cParams.busName);
-			free(monPrefix);
-			free(stateName);
+			free(go.dataPrefix);
+			free(go.stateName);
 			free(threads);
 			return EXIT_FAILURE;
 		}
@@ -448,8 +541,8 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(monPrefix);
-		free(stateName);
+		free(go.dataPrefix);
+		free(go.stateName);
 		free(threads);
 		return EXIT_FAILURE;
 	}
@@ -505,7 +598,7 @@ int main(int argc, char *argv[]) {
 
 		// Periodic jobs that don't need checking/testing every iteration
 		if ((loopCount % 200 == 0)) {
-			if (rotateMonitor) {
+			if (go.rotateMonitor) {
 				/*
 				 * During testing of software on the previous project, the time/localtime combination could
 				 * take up a surprising amount of CPU time, so we avoid calling it if we can.
@@ -537,7 +630,7 @@ int main(int argc, char *argv[]) {
 			// Rotate all log files, then reset the flag
 
 			/*
-			 * Note that we don't check the rotateMonitor flag here
+			 * Note that we don't check the go.rotateMonitor flag here
 			 *
 			 * If automatic rotation is disabled at the command line then the rotateNow flag will only be
 			 * set if triggered by a signal, so this allows rotating logs on an external trigger even if
@@ -551,7 +644,7 @@ int main(int argc, char *argv[]) {
 
 			FILE *newMonitor = NULL;
 			char *newMonFileStem = NULL;
-			newMonitor  = openSerialNumberedFile(monPrefix, "dat", &newMonFileStem);
+			newMonitor  = openSerialNumberedFile(go.dataPrefix, "dat", &newMonFileStem);
 
 			if (newMonitor == NULL) {
 				// If the error is likely to be too many data files, continue with the old handle.
@@ -688,7 +781,7 @@ int main(int argc, char *argv[]) {
 	log_info(&state, 2, "Message queue destroyed");
 
 	fclose(monitorFile);
-	free(monPrefix);
+	free(go.dataPrefix);
 	free(monFileStem);
 	log_info(&state, 2, "Monitor file closed");
 
@@ -697,13 +790,16 @@ int main(int argc, char *argv[]) {
 
 	log_info(&state, 0, "%d messages read successfully\n\n", msgCount);
 	fclose(state.log);
-	free(stateName);
+	free(go.stateName);
 
 	/***
 	 * While this isn't necessary for the program to run, it keeps Valgrind
 	 * happy and makes it easier to spot real bugs and leaks
 	 *
 	 */
+	if (go.configFileName) {
+		free(go.configFileName);
+	}
 	free(gpsParams.portName);
 	free(mpParams.portName);
 	free(nmeaParams.portName);

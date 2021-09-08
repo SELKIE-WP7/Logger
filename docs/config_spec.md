@@ -4,17 +4,15 @@ Configuration File Options
 Global Options
 ==============
 
-- Console verbosity
-- Log file verbosity
+- Console verbosity (verbose)
 
-- Timestamp / marker frequency
+- Timestamp / marker frequency (frequency)
 
-- Monitor file path/prefix
-- Monitor file rotation
-- Monitor file enabled
+- Monitor file path/prefix (prefix)
+- Monitor file rotation (rotate)
 
-- State file path/prefix
-- State file enabled
+- State file path/prefix (statefile)
+- State file enabled (savestate)
 
 
 GPS Source Options

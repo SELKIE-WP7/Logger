@@ -56,8 +56,8 @@ int config_handler(void* user, const char* section, const char* name, const char
 		memset(&(cs->opts[cs->numopts]), 0, sizeof(config_kv) * 5);
 		k = &(cs->opts[cs->numopts++]);
 	}
-	k->key = strdup(name);
-	k->value = strdup(value);
+	k->key = config_qstrdup(name);
+	k->value = config_qstrdup(value);
 
 	return 1;
 }
@@ -175,4 +175,15 @@ int config_parse_bool(const char *b) {
 			return 0;
 	}
 	return -1;
+}
+
+char *config_qstrdup(const char * c) {
+	size_t sl = strlen(c);
+	if (((c[0] == '"') && (c[sl-1] == '"')) || ((c[0] == '\'') && (c[sl-1] == '\''))) {
+		// Length minus the two quote chars
+		return strndup(&(c[1]), sl-2);
+	}
+
+	// No matched quotes? Dup what we were given
+	return strdup(c);
 }

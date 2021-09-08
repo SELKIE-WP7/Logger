@@ -49,6 +49,16 @@
  */
 #define SERIAL_SLEEP 1E3
 
+//! General program options
+struct global_opts {
+	char *configFileName; //! Name of configuration file used
+	char *dataPrefix; //! File prefix for main log and data files (optionally prefixed by path)
+	char *stateName; //! Name (and optionally path) to state file for live data
+	bool saveState; //! Enable / Disable use of state file. Default true
+	bool rotateMonitor; //! Enable / Disable daily rotation of main log and data files
+	int  coreFreq; //! Core marker/timer frequency
+};
+
 //! Device specific callback functions
 typedef void *(*device_fn)(void *);
 
@@ -58,6 +68,7 @@ typedef struct {
 	device_fn logging;  //!< Main logging thread, passed to pthread_create()
 	device_fn shutdown; //!< Called on shutdown - close handles etc.
 	device_fn channels; //!< Send a current channel map to the queue (optional)
+	device_fn parse;  //!< Parse configuration options into device parameters
 } device_callbacks;
 
 //! Logging thread information
@@ -78,7 +89,7 @@ typedef struct {
 
 
 //! Difference between timespecs (used for rate keeping)
-bool timespec_subtract (struct timespec *result, struct timespec *x, struct timespec *y);
+bool timespec_subtract(struct timespec *result, struct timespec *x, struct timespec *y);
 
 //! Push current software version into message queue
 bool log_softwareVersion(msgqueue *q);

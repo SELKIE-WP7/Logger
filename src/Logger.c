@@ -168,7 +168,9 @@ int main(int argc, char *argv[]) {
 		}
 
 		config_section *def = config_get_section(&conf, "");
-		if (def != NULL) { 
+		if (def == NULL) {
+			log_warning(&state, "No global configuration section found in file. Using defaults");
+		} else {
 			config_kv *kv = NULL;
 			if ((kv = config_get_key(def, "verbose"))) {
 				errno = 0;
@@ -224,9 +226,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Check for conflicting options
+	// Downgraded to a warning as part of the move to configuration files
 	if (go.stateName && !go.saveState) {
-		log_error(&state, "-s and -S are mutually exclusive");
-		doUsage = true;
+		log_warning(&state, "State file name configured, but state file use disabled by configuration");
 	}
 
 	if (doUsage) {

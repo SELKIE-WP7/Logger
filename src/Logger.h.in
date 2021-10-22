@@ -101,7 +101,10 @@ bool log_softwareVersion(msgqueue *q);
 #include "LoggerNMEA.h"
 #include "LoggerI2C.h"
 #include "LoggerTime.h"
+#include "LoggerDMap.h" // Include after all data sources/devices defined
+
 #include "LoggerSignals.h"
+
 
 //! @}
 #endif

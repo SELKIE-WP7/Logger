@@ -243,8 +243,6 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	destroy_config(&conf);
-
 	// Set defaults if no argument provided
 	// Defining the defaults as compiled in constants at the top of main() causes issues
 	// with overwriting them later
@@ -262,18 +260,11 @@ int main(int argc, char *argv[]) {
 		go.coreFreq = DEFAULT_MARK_FREQUENCY;
 	}
 
-/***************************
-	For each section:
-		Allocate log_thread_args_t structure (lta)
-		Set lta->tag to section name
-		Set lta->logQ to queue
-		Set lta->pstate to &state
-		Identify device type
-		Get callback functions and set lta->funcs
-		If set, call lta->funcs->parse() with config section to populate lta->dparams
-			parse() must allocate memory for dparams
-****************************/
+	// Per thread / individual source configuration happens after this global setup section
 
+/**********************************************************************************************
+ * Set up various log files and mechanisms
+ *********************************************************************************************/
 
 	int mon_yday = -1; //!< Log rotation markers: Day for currently opened files
 	int mon_nextyday = -2; //!< Log rotation markers: Day for next files
@@ -388,22 +379,92 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	int nThreads = 1;
-	if (gpsParams.portName) { nThreads++;}
-	if (mpParams.portName) { nThreads++;}
-	if (nmeaParams.portName) { nThreads++;}
-	if (i2cParams.busName) { nThreads++;}
+/********************************************************************************************
+ * Configure individual data sources, based on the configuration file sections
+ * 	For each section:
+ *		Allocate log_thread_args_t structure (lta)
+ *		Set lta->tag to section name
+ *		Set lta->logQ to queue
+ *		Set lta->pstate to &state
+ *		Identify device type
+ *		Get callback functions and set lta->funcs
+ *		If set, call lta->funcs->parse() with config section to populate lta->dparams
+ *			parse() must allocate memory for dparams
+********************************************************************************************/
 
-	int tix = 0; // Thread Index
-	log_thread_args_t *ltargs = calloc(nThreads, sizeof(log_thread_args_t));
+	log_thread_args_t *ltargs = calloc(10, sizeof(log_thread_args_t));
+	size_t ltaSize = 10;
+	size_t nThreads = 0;
+
+	if (!ltargs) {
+		log_error(&state, "Unable to allocate ltargs");
+		free(go.dataPrefix);
+		free(go.stateName);
+		free(go.configFileName);
+		destroy_config(&conf);
+		if (monitorFile) { fclose(monitorFile); }
+		if (monFileStem) { free(monFileStem); }
+		if (varFile) { fclose(varFile); }
+		if (state.log) { fclose(state.log); }
+		return EXIT_FAILURE;
+	}
+
+	ltargs[nThreads].tag = "Timer";
+	ltargs[nThreads].logQ = &log_queue;
+	ltargs[nThreads].pstate = &state;
+	ltargs[nThreads].dParams = &timerParams;
+	ltargs[nThreads].funcs = timer_getCallbacks();
+
+	// Loop starts at 1, as position zero is filled with the timer above
+	for (int i = 1; i < conf.numsects; ++i) {
+		if (strcmp(conf.sects[i].name, "") == 0) {
+			// The global/unlabelled section gets handled above
+			continue;
+		}
+		log_info(&state, 3, "Found section: %s", conf.sects[i].name);
+		ltargs[nThreads].tag = strdup(conf.sects[i].name);
+		ltargs[nThreads].logQ = &log_queue;
+		ltargs[nThreads].pstate = &state;
+		// TODO: Device specific init
+		config_kv *type = config_get_key(&(conf.sects[i]), "type");
+		if (type == NULL) {
+			log_error(&state, "Configuration - data source type not defined for \"%s\"", conf.sects[i].name);
+			return EXIT_FAILURE;
+		}
+		ltargs[nThreads].funcs = dmap_getCallbacks(type->value);
+		if (ltargs[nThreads].funcs.parse == NULL) {
+			log_error(&state, "Configuration - no parser available for \"%s\" (%s)", conf.sects[i].name, type->value);
+			return EXIT_FAILURE;
+		}
+		nThreads++;
+		if (nThreads >= ltaSize) {
+			log_thread_args_t *ltt = realloc(ltargs, (ltaSize+10)*sizeof(log_thread_args_t));
+			if (!ltt) {
+				log_error(&state, "Unable to reallocate ltargs structure: %s", strerror(errno));
+				return EXIT_FAILURE;
+			}
+			ltaSize += 10;
+			ltargs = ltt;
+		}
+	}
+
+	destroy_config(&conf);
+
 	pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
+	if (!threads) {
+		log_error(&state, "Unable to allocate threads: %s", strerror(errno));
+		return EXIT_FAILURE;
+	}
 
-	ltargs[tix].tag = "Timer";
-	ltargs[tix].logQ = &log_queue;
-	ltargs[tix].pstate = &state;
-	ltargs[tix].dParams = &timerParams;
-	ltargs[tix].funcs = timer_getCallbacks();
+	for (int tix=0; tix < nThreads; tix++) {
+		ltargs[tix].funcs.startup(&(ltargs[tix]));
+		if (ltargs[tix].returnCode < 0) {
+			log_error(&state, "Unable to set up \"%s\"", ltargs[tix].tag);
+			return EXIT_FAILURE;
+		}
+	}
 
+	/*
 	ltargs[tix].funcs.startup(&(ltargs[tix]));
 	if (ltargs[tix].returnCode < 0) {
 		log_error(&state, "Unable to set up Timers");
@@ -507,7 +568,7 @@ int main(int argc, char *argv[]) {
 		}
 		tix++;
 
-	}
+	} */
 
 	log_info(&state, 1, "Initialisation complete, starting log threads");
 

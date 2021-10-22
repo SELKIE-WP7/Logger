@@ -172,4 +172,8 @@ FILE *openSerialNumberedFile(const char *prefix, const char *extension, char **n
 	return NULL;
 }
 
+void destroy_program_state(program_state *s) {
+	if (s->log) { fclose(s->log); }
+	s->log = NULL;
+}
 //!@}

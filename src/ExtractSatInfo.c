@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
 
-	char *outfileName = NULL;
+	char *outFileName = NULL;
 	bool doGZ = true;
 	bool clobberOutput = false;
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 				doGZ = false;
 				break;
 			case 'o':
-				outfileName = strdup(optarg);
+				outFileName = strdup(optarg);
 				break;
 			case '?':
 				log_error(&state, "Unknown option `-%c'", optopt);
@@ -78,22 +78,27 @@ int main(int argc, char *argv[]) {
 
 	if (doUsage) {
 		fprintf(stderr, usage, argv[0]);
+		free(outFileName);
+		destroy_program_state(&state);
 		return -1;
 	}
 
-	char *infileName = strdup(argv[optind]);
-	FILE *inFile = fopen(infileName, "rb");
+	char *inFileName = strdup(argv[optind]);
+	FILE *inFile = fopen(inFileName, "rb");
 	if (inFile == NULL) {
 		log_error(&state, "Unable to open input file");
+		free(outFileName);
+		free(inFileName);
+		destroy_program_state(&state);
 		return -1;
 	}
 
 
-	if (outfileName == NULL) {
+	if (outFileName == NULL) {
 		// Work out output file name
 		// Split into base and dirnames so that we're don't accidentally split the path on a .
-		char *inF1 = strdup(infileName);
-		char *inF2 = strdup(infileName);
+		char *inF1 = strdup(inFileName);
+		char *inF2 = strdup(inFileName);
 		char *dn = dirname(inF1);
 		char *bn = basename(inF2);
 
@@ -111,11 +116,25 @@ int main(int argc, char *argv[]) {
 		char *nbn = calloc(bnl+1, sizeof(char));
 		strncpy(nbn, bn, bnl);
 		if (doGZ) {
-			if (asprintf(&outfileName, "%s/%s.satinfo.csv.gz", dn, nbn) <= 0) {
+			if (asprintf(&outFileName, "%s/%s.satinfo.csv.gz", dn, nbn) <= 0) {
+				free(nbn);
+				free(inF1);
+				free(inF2);
+				fclose(inFile);
+				free(outFileName);
+				free(inFileName);
+				destroy_program_state(&state);
 				return -1;
 			}
 		} else {
-			if (asprintf(&outfileName, "%s/%s.satinfo.csv", dn, nbn) <= 0) {
+			if (asprintf(&outFileName, "%s/%s.satinfo.csv", dn, nbn) <= 0) {
+				free(nbn);
+				free(inF1);
+				free(inF2);
+				fclose(inFile);
+				free(outFileName);
+				free(inFileName);
+				destroy_program_state(&state);
 				return -1;
 			}
 		}
@@ -149,35 +168,45 @@ int main(int argc, char *argv[]) {
 
 	// Use zib functions, but in transparent mode if not compressing
 	// Avoids wrapping every write function with doGZ checks
-	gzFile outFile = gzopen(outfileName, fmode);
+	gzFile outFile = gzopen(outFileName, fmode);
 	if (outFile == NULL) {
 		log_error(&state, "Unable to open output file");
-		log_error(&state, "%s", strerror(errno));
+		log_error(&state, "%s  ", strerror(errno));
+		fclose(inFile);
+		free(outFileName);
+		free(inFileName);
+		destroy_program_state(&state);
 		return -1;
 	}
-	log_info(&state, 1, "Writing %s output to %s", doGZ ? "compressed" : "uncompressed", outfileName);
-	free(outfileName);
-	outfileName = NULL;
+	log_info(&state, 1, "Writing %s output to %s", doGZ ? "compressed" : "uncompressed", outFileName);
+	free(outFileName);
+	outFileName = NULL;
 
 	state.started = 1;
 	int msgCount = 0;
 	struct stat inStat = {0};
 	if (fstat(fileno(inFile), &inStat) != 0) {
 		log_error(&state, "Unable to get input file status: %s", strerror(errno));
+		free(inFileName);
+		fclose(inFile);
+		gzclose(outFile);
+		destroy_program_state(&state);
 		return -1;
 	}
 	long inSize = inStat.st_size;
 	long inPos = 0;
 	int progress = 0;
 	if (inSize >= 1E9) {
-		log_info(&state, 1, "Reading %.2fGB of data from %s", inSize / 1.0E9, infileName);
+		log_info(&state, 1, "Reading %.2fGB of data from %s", inSize / 1.0E9, inFileName);
 	} else if (inSize >= 1E6) {
-		log_info(&state, 1, "Reading %.2fMB of data from %s", inSize / 1.0E6, infileName);
+		log_info(&state, 1, "Reading %.2fMB of data from %s", inSize / 1.0E6, inFileName);
 	} else if (inSize >= 1E3) {
-		log_info(&state, 1, "Reading %.2fkB of data from %s", inSize / 1.0E3, infileName);
+		log_info(&state, 1, "Reading %.2fkB of data from %s", inSize / 1.0E3, inFileName);
 	} else {
-		log_info(&state, 1, "Reading %ld bytes of data from %s", inSize, infileName);
+		log_info(&state, 1, "Reading %ld bytes of data from %s", inSize, inFileName);
 	}
+	free(inFileName);
+	inFileName = NULL;
 
 	char *GNSS[] = {"GPS", "SBAS", "Galileo", "BeiDou", "IMES", "QZSS", "GLONASS"};
 	gzprintf(outFile, "TOW,Source,GNSS,SatID,SNR,Elevation,Azimuth,Residual,Quality,SatUsed\n");
@@ -227,7 +256,6 @@ int main(int argc, char *argv[]) {
 	gzclose(outFile);
 
 	log_info(&state, 1, "%d messages processed", msgCount);
-	free(infileName);
-	free(outfileName);
+	destroy_program_state(&state);
 	return 0;
 }

@@ -151,9 +151,7 @@ int main(int argc, char *argv[]) {
 	ini_config conf = {0};
 	if (!new_config(&conf)) {
 		log_error(&state, "Failed to allocated new config");
-		free(go.configFileName);
-		free(go.dataPrefix);
-		free(go.stateName);
+		destroy_global_opts(&go);
 		return EXIT_FAILURE;
 	}
 
@@ -161,9 +159,7 @@ int main(int argc, char *argv[]) {
 		log_info(&state, 1, "Reading configuration from file \"%s\"", go.configFileName);
 		if (ini_parse(go.configFileName, config_handler, &conf)) {
 			log_error(&state, "Unable to read configuration file");
-			free(go.configFileName);
-			free(go.dataPrefix);
-			free(go.stateName);
+			destroy_global_opts(&go);
 			return EXIT_FAILURE;
 		}
 
@@ -237,9 +233,8 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(go.configFileName);
-		free(go.dataPrefix);
-		free(go.stateName);
+		destroy_global_opts(&go);
+		destroy_config(&conf);
 		return EXIT_FAILURE;
 	}
 
@@ -284,14 +279,12 @@ int main(int argc, char *argv[]) {
 		mon_nextyday = mon_yday;
 	}
 
-	FILE *monitorFile = NULL;
-	char *monFileStem = NULL;
 
 	errno = 0;
 	log_info(&state, 1, "Using %s as output file prefix", go.dataPrefix);
-	monitorFile = openSerialNumberedFile(go.dataPrefix, "dat", &monFileStem);
+	go.monitorFile = openSerialNumberedFile(go.dataPrefix, "dat", &go.monFileStem);
 
-	if (monitorFile == NULL) {
+	if (go.monitorFile == NULL) {
 		if (errno == EEXIST) {
 			log_error(&state, "Unable to open data file - too many files created with this prefix today?");
 		} else {
@@ -301,21 +294,21 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(go.dataPrefix);
-		free(go.stateName);
-		return -1;
+		destroy_global_opts(&go);
+		return EXIT_FAILURE;
 	}
-	log_info(&state, 1, "Using data file %s.dat", monFileStem);
+	log_info(&state, 1, "Using data file %s.dat", go.monFileStem);
 
 	errno = 0;
 	{
 		char *logFileName = NULL;
-		if (asprintf(&logFileName, "%s.%s", monFileStem, "log") < 0) {
+		if (asprintf(&logFileName, "%s.%s", go.monFileStem, "log") < 0) {
 			log_error(&state, "Failed to allocate memory for log file name: %s", strerror(errno));
 		}
 		state.log = fopen(logFileName, "w+x");
 		free(logFileName);
 	}
+
 	if (!state.log) {
 		if (errno == EEXIST) {
 			log_error(&state, "Unable to open log file. Log file and data file names out of sync?");
@@ -326,24 +319,24 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(go.dataPrefix);
-		free(go.stateName);
+		destroy_config(&conf);
+		destroy_global_opts(&go);
+		destroy_program_state(&state);
 		return EXIT_FAILURE;
 	}
 	state.logverbose = 3;
-	log_info(&state, 2, "Using log file %s.log", monFileStem);
+	log_info(&state, 2, "Using log file %s.log", go.monFileStem);
 
 	errno = 0;
-	FILE *varFile = NULL;
 	{
 		char *varFileName = NULL;
-		if (asprintf(&varFileName, "%s.%s", monFileStem, "var") < 0) {
+		if (asprintf(&varFileName, "%s.%s", go.monFileStem, "var") < 0) {
 			log_error(&state, "Failed to allocate memory for variable file name: %s", strerror(errno));
 		}
-		varFile = fopen(varFileName, "w+x");
+		go.varFile = fopen(varFileName, "w+x");
 		free(varFileName);
 	}
-	if (!varFile) {
+	if (!go.varFile) {
 		if (errno == EEXIST) {
 			log_error(&state, "Unable to open variable file. Variable file and data file names out of sync?");
 		} else {
@@ -353,11 +346,12 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(go.dataPrefix);
-		free(go.stateName);
+		destroy_config(&conf);
+		destroy_global_opts(&go);
+		destroy_program_state(&state);
 		return EXIT_FAILURE;
 	}
-	log_info(&state, 2, "Using variable file %s.var", monFileStem);
+	log_info(&state, 2, "Using variable file %s.var", go.monFileStem);
 
 	log_info(&state, 1, "Version: " GIT_VERSION_STRING); // Preprocessor concatenation, not a format string!
 	if (go.saveState) {
@@ -374,8 +368,9 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(go.dataPrefix);
-		free(go.stateName);
+		destroy_config(&conf);
+		destroy_global_opts(&go);
+		destroy_program_state(&state);
 		return EXIT_FAILURE;
 	}
 
@@ -392,20 +387,19 @@ int main(int argc, char *argv[]) {
  *			parse() must allocate memory for dparams
 ********************************************************************************************/
 
+	// Set true for graceful exit at next convenient point during configuration
+	bool nextExit = false;
+
 	log_thread_args_t *ltargs = calloc(10, sizeof(log_thread_args_t));
 	size_t ltaSize = 10;
 	size_t nThreads = 0;
 
 	if (!ltargs) {
 		log_error(&state, "Unable to allocate ltargs");
-		free(go.dataPrefix);
-		free(go.stateName);
-		free(go.configFileName);
+		destroy_global_opts(&go);
 		destroy_config(&conf);
-		if (monitorFile) { fclose(monitorFile); }
-		if (monFileStem) { free(monFileStem); }
-		if (varFile) { fclose(varFile); }
-		if (state.log) { fclose(state.log); }
+		if (go.varFile) { fclose(go.varFile); }
+		destroy_program_state(&state);
 		return EXIT_FAILURE;
 	}
 
@@ -429,12 +423,18 @@ int main(int argc, char *argv[]) {
 		config_kv *type = config_get_key(&(conf.sects[i]), "type");
 		if (type == NULL) {
 			log_error(&state, "Configuration - data source type not defined for \"%s\"", conf.sects[i].name);
-			return EXIT_FAILURE;
+			free(ltargs[nThreads].tag);
+			ltargs[nThreads].tag = NULL;
+			nextExit = true;
+			continue;
 		}
 		ltargs[nThreads].funcs = dmap_getCallbacks(type->value);
 		if (ltargs[nThreads].funcs.parse == NULL) {
 			log_error(&state, "Configuration - no parser available for \"%s\" (%s)", conf.sects[i].name, type->value);
-			return EXIT_FAILURE;
+			free(ltargs[nThreads].tag);
+			ltargs[nThreads].tag = NULL;
+			nextExit = true;
+			continue;
 		}
 		nThreads++;
 		if (nThreads >= ltaSize) {
@@ -450,6 +450,19 @@ int main(int argc, char *argv[]) {
 
 	destroy_config(&conf);
 
+	if (nextExit) {
+		for (int i = 0; i < nThreads; i++) {
+			if (ltargs[i].tag) {free(ltargs[i].tag);}
+			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
+		}
+		free(ltargs);
+		state.shutdown = true;
+		log_error(&state, "Failed to complete configuration successfully - exiting.");
+		destroy_global_opts(&go);
+		destroy_program_state(&state);
+		return EXIT_FAILURE;
+	}
+
 	pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
 	if (!threads) {
 		log_error(&state, "Unable to allocate threads: %s", strerror(errno));
@@ -460,8 +473,23 @@ int main(int argc, char *argv[]) {
 		ltargs[tix].funcs.startup(&(ltargs[tix]));
 		if (ltargs[tix].returnCode < 0) {
 			log_error(&state, "Unable to set up \"%s\"", ltargs[tix].tag);
-			return EXIT_FAILURE;
+			nextExit = true;
+			break;
 		}
+	}
+
+	if (nextExit) {
+		for (int i = 0; i < nThreads; i++) {
+			if (ltargs[i].tag) {free(ltargs[i].tag);}
+			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
+		}
+		free(ltargs);
+		state.shutdown = true;
+		log_error(&state, "Failed to initialise all data sources successfully - exiting.");
+		destroy_global_opts(&go);
+		destroy_program_state(&state);
+		free(threads);
+		return EXIT_FAILURE;
 	}
 
 	/*
@@ -575,18 +603,29 @@ int main(int argc, char *argv[]) {
 	for (int tix=0; tix < nThreads; tix++) {
 		if (!ltargs[tix].funcs.logging) {
 			log_error(&state, "Unable to launch thread %s - no logging function provided", ltargs[tix].tag);
-			return EXIT_FAILURE;
+			nextExit = true;
+			shutdownFlag = true; // Ensure threads aware
+			for (int it = tix - 1; it >= 0; --it) {
+				if (it < 0) { break;}
+				pthread_join(threads[it], NULL);
+				if (ltargs[it].returnCode != 0) {
+					log_error(&state, "Thread %d has signalled an error: %d", it, ltargs[it].returnCode);
+				}
+			}
+			break;
 		}
 		if (pthread_create(&(threads[tix]), NULL, ltargs[tix].funcs.logging, &(ltargs[tix])) != 0){
 			log_error(&state, "Unable to launch %s thread", ltargs[tix].tag);
-			free(gpsParams.portName);
-			free(mpParams.portName);
-			free(nmeaParams.portName);
-			free(i2cParams.busName);
-			free(go.dataPrefix);
-			free(go.stateName);
-			free(threads);
-			return EXIT_FAILURE;
+			nextExit = true;
+			shutdownFlag = true; // Ensure threads aware
+			for (int it = tix - 1; it >= 0; --it) {
+				if (it < 0) { break;}
+				pthread_join(threads[it], NULL);
+				if (ltargs[it].returnCode != 0) {
+					log_error(&state, "Thread %d has signalled an error: %d", it, ltargs[it].returnCode);
+				}
+			}
+			break;
 		}
 
 #ifdef _GNU_SOURCE
@@ -599,6 +638,21 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	if (nextExit) {
+		fprintf(stderr, "XXXX\n");
+		for (int i = 0; i < nThreads; i++) {
+			if (ltargs[i].tag) {free(ltargs[i].tag);}
+			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
+		}
+		free(ltargs);
+		state.shutdown = true;
+		log_error(&state, "Failed to start all data sources - exiting.");
+		destroy_global_opts(&go);
+		destroy_program_state(&state);
+		free(threads);
+		return EXIT_FAILURE;
+	}
+
 	state.started = true;
 	log_info(&state, 1, "Startup complete");
 
@@ -608,8 +662,8 @@ int main(int argc, char *argv[]) {
 		free(mpParams.portName);
 		free(nmeaParams.portName);
 		free(i2cParams.busName);
-		free(go.dataPrefix);
-		free(go.stateName);
+		destroy_global_opts(&go);
+		destroy_program_state(&state);
 		free(threads);
 		return EXIT_FAILURE;
 	}
@@ -723,11 +777,11 @@ int main(int argc, char *argv[]) {
 					return -1;
 				}
 			} else {
-				fclose(monitorFile);
-				monitorFile = newMonitor;
-				free(monFileStem);
-				monFileStem= newMonFileStem;
-				log_info(&state, 2, "Using data file %s.dat", monFileStem);
+				fclose(go.monitorFile);
+				go.monitorFile = newMonitor;
+				free(go.monFileStem);
+				go.monFileStem= newMonFileStem;
+				log_info(&state, 2, "Using data file %s.dat", go.monFileStem);
 			}
 
 			// As above, but for the log file
@@ -735,7 +789,7 @@ int main(int argc, char *argv[]) {
 			errno = 0;
 			{
 				char *logFileName = NULL;
-				if (asprintf(&logFileName, "%s.%s", monFileStem, "log") < 0) {
+				if (asprintf(&logFileName, "%s.%s", go.monFileStem, "log") < 0) {
 					log_error(&state, "Failed to allocate memory for log file name: %s", strerror(errno));
 				}
 				newLog = fopen(logFileName, "w+x");
@@ -753,14 +807,14 @@ int main(int argc, char *argv[]) {
 				FILE * oldLog = state.log;
 				state.log = newLog;
 				fclose(oldLog);
-				log_info(&state, 2, "Using log file %s.log", monFileStem);
+				log_info(&state, 2, "Using log file %s.log", go.monFileStem);
 			}
 
 			FILE *newVar = NULL;
 			errno = 0;
 			{
 				char *varFileName = NULL;
-				if (asprintf(&varFileName, "%s.%s", monFileStem, "var") < 0) {
+				if (asprintf(&varFileName, "%s.%s", go.monFileStem, "var") < 0) {
 					log_error(&state, "Failed to allocate memory for variable file name: %s", strerror(errno));
 				}
 				newVar = fopen(varFileName, "w+x");
@@ -776,9 +830,9 @@ int main(int argc, char *argv[]) {
 				}
 			} else {
 				// We're the only thread writing to the .var file, so fewer shenanigans required.
-				fclose(varFile);
-				log_info(&state, 2, "Using variable file %s.var", monFileStem);
-				varFile = newVar;
+				fclose(go.varFile);
+				log_info(&state, 2, "Using variable file %s.var", go.monFileStem);
+				go.varFile = newVar;
 			}
 
 			// Re-request channel names for the new files
@@ -807,9 +861,9 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		msgCount++;
-		mp_writeMessage(fileno(monitorFile), res);
+		mp_writeMessage(fileno(go.monitorFile), res);
 		if (res->type == SLCHAN_MAP || res->type == SLCHAN_NAME) {
-			mp_writeMessage(fileno(varFile), res);
+			mp_writeMessage(fileno(go.varFile), res);
 		}
 		msg_destroy(res);
 		free(res);
@@ -838,7 +892,7 @@ int main(int argc, char *argv[]) {
 			msg_t *res = queue_pop(&log_queue);
 			msgCount++;
 			msgCount++;
-			mp_writeMessage(fileno(monitorFile), res);
+			mp_writeMessage(fileno(go.monitorFile), res);
 			msg_destroy(res);
 			free(res);
 		}
@@ -847,26 +901,23 @@ int main(int argc, char *argv[]) {
 	queue_destroy(&log_queue);
 	log_info(&state, 2, "Message queue destroyed");
 
-	fclose(monitorFile);
-	free(go.dataPrefix);
-	free(monFileStem);
+	fclose(go.monitorFile);
+	free(go.monFileStem);
 	log_info(&state, 2, "Monitor file closed");
 
-	fclose(varFile);
+	fclose(go.varFile);
 	log_info(&state, 2, "Variable file closed");
 
 	log_info(&state, 0, "%d messages read successfully\n\n", msgCount);
 	fclose(state.log);
-	free(go.stateName);
 
 	/***
 	 * While this isn't necessary for the program to run, it keeps Valgrind
 	 * happy and makes it easier to spot real bugs and leaks
 	 *
 	 */
-	if (go.configFileName) {
-		free(go.configFileName);
-	}
+	destroy_program_state(&state);
+	destroy_global_opts(&go);
 	free(gpsParams.portName);
 	free(mpParams.portName);
 	free(nmeaParams.portName);
@@ -920,4 +971,22 @@ bool log_softwareVersion(msgqueue *q) {
 		return false;
 	}
 	return true;
+}
+
+void destroy_global_opts(struct global_opts *go) {
+	if (go->configFileName) { free(go->configFileName); }
+	if (go->dataPrefix) { free(go->dataPrefix); }
+	if (go->stateName) { free(go->stateName); }
+	if (go->monFileStem) { free(go->monFileStem); }
+
+	go->configFileName = NULL;
+	go->dataPrefix = NULL;
+	go->stateName = NULL;
+	go->monFileStem = NULL;
+
+	if (go->monitorFile) { fclose(go->monitorFile); }
+	if (go->varFile) { fclose(go->varFile); }
+
+	go->monitorFile = NULL;
+	go->varFile = NULL;
 }

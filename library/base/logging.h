@@ -37,5 +37,7 @@ void log_info(const program_state *s, const int level, const char *format, ...) 
 //! Open dated, serial numbered file with given prefix and extension
 FILE *openSerialNumberedFile(const char *prefix, const char *extension, char **name);
 
+//! Cleanly destroy program state
+void destroy_program_state(program_state *s);
 //!@}
 #endif

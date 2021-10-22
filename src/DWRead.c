@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -56,8 +57,8 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	char *infileName = strdup(argv[optind]);
-	FILE *inFile = fopen(infileName, "rb");
+	char *inFileName = strdup(argv[optind]);
+	FILE *inFile = fopen(inFileName, "rb");
 	if (inFile == NULL) {
 		log_error(&state, "Unable to open input file");
 		return -1;
@@ -136,5 +137,8 @@ int main(int argc, char *argv[]) {
 		memmove(buf, &(buf[end]), hw-end);
 		hw -= end;
 	}
+	fclose(inFile);
+	free(inFileName);
+	destroy_program_state(&state);
 	return 1;
 }

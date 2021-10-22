@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
 
-	char *outfileName = NULL;
+	char *outFileName = NULL;
 	bool clobberOutput = false;
 	uint8_t source = 0;
 	bool type[255] = {0};
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 				break;
 
 			case 'o':
-				outfileName = strdup(optarg);
+				outFileName = strdup(optarg);
 				break;
 			case '?':
 				log_error(&state, "Unknown option `-%c'", optopt);
@@ -95,13 +95,18 @@ int main(int argc, char *argv[]) {
 
 	if (doUsage) {
 		fprintf(stderr, usage, argv[0]);
+		destroy_program_state(&state);
+		free(outFileName);
 		return -1;
 	}
 
-	char *infileName = strdup(argv[optind]);
-	FILE *inFile = fopen(infileName, "rb");
+	char *inFileName = strdup(argv[optind]);
+	FILE *inFile = fopen(inFileName, "rb");
 	if (inFile == NULL) {
 		log_error(&state, "Unable to open input file");
+		free(inFileName);
+		free(outFileName);
+		destroy_program_state(&state);
 		return -1;
 	}
 
@@ -110,11 +115,11 @@ int main(int argc, char *argv[]) {
 		log_warning(&state, "Different message types will not be distinguished in output file");
 	}
 
-	if (outfileName == NULL) {
+	if (outFileName == NULL) {
 		// Work out output file name
 		// Split into base and dirnames so that we're don't accidentally split the path on a .
-		char *inF1 = strdup(infileName);
-		char *inF2 = strdup(infileName);
+		char *inF1 = strdup(inFileName);
+		char *inF2 = strdup(inFileName);
 		char *dn = dirname(inF1);
 		char *bn = basename(inF2);
 
@@ -131,7 +136,7 @@ int main(int argc, char *argv[]) {
 		// New basename is old basename up to . (or end, if absent)
 		char *nbn = calloc(bnl+1, sizeof(char));
 		strncpy(nbn, bn, bnl);
-		if (asprintf(&outfileName, "%s/%s.s%02x.dat", dn, nbn, source) <= 0) {
+		if (asprintf(&outFileName, "%s/%s.s%02x.dat", dn, nbn, source) <= 0) {
 			return -1;
 		}
 		free(nbn);
@@ -147,13 +152,17 @@ int main(int argc, char *argv[]) {
 		fmode[2] = 'x';
 	}
 
-	FILE *outFile = fopen(outfileName, fmode);
+	FILE *outFile = fopen(outFileName, fmode);
 	if (outFile == NULL) {
 		log_error(&state, "Unable to open output file");
 		log_error(&state, "%s", strerror(errno));
+		fclose(inFile);
+		free(inFileName);
+		free(outFileName);
+		destroy_program_state(&state);
 		return -1;
 	}
-	log_info(&state, 1, "Writing messages from source 0x%02x to %s", source, outfileName);
+	log_info(&state, 1, "Writing messages from source 0x%02x to %s", source, outFileName);
 	log_info(&state, 1, "Raw mode %s", raw ? "enabled" : "disabled");
 	if (typeCount > 0) {
 		log_info(&state, 2, "Filtering for %d message types", typeCount);
@@ -163,28 +172,34 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
-	free(outfileName);
-	outfileName = NULL;
+	free(outFileName);
+	outFileName = NULL;
 
 	state.started = 1;
 	int msgCount = 0;
 	struct stat inStat = {0};
 	if (fstat(fileno(inFile), &inStat) != 0) {
 		log_error(&state, "Unable to get input file status: %s", strerror(errno));
+		free(inFileName);
+		fclose(inFile);
+		fclose(outFile);
+		destroy_program_state(&state);
 		return -1;
 	}
 	long inSize = inStat.st_size;
 	long inPos = 0;
 	int progress = 0;
 	if (inSize >= 1E9) {
-		log_info(&state, 1, "Reading %.2fGB of data from %s", inSize / 1.0E9, infileName);
+		log_info(&state, 1, "Reading %.2fGB of data from %s", inSize / 1.0E9, inFileName);
 	} else if (inSize >= 1E6) {
-		log_info(&state, 1, "Reading %.2fMB of data from %s", inSize / 1.0E6, infileName);
+		log_info(&state, 1, "Reading %.2fMB of data from %s", inSize / 1.0E6, inFileName);
 	} else if (inSize >= 1E3) {
-		log_info(&state, 1, "Reading %.2fkB of data from %s", inSize / 1.0E3, infileName);
+		log_info(&state, 1, "Reading %.2fkB of data from %s", inSize / 1.0E3, inFileName);
 	} else {
-		log_info(&state, 1, "Reading %ld bytes of data from %s", inSize, infileName);
+		log_info(&state, 1, "Reading %ld bytes of data from %s", inSize, inFileName);
 	}
+
+	free(inFileName);
 
 	while (!(feof(inFile))) {
 		// Read message from data file
@@ -209,11 +224,17 @@ int main(int argc, char *argv[]) {
 				if (raw) {
 					if (!mp_writeData(fileno(outFile), &tmp)) {
 						log_error(&state, "Unable to write output: %s", strerror(errno));
+						fclose(inFile);
+						fclose(outFile);
+						destroy_program_state(&state);
 						return -1;
 					}
 				} else {
 					if (!mp_writeMessage(fileno(outFile), &tmp)) {
 						log_error(&state, "Unable to write output: %s", strerror(errno));
+						fclose(inFile);
+						fclose(outFile);
+						destroy_program_state(&state);
 						return -1;
 					}
 				}
@@ -231,7 +252,6 @@ int main(int argc, char *argv[]) {
 	fclose(outFile);
 
 	log_info(&state, 1, "%d messages processed", msgCount);
-	free(infileName);
-	free(outfileName);
+	destroy_program_state(&state);
 	return 0;
 }

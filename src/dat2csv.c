@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -105,12 +106,15 @@ typedef struct {
 } csv_msg_handler;
 //! @}
 
+//! Tidy up source and channel name arrays
+void free_sn_cn(char *sn[128], char * cn[128][128]);
+
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
 
 	char *varfileName = NULL;
-	char *outfileName = NULL;
+	char *outFileName = NULL;
 	bool doGZ = true;
 	bool clobberOutput = false;
 	uint8_t primaryClock = 0x02;
@@ -154,7 +158,7 @@ int main(int argc, char *argv[]) {
 				varfileName = strdup(optarg);
 				break;
 			case 'o':
-				outfileName = strdup(optarg);
+				outFileName = strdup(optarg);
 				break;
 			case 'T':
 				errno = 0;
@@ -182,8 +186,8 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	char *infileName = strdup(argv[optind]);
-	FILE *inFile = fopen(infileName, "rb");
+	char *inFileName = strdup(argv[optind]);
+	FILE *inFile = fopen(inFileName, "rb");
 	if (inFile == NULL) {
 		log_error(&state, "Unable to open input file");
 		return -1;
@@ -207,7 +211,7 @@ int main(int argc, char *argv[]) {
 	if (varfileName == NULL) {
 		log_warning(&state, "Reading entire data file to generate channel list.");
 		log_warning(&state, "Provide .var file using '-c' option to avoid this");
-		varfileName = strdup(infileName);
+		varfileName = strdup(inFileName);
 		if (varfileName == NULL) {
 			log_error(&state, "Error processing variable file name: %s", strerror(errno));
 			return -1;
@@ -342,11 +346,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (outfileName == NULL) {
+	if (outFileName == NULL) {
 		// Work out output file name
 		// Split into base and dirnames so that we're don't accidentally split the path on a .
-		char *inF1 = strdup(infileName);
-		char *inF2 = strdup(infileName);
+		char *inF1 = strdup(inFileName);
+		char *inF2 = strdup(inFileName);
 		char *dn = dirname(inF1);
 		char *bn = basename(inF2);
 
@@ -364,11 +368,11 @@ int main(int argc, char *argv[]) {
 		char *nbn = calloc(bnl+1, sizeof(char));
 		strncpy(nbn, bn, bnl);
 		if (doGZ) {
-			if (asprintf(&outfileName, "%s/%s.csv.gz", dn, nbn) <= 0) {
+			if (asprintf(&outFileName, "%s/%s.csv.gz", dn, nbn) <= 0) {
 				return -1;
 			}
 		} else {
-			if (asprintf(&outfileName, "%s/%s.csv", dn, nbn) <= 0) {
+			if (asprintf(&outFileName, "%s/%s.csv", dn, nbn) <= 0) {
 				return -1;
 			}
 		}
@@ -402,36 +406,50 @@ int main(int argc, char *argv[]) {
 
 	// Use zib functions, but in transparent mode if not compressing
 	// Avoids wrapping every write function with doGZ checks
-	gzFile outFile = gzopen(outfileName, fmode);
+	gzFile outFile = gzopen(outFileName, fmode);
 	if (outFile == NULL) {
 		log_error(&state, "Unable to open output file");
 		log_error(&state, "%s", strerror(errno));
+		fclose(inFile);
+		free(inFileName);
+		free(outFileName);
+		free(handlers);
+		free_sn_cn(sourceNames, channelNames);
+		destroy_program_state(&state);
 		return -1;
 	}
-	log_info(&state, 1, "Writing %s output to %s", doGZ ? "compressed" : "uncompressed", outfileName);
-	free(outfileName);
-	outfileName = NULL;
+	log_info(&state, 1, "Writing %s output to %s", doGZ ? "compressed" : "uncompressed", outFileName);
+	free(outFileName);
+	outFileName = NULL;
 
 	state.started = 1;
 	int msgCount = 0;
 	struct stat inStat = {0};
 	if (fstat(fileno(inFile), &inStat) != 0) {
 		log_error(&state, "Unable to get input file status: %s", strerror(errno));
+		fclose(inFile);
+		gzclose(outFile);
+		free(inFileName);
+		free(outFileName);
+		free(handlers);
+		free_sn_cn(sourceNames, channelNames);
+		destroy_program_state(&state);
 		return -1;
 	}
 	long inSize = inStat.st_size;
 	long inPos = 0;
 	int progress = 0;
 	if (inSize >= 1E9) {
-		log_info(&state, 1, "Reading %.2fGB of data from %s", inSize / 1.0E9, infileName);
+		log_info(&state, 1, "Reading %.2fGB of data from %s", inSize / 1.0E9, inFileName);
 	} else if (inSize >= 1E6) {
-		log_info(&state, 1, "Reading %.2fMB of data from %s", inSize / 1.0E6, infileName);
+		log_info(&state, 1, "Reading %.2fMB of data from %s", inSize / 1.0E6, inFileName);
 	} else if (inSize >= 1E3) {
-		log_info(&state, 1, "Reading %.2fkB of data from %s", inSize / 1.0E3, infileName);
+		log_info(&state, 1, "Reading %.2fkB of data from %s", inSize / 1.0E3, inFileName);
 	} else {
-		log_info(&state, 1, "Reading %ld bytes of data from %s", inSize, infileName);
+		log_info(&state, 1, "Reading %ld bytes of data from %s", inSize, inFileName);
 	}
-
+	free(inFileName);
+	inFileName = NULL;
 
 	uint32_t timestep = 0;
 	uint32_t nextstep = 0;
@@ -447,6 +465,13 @@ int main(int argc, char *argv[]) {
 		char *fieldTitle = handlers[i].header(handlers[i].source, handlers[i].type, sourceNames[handlers[i].source], channelNames[handlers[i].source][handlers[i].type]);
 		if (fieldTitle == NULL) {
 			log_error(&state, "Unable to generate field name string: %s", strerror(errno));
+			gzclose(outFile);
+			fclose(inFile);
+			free(header);
+			free(fieldTitle);
+			free(handlers);
+			free_sn_cn(sourceNames, channelNames);
+			destroy_program_state(&state);
 			return -1;
 		}
 		if (hlen > (hsize - strlen(fieldTitle))) {
@@ -502,13 +527,16 @@ int main(int argc, char *argv[]) {
 			// Call all message handlers, in order
 			for (int i = 0; i < nHandlers; i++) {
 				bool handled = false;
+				bool error = false;
 				for (int m = 0; m < currMsg; m++) {
 					msg_t *msg = &(currentTimestep[m]);
 					if (msg->type == handlers[i].type && msg->source == handlers[i].source) {
 						char *out = handlers[i].data(msg);
 						if (out == NULL) {
 							log_error(&state, "Error converting message to output format: %s", strerror(errno));
-							return -1;
+							error = true;
+							free(out);
+							break;
 						}
 						gzprintf(outFile, ",%s", out);
 						free(out);
@@ -516,14 +544,26 @@ int main(int argc, char *argv[]) {
 						break; // First instance of each message wins
 					}
 				}
-				if (!handled) {
+				if (!error && !handled) {
 					char *out = handlers[i].data(NULL); // Generate empty fields
 					if (out == NULL) {
 						log_error(&state, "Error generating empty field: %s", strerror(errno));
-						return -1;
+						error = true;
+					} else {
+						gzprintf(outFile, ",%s", out);
 					}
-					gzprintf(outFile, ",%s", out);
 					free(out);
+				}
+				if (error) {
+					for (int m=0; m < currMsg; m++) {
+						msg_destroy(&(currentTimestep[m]));
+					}
+					gzclose(outFile);
+					fclose(inFile);
+					free(handlers);
+					free_sn_cn(sourceNames, channelNames);
+					destroy_program_state(&state);
+					return -1;
 				}
 			}
 			gzprintf(outFile, "\n");
@@ -544,23 +584,27 @@ int main(int argc, char *argv[]) {
 	fclose(inFile);
 	gzclose(outFile);
 
+	log_info(&state, 1, "%d messages processed", msgCount);
+	free(handlers);
+	free_sn_cn(sourceNames, channelNames);
+	destroy_program_state(&state);
+	return 0;
+}
+
+void free_sn_cn(char *sn[128], char * cn[128][128]) {
 	for (int i = 0; i < 128; i++) {
-		if (sourceNames[i] != NULL) {
-			free(sourceNames[i]);
+		if (sn[i] != NULL) {
+			free(sn[i]);
 		}
 	}
 	for (int i = 0; i < 128; i++) {
 		for (int j = 0; j < 128; j++) {
-			if (channelNames[i][j] != NULL) {
-				free(channelNames[i][j]);
-				channelNames[i][j] = NULL;
+			if (cn[i][j] != NULL) {
+				free(cn[i][j]);
+				cn[i][j] = NULL;
 			}
 		}
 	}
-	log_info(&state, 1, "%d messages processed", msgCount);
-	free(infileName);
-	free(handlers);
-	return 0;
 }
 
 /*!

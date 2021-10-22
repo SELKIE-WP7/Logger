@@ -51,12 +51,17 @@
 
 //! General program options
 struct global_opts {
-	char *configFileName; //! Name of configuration file used
-	char *dataPrefix; //! File prefix for main log and data files (optionally prefixed by path)
-	char *stateName; //! Name (and optionally path) to state file for live data
-	bool saveState; //! Enable / Disable use of state file. Default true
-	bool rotateMonitor; //! Enable / Disable daily rotation of main log and data files
-	int  coreFreq; //! Core marker/timer frequency
+	char *configFileName; //!< Name of configuration file used
+	char *dataPrefix; //!< File prefix for main log and data files (optionally prefixed by path)
+	char *stateName; //!< Name (and optionally path) to state file for live data
+	bool saveState; //!< Enable / Disable use of state file. Default true
+	bool rotateMonitor; //!< Enable / Disable daily rotation of main log and data files
+	int  coreFreq; //!< Core marker/timer frequency
+
+	// Not really options, but this is a convenient place to track them
+	FILE *monitorFile; //!< Current data output file
+	char *monFileStem; //!< Current serial numbered file prefix
+	FILE *varFile; //! Current variables file
 };
 
 //! Device specific callback functions
@@ -93,6 +98,9 @@ bool timespec_subtract(struct timespec *result, struct timespec *x, struct times
 
 //! Push current software version into message queue
 bool log_softwareVersion(msgqueue *q);
+
+//! Cleanup function for global_opts struct
+void destroy_global_opts(struct global_opts *go);
 
 #include "LoggerConfig.h" // Include first, so types are available below
 

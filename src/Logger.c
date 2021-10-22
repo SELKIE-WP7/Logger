@@ -510,6 +510,10 @@ int main(int argc, char *argv[]) {
 	log_info(&state, 1, "Initialisation complete, starting log threads");
 
 	for (int tix=0; tix < nThreads; tix++) {
+		if (!ltargs[tix].funcs.logging) {
+			log_error(&state, "Unable to launch thread %s - no logging function provided", ltargs[tix].tag);
+			return EXIT_FAILURE;
+		}
 		if (pthread_create(&(threads[tix]), NULL, ltargs[tix].funcs.logging, &(ltargs[tix])) != 0){
 			log_error(&state, "Unable to launch %s thread", ltargs[tix].tag);
 			free(gpsParams.portName);

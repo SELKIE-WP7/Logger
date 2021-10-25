@@ -98,6 +98,10 @@ void *mp_shutdown(void *ptargs) {
 		mp_closeConnection(mpInfo->handle);
 	}
 	mpInfo->handle = -1;
+	if (mpInfo->portName) {
+		free(mpInfo->portName);
+		mpInfo->portName = NULL;
+	}
 	return NULL;
 }
 
@@ -118,4 +122,38 @@ mp_params mp_getParams() {
 		.handle = -1
 	};
 	return mp;
+}
+
+
+bool mp_parseConfig(log_thread_args_t *lta, config_section *s) {
+	if (lta->dParams) {
+		log_error(lta->pstate, "[MP:%s] Refusing to reconfigure", lta->tag);
+		return false;
+	}
+
+	mp_params *mp = calloc(1, sizeof(mp_params));
+	if (!mp) {
+		log_error(lta->pstate, "[MP:%s] Unable to allocate memory for device parameters", lta->tag);
+		return false;
+	}
+	(*mp) = mp_getParams();
+
+	config_kv *t = NULL;
+	if ((t = config_get_key(s, "port"))) {
+		mp->portName = config_qstrdup(t->value);
+	}
+	t = NULL;
+
+	if ((t = config_get_key(s, "baud"))) {
+		errno = 0;
+		mp->baudRate = strtol(t->value, NULL, 0);
+		if (errno) {
+			log_error(lta->pstate, "[MP:%s] Error parsing baud rate: %s", lta->tag, strerror(errno));
+			return false;
+		}
+	}
+	t = NULL;
+
+	lta->dParams = mp;
+	return true;
 }

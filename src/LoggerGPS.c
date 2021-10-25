@@ -213,6 +213,14 @@ void *gps_shutdown(void *ptargs) {
 		ubx_closeConnection(gpsInfo->handle);
 	}
 	gpsInfo->handle = -1;
+	if (gpsInfo->sourceName) {
+		free(gpsInfo->sourceName);
+		gpsInfo->sourceName = NULL;
+	}
+	if (gpsInfo->portName) {
+		free(gpsInfo->portName);
+		gpsInfo->portName = NULL;
+	}
 	return NULL;
 }
 
@@ -277,4 +285,81 @@ gps_params gps_getParams() {
 		.dumpAll = false
 	};
 	return gp;
+}
+
+bool gps_parseConfig(log_thread_args_t *lta, config_section *s) {
+	if (lta->dParams) {
+		log_error(lta->pstate, "[GPS:%s] Refusing to reconfigure", lta->tag);
+		return false;
+	}
+
+	gps_params *gp = calloc(1, sizeof(gps_params));
+	if (!gp) {
+		log_error(lta->pstate, "[GPS:%s] Unable to allocate memory for device parameters", lta->tag);
+		return false;
+	}
+	(*gp) = gps_getParams();
+
+	config_kv *t = NULL;
+	if ((t = config_get_key(s, "name"))) {
+		gp->sourceName = config_qstrdup(t->value);
+	} else {
+		// Must set a name, so nick the tag value
+		gp->sourceName = strdup(lta->tag);
+	}
+	t = NULL;
+
+	if ((t = config_get_key(s, "port"))) {
+		gp->portName = config_qstrdup(t->value);
+	}
+	t = NULL;
+
+	if ((t = config_get_key(s, "dumpall"))) {
+		gp->dumpAll = config_parse_bool(t->value);
+	}
+	t = NULL;
+
+	if ((t = config_get_key(s, "baud"))) {
+		errno = 0;
+		gp->targetBaud = strtol(t->value, NULL, 0);
+		if (errno) {
+			log_error(lta->pstate, "[GPS:%s] Error parsing baud rate: %s", lta->tag, strerror(errno));
+			return false;
+		}
+	}
+	t = NULL;
+
+	if ((t = config_get_key(s, "initialbaud"))) {
+		errno = 0;
+		gp->initialBaud = strtol(t->value, NULL, 0);
+		if (errno) {
+			log_error(lta->pstate, "[GPS:%s] Error parsing initial baud rate: %s", lta->tag, strerror(errno));
+			return false;
+		}
+	}
+	t = NULL;
+
+	if ((t = config_get_key(s, "sourcenum"))) {
+		errno = 0;
+		int sn = strtol(t->value, NULL, 0);
+		if (errno) {
+			log_error(lta->pstate, "[GPS:%s] Error parsing source number: %s", lta->tag, strerror(errno));
+			return false;
+		}
+		if (sn < 0) {
+			log_error(lta->pstate, "[GPS:%s] Invalid source number (%s)", lta->tag, t->value);
+			return false;
+		}
+		if (sn < 10) {
+			gp->sourceNum += sn;
+		} else {
+			gp->sourceNum = sn;
+			if (sn < SLSOURCE_GPS || sn > (SLSOURCE_GPS + 0x0F)) {
+				log_warning(lta->pstate, "[GPS:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems", lta->tag, sn);
+			}
+		}
+	}
+	t = NULL;
+	lta->dParams = gp;
+	return true;
 }

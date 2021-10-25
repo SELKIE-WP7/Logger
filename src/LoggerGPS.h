@@ -27,6 +27,7 @@
 //! GPS Device specific parameters
 typedef struct {
 	char *portName; //!< Target port name
+	char *sourceName; //!< User defined name for this GPS
 	uint8_t sourceNum; //!< Source ID for messages
 	int initialBaud; //!< Baud rate for initial configuration
 	int targetBaud; //!< Baud rate for operations (currently unused)
@@ -51,5 +52,8 @@ device_callbacks gps_getCallbacks();
 
 //! Fill out default GPS parameters
 gps_params gps_getParams();
+
+//! Parse configuration section
+bool gps_parseConfig(log_thread_args_t *lta, config_section *s);
 //! @}
 #endif

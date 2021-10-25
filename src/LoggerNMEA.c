@@ -127,6 +127,14 @@ void *nmea_shutdown(void *ptargs) {
 		nmea_closeConnection(nmeaInfo->handle);
 	}
 	nmeaInfo->handle = -1;
+	if (nmeaInfo->sourceName) {
+		free(nmeaInfo->sourceName);
+		nmeaInfo->sourceName = NULL;
+	}
+	if (nmeaInfo->portName) {
+		free(nmeaInfo->portName);
+		nmeaInfo->portName = NULL;
+	}
 	return NULL;
 }
 
@@ -190,3 +198,58 @@ nmea_params nmea_getParams() {
 	};
 	return gp;
 }
+
+bool nmea_parseConfig(log_thread_args_t *lta, config_section *s) {
+	if (lta->dParams) {
+		log_error(lta->pstate, "[NMEA:%s] Refusing to reconfigure", lta->tag);
+		return false;
+	}
+
+	nmea_params *nmp = calloc(1, sizeof(nmea_params));
+	if (!nmp) {
+		log_error(lta->pstate, "[NMEA:%s] Unable to allocate memory for device parameters", lta->tag);
+		return false;
+	}
+	(*nmp) = nmea_getParams();
+
+	config_kv *t = NULL;
+	if ((t = config_get_key(s, "port"))) {
+		nmp->portName = config_qstrdup(t->value);
+	}
+	t = NULL;
+
+	if ((t = config_get_key(s, "baud"))) {
+		errno = 0;
+		nmp->baudRate = strtol(t->value, NULL, 0);
+		if (errno) {
+			log_error(lta->pstate, "[NMEA:%s] Error parsing baud rate: %s", lta->tag, strerror(errno));
+			return false;
+		}
+	}
+	t = NULL;
+
+	if ((t = config_get_key(s, "sourcenum"))) {
+		errno = 0;
+		int sn = strtol(t->value, NULL, 0);
+		if (errno) {
+			log_error(lta->pstate, "[NMEA:%s] Error parsing source number: %s", lta->tag, strerror(errno));
+			return false;
+		}
+		if (sn < 0) {
+			log_error(lta->pstate, "[NMEA:%s] Invalid source number (%s)", lta->tag, t->value);
+			return false;
+		}
+		if (sn < 10) {
+			nmp->sourceNum += sn;
+		} else {
+			nmp->sourceNum = sn;
+			if (sn < SLSOURCE_NMEA || sn > (SLSOURCE_NMEA + 0x0F)) {
+				log_warning(lta->pstate, "[NMEA:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems", lta->tag, sn);
+			}
+		}
+	}
+	t = NULL;
+	lta->dParams = nmp;
+	return true;
+}
+

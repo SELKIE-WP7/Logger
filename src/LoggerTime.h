@@ -21,10 +21,11 @@
 //! Timer specific parameters
 typedef struct {
 	uint8_t sourceNum; //!< Source ID for messages
+	char *sourceName;
 	int frequency; //!< Aim to sample this many times per second
 } timer_params;
 
-//! No setup required - does nothing.
+//! Check parameters, but no other setup required
 void *timer_setup(void *ptargs);
 
 //! Generate timer message at requested frequency
@@ -42,5 +43,7 @@ device_callbacks timer_getCallbacks();
 //! Fill out default timer parameters
 timer_params timer_getParams();
 
+//! Take a configuration section and parse parameters
+bool timer_parseConfig(log_thread_args_t *lta, config_section *s);
 //! @}
 #endif

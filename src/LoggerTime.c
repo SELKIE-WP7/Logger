@@ -3,6 +3,16 @@
 #include "LoggerSignals.h"
 
 void *timer_setup(void *ptargs) {
+	log_thread_args_t *args = (log_thread_args_t *) ptargs;
+	timer_params *timerInfo = (timer_params *) args->dParams;
+	if (timerInfo->sourceName == NULL) {
+		if (timerInfo->sourceNum == SLSOURCE_TIMER) {
+			// Special case the default clock
+			timerInfo->sourceName = strdup("Internal");
+		} else {
+			log_error(args->pstate, "[Timer:Unknown] No source name specified!");
+		}
+	}
 	return NULL;
 }
 
@@ -65,6 +75,12 @@ void *timer_logging(void *ptargs) {
 }
 
 void *timer_shutdown(void *ptargs) {
+	log_thread_args_t *args = (log_thread_args_t *) ptargs;
+	timer_params *timerInfo = (timer_params *) args->dParams;
+	if (timerInfo->sourceName) {
+		free(timerInfo->sourceName);
+		timerInfo->sourceName = NULL;
+	}
 	return NULL;
 }
 
@@ -75,7 +91,7 @@ void *timer_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	timer_params *timerInfo = (timer_params *) args->dParams;
 
-	msg_t *m_sn = msg_new_string(timerInfo->sourceNum, SLCHAN_NAME, 6, "Timers");
+	msg_t *m_sn = msg_new_string(timerInfo->sourceNum, SLCHAN_NAME, 6, timerInfo->sourceName);
 
 	if (!queue_push(args->logQ, m_sn)) {
 		log_error(args->pstate, "[Timers] Error pushing channel name to queue");
@@ -119,7 +135,69 @@ device_callbacks timer_getCallbacks() {
 timer_params timer_getParams() {
 	timer_params timer = {
 		.sourceNum = SLSOURCE_TIMER,
+		.sourceName = NULL,
 		.frequency = DEFAULT_MARK_FREQUENCY,
 	};
 	return timer;
+}
+
+bool timer_parseConfig(log_thread_args_t *lta, config_section *s) {
+	if (lta->dParams) {
+		log_error(lta->pstate, "[Timers:%s] Refusing to reconfigure", lta->tag);
+		return false;
+	}
+
+	timer_params *tp = calloc(1, sizeof(timer_params));
+	if (!tp) {
+		log_error(lta->pstate, "[Timers:%s] Unable to allocate memory for device parameters", lta->tag);
+		return false;
+	}
+	(*tp) = timer_getParams();
+
+	config_kv *t = NULL;
+	if ((t = config_get_key(s, "name"))) {
+		tp->sourceName = config_qstrdup(t->value);
+	} else {
+		// Must set a name, so nick the tag value
+		tp->sourceName = strdup(lta->tag);
+	}
+	t = NULL;
+
+	if ((t = config_get_key(s, "frequency"))) {
+		errno = 0;
+		tp->frequency = strtol(t->value, NULL, 0);
+		if (errno) {
+			log_error(lta->pstate, "[Timers:%s] Error parsing frequency: %s", lta->tag, strerror(errno));
+			return false;
+		}
+		if (tp->frequency <= 0) {
+			log_error(lta->pstate, "[Timers:%s] Invalid frequency requested (%d) - must be positive and non-zero", lta->tag, tp->frequency);
+			return false;
+		}
+	}
+	t = NULL;
+
+	if ((t = config_get_key(s, "sourcenum"))) {
+		errno = 0;
+		int sn = strtol(t->value, NULL, 0);
+		if (errno) {
+			log_error(lta->pstate, "[Timers:%s] Error parsing source number: %s", lta->tag, strerror(errno));
+			return false;
+		}
+		if (sn < 0) {
+			log_error(lta->pstate, "[Timers:%s] Invalid source number (%s)", lta->tag, t->value);
+			return false;
+		}
+		if (sn < 10) {
+			tp->sourceNum += sn;
+		} else {
+			tp->sourceNum = sn;
+			if (sn <= SLSOURCE_TIMER || sn > (SLSOURCE_TIMER + 0x0F)) {
+				log_warning(lta->pstate, "[Timers:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems", lta->tag, sn);
+			}
+		}
+	}
+	t = NULL;
+	lta->dParams = tp;
+	return true;
 }

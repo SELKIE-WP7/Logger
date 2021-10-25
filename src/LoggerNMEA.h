@@ -24,6 +24,7 @@
 //! NMEA Device specific parameters
 typedef struct {
 	char *portName; //!< Target port name
+	char *sourceName; //!< User defined name for this source
 	uint8_t sourceNum; //!< Source ID for messages
 	int baudRate; //!< Baud rate for operations
 	int handle; //!< Handle for currently opened device
@@ -47,5 +48,8 @@ device_callbacks nmea_getCallbacks();
 
 //! Fill out default NMEA parameters
 nmea_params nmea_getParams();
+
+//! Take a configuration section and parse parameters
+bool nmea_parseConfig(log_thread_args_t *lta, config_section *s);
 //! @}
 #endif

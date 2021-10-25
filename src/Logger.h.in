@@ -73,7 +73,6 @@ typedef struct {
 	device_fn logging;  //!< Main logging thread, passed to pthread_create()
 	device_fn shutdown; //!< Called on shutdown - close handles etc.
 	device_fn channels; //!< Send a current channel map to the queue (optional)
-	device_fn parse;  //!< Parse configuration options into device parameters
 } device_callbacks;
 
 //! Logging thread information
@@ -84,14 +83,14 @@ typedef struct {
  * shutdown.
  */
 typedef struct {
-	char *tag; //!< Tag/device type for messages etc.
+	char *tag; //!< Tag/source name for messages etc.
+	char *type; //!< Data source type
 	msgqueue *logQ; //!< Main message queue. Pushed to by threads, consumed by main()
 	program_state *pstate; //!< Current program state, used for logging
 	device_callbacks funcs; //!< Callback information for this device/thread
 	void *dParams; //!< Device/Thread specific data
 	int returnCode; //!< Thread return code (output)
 } log_thread_args_t;
-
 
 //! Difference between timespecs (used for rate keeping)
 bool timespec_subtract(struct timespec *result, struct timespec *x, struct timespec *y);
@@ -103,6 +102,9 @@ bool log_softwareVersion(msgqueue *q);
 void destroy_global_opts(struct global_opts *go);
 
 #include "LoggerConfig.h" // Include first, so types are available below
+
+//! Data source specific configuration parsers;
+typedef bool (*dc_parser)(log_thread_args_t *, config_section *);
 
 #include "LoggerGPS.h"
 #include "LoggerMP.h"

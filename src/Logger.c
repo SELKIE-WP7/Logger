@@ -22,28 +22,13 @@ int main(int argc, char *argv[]) {
 	go.saveState = true;
 	go.rotateMonitor = true;
 
-	gps_params gpsParams = gps_getParams();
-	mp_params mpParams = mp_getParams();
-	nmea_params nmeaParams = nmea_getParams();
-	i2c_params i2cParams = i2c_getParams();
-	timer_params timerParams = timer_getParams();
+	int verbosityModifier = 0;
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-f frequency] [-g port] [-n port] [-p port] [-i port] [-b initial baud] [-m file] [-R] [-s file | -S]\n"
+        char *usage =  "Usage: %1$s [-v] [-q] <config file>\n"
                 "\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
-		"\t-f\tMarker frequency\n"
-                "\t-g port\tSpecify GPS port\n"
-		"\t-n port\tNMEA source port\n"
-		"\t-p port\tMP source port\n"
-		"\t-b baud\tGPS initial baud rate\n"
-		"\t-i port\tI2C Bus\n"
-                "\t-m file\tMonitor file prefix\n"
-                "\t-s file\tState file name\n"
-		"\t-S\tDo not use state file\n"
-		"\t-R\tDo not rotate monitor file\n"
-                "\nVersion: " GIT_VERSION_STRING "\n"
-		"Default options equivalent to:\n"
-		"\t%1$s -f " DEFAULT_MARK_FREQ_STRING " -m " DEFAULT_MON_PREFIX " -s " DEFAULT_STATE_NAME "\n";
+		"\nSee documentation for configuration file format details\n"
+                "\nVersion: " GIT_VERSION_STRING "\n";
 
 /*****************************************************************************
 	Program Startup
@@ -53,8 +38,16 @@ int main(int argc, char *argv[]) {
         opterr = 0; // Handle errors ourselves
         int gov = 0;
 	bool doUsage = false;
-        while ((gov = getopt (argc, argv, "b:c:f:g:i:m:n:p:s:SRL")) != -1) {
+        while ((gov = getopt (argc, argv, "vq")) != -1) {
                 switch(gov) {
+			case 'v':
+				verbosityModifier++;
+				break;
+			case 'q':
+				verbosityModifier--;
+				break;
+			// TODO: Migrate all below to config file
+			/*
 			case 'b':
 				errno = 0;
 				gpsParams.initialBaud = strtol(optarg, NULL, 10);
@@ -132,17 +125,26 @@ int main(int argc, char *argv[]) {
 			case 'R':
 				go.rotateMonitor = false;
 				break;
+			*/
 			case '?':
 				log_error(&state, "Unknown option `-%c'", optopt);
 				doUsage = true;
 		}
         }
 
-	// Should be no spare arguments
-        if (argc - optind != 0) {
+	// Should be 1 spare arguments - the configuration file name
+        if (argc - optind != 1) {
 		log_error(&state, "Invalid arguments");
 		doUsage = true;
         }
+
+	if (doUsage) {
+		fprintf(stderr, usage, argv[0]);
+		destroy_global_opts(&go);
+		return EXIT_FAILURE;
+	}
+
+	go.configFileName = strdup(argv[optind]);
 
 /***************************
 	Extract global config options from "" section
@@ -155,71 +157,73 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if (go.configFileName) {
-		log_info(&state, 1, "Reading configuration from file \"%s\"", go.configFileName);
-		if (ini_parse(go.configFileName, config_handler, &conf)) {
-			log_error(&state, "Unable to read configuration file");
-			destroy_global_opts(&go);
-			return EXIT_FAILURE;
-		}
-
-		config_section *def = config_get_section(&conf, "");
-		if (def == NULL) {
-			log_warning(&state, "No global configuration section found in file. Using defaults");
-		} else {
-			config_kv *kv = NULL;
-			if ((kv = config_get_key(def, "verbose"))) {
-				errno = 0;
-				state.verbose = strtol(kv->value, NULL, 0);
-				if (errno) {
-					log_error(&state, "Error parsing verbosity: %s", strerror(errno));
-					doUsage = true;
-				}
-			}
-
-			kv = NULL;
-			if ((kv = config_get_key(def, "frequency"))) {
-				errno = 0;
-				go.coreFreq = strtol(kv->value, NULL, 0);
-				if (errno) {
-					log_error(&state, "Error parsing core sample frequency: %s", strerror(errno));
-					doUsage = true;
-				}
-			}
-
-			kv = NULL;
-			if ((kv = config_get_key(def, "prefix"))) {
-				go.dataPrefix = strdup(kv->value);
-			}
-
-			kv = NULL;
-			if ((kv = config_get_key(def, "statefile"))) {
-				go.stateName = strdup(kv->value);
-			}
-
-			kv = NULL;
-			if ((kv = config_get_key(def, "savestate"))) {
-				int st = config_parse_bool(kv->value);
-				if (st < 0) {
-					log_error(&state, "Error parsing option savestate: %s", strerror(errno));
-					doUsage = true;
-				}
-				go.saveState = st;
-			}
-
-			kv = NULL;
-			if ((kv = config_get_key(def, "rotate"))) {
-				int rm = config_parse_bool(kv->value);
-				if (rm < 0) {
-					log_error(&state, "Error parsing option rotate: %s", strerror(errno));
-					doUsage = true;
-				}
-				go.rotateMonitor = rm;
-			}
-		}
-
-		print_config(&conf);
+	log_info(&state, 1, "Reading configuration from file \"%s\"", go.configFileName);
+	if (ini_parse(go.configFileName, config_handler, &conf)) {
+		log_error(&state, "Unable to read configuration file");
+		destroy_global_opts(&go);
+		return EXIT_FAILURE;
 	}
+
+	config_section *def = config_get_section(&conf, "");
+	if (def == NULL) {
+		log_warning(&state, "No global configuration section found in file. Using defaults");
+	} else {
+		config_kv *kv = NULL;
+		if ((kv = config_get_key(def, "verbose"))) {
+			errno = 0;
+			state.verbose = strtol(kv->value, NULL, 0);
+			if (errno) {
+				log_error(&state, "Error parsing verbosity: %s", strerror(errno));
+				doUsage = true;
+			}
+		}
+
+		kv = NULL;
+		if ((kv = config_get_key(def, "frequency"))) {
+			errno = 0;
+			go.coreFreq = strtol(kv->value, NULL, 0);
+			if (errno) {
+				log_error(&state, "Error parsing core sample frequency: %s", strerror(errno));
+				doUsage = true;
+			}
+		}
+
+		kv = NULL;
+		if ((kv = config_get_key(def, "prefix"))) {
+			go.dataPrefix = strdup(kv->value);
+		}
+
+		kv = NULL;
+		if ((kv = config_get_key(def, "statefile"))) {
+			go.stateName = strdup(kv->value);
+		}
+
+		kv = NULL;
+		if ((kv = config_get_key(def, "savestate"))) {
+			int st = config_parse_bool(kv->value);
+			if (st < 0) {
+				log_error(&state, "Error parsing option savestate: %s", strerror(errno));
+				doUsage = true;
+			}
+			go.saveState = st;
+		}
+
+		kv = NULL;
+		if ((kv = config_get_key(def, "rotate"))) {
+			int rm = config_parse_bool(kv->value);
+			if (rm < 0) {
+				log_error(&state, "Error parsing option rotate: %s", strerror(errno));
+				doUsage = true;
+			}
+			go.rotateMonitor = rm;
+		}
+	}
+
+	state.verbose += verbosityModifier;
+
+	log_info(&state, 3, "**** Parsed configuration file follows: ");
+	if (state.verbose >= 3) { print_config(&conf); }
+	log_info(&state, 3, "**** Parsed configuration file ends ");
 
 	// Check for conflicting options
 	// Downgraded to a warning as part of the move to configuration files
@@ -229,10 +233,6 @@ int main(int argc, char *argv[]) {
 
 	if (doUsage) {
 		fprintf(stderr, usage, argv[0]);
-		free(gpsParams.portName);
-		free(mpParams.portName);
-		free(nmeaParams.portName);
-		free(i2cParams.busName);
 		destroy_global_opts(&go);
 		destroy_config(&conf);
 		return EXIT_FAILURE;
@@ -290,10 +290,6 @@ int main(int argc, char *argv[]) {
 		} else {
 			log_error(&state, "Unable to open data file: %s", strerror(errno));
 		}
-		free(gpsParams.portName);
-		free(mpParams.portName);
-		free(nmeaParams.portName);
-		free(i2cParams.busName);
 		destroy_global_opts(&go);
 		return EXIT_FAILURE;
 	}
@@ -315,10 +311,6 @@ int main(int argc, char *argv[]) {
 		} else {
 			log_error(&state, "Unable to open log file: %s", strerror(errno));
 		}
-		free(gpsParams.portName);
-		free(mpParams.portName);
-		free(nmeaParams.portName);
-		free(i2cParams.busName);
 		destroy_config(&conf);
 		destroy_global_opts(&go);
 		destroy_program_state(&state);
@@ -342,10 +334,6 @@ int main(int argc, char *argv[]) {
 		} else {
 			log_error(&state, "Unable to open variable file: %s", strerror(errno));
 		}
-		free(gpsParams.portName);
-		free(mpParams.portName);
-		free(nmeaParams.portName);
-		free(i2cParams.busName);
 		destroy_config(&conf);
 		destroy_global_opts(&go);
 		destroy_program_state(&state);
@@ -364,10 +352,6 @@ int main(int argc, char *argv[]) {
 	msgqueue log_queue = {0};
 	if (!queue_init(&log_queue)) {
 		log_error(&state, "Unable to initialise message queue");
-		free(gpsParams.portName);
-		free(mpParams.portName);
-		free(nmeaParams.portName);
-		free(i2cParams.busName);
 		destroy_config(&conf);
 		destroy_global_opts(&go);
 		destroy_program_state(&state);
@@ -403,14 +387,25 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	ltargs[nThreads].tag = "Timer";
+	ltargs[nThreads].tag = strdup("Timer"); // Must be free-able
 	ltargs[nThreads].logQ = &log_queue;
 	ltargs[nThreads].pstate = &state;
-	ltargs[nThreads].dParams = &timerParams;
+	{
+		timer_params *tp = calloc(1, sizeof(timer_params));
+		if (!tp) {
+			log_error(&state, "Unable to allocate timer parameters");
+			nextExit = true;
+		} else {
+			(*tp) = timer_getParams();
+			tp->frequency = go.coreFreq;
+			ltargs[nThreads].dParams = tp;
+		}
+	}
 	ltargs[nThreads].funcs = timer_getCallbacks();
 
-	// Loop starts at 1, as position zero is filled with the timer above
-	for (int i = 1; i < conf.numsects; ++i) {
+	nThreads++;
+
+	for (int i = 0; i < conf.numsects; ++i) {
 		if (strcmp(conf.sects[i].name, "") == 0) {
 			// The global/unlabelled section gets handled above
 			continue;
@@ -428,11 +423,26 @@ int main(int argc, char *argv[]) {
 			nextExit = true;
 			continue;
 		}
+		ltargs[nThreads].type = strdup(type->value);
 		ltargs[nThreads].funcs = dmap_getCallbacks(type->value);
-		if (ltargs[nThreads].funcs.parse == NULL) {
+		dc_parser dcp = dmap_getParser(type->value);
+		if (dcp == NULL) {
 			log_error(&state, "Configuration - no parser available for \"%s\" (%s)", conf.sects[i].name, type->value);
 			free(ltargs[nThreads].tag);
+			free(ltargs[nThreads].type);
 			ltargs[nThreads].tag = NULL;
+			ltargs[nThreads].type = NULL;
+			nextExit = true;
+			continue;
+		}
+		if (!dcp(&(ltargs[nThreads]), &(conf.sects[i]))) {
+			log_error(&state, "Configuration - parser failed for \"%s\" (%s)", conf.sects[i].name, type->value);
+			free(ltargs[nThreads].tag);
+			free(ltargs[nThreads].type);
+			free(ltargs[nThreads].dParams);
+			ltargs[nThreads].tag = NULL;
+			ltargs[nThreads].type = NULL;
+			ltargs[nThreads].dParams = NULL;
 			nextExit = true;
 			continue;
 		}
@@ -453,6 +463,7 @@ int main(int argc, char *argv[]) {
 	if (nextExit) {
 		for (int i = 0; i < nThreads; i++) {
 			if (ltargs[i].tag) {free(ltargs[i].tag);}
+			if (ltargs[i].type) {free(ltargs[i].type);}
 			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
 		}
 		free(ltargs);
@@ -481,6 +492,7 @@ int main(int argc, char *argv[]) {
 	if (nextExit) {
 		for (int i = 0; i < nThreads; i++) {
 			if (ltargs[i].tag) {free(ltargs[i].tag);}
+			if (ltargs[i].type) {free(ltargs[i].type);}
 			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
 		}
 		free(ltargs);
@@ -493,85 +505,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	/*
-	ltargs[tix].funcs.startup(&(ltargs[tix]));
-	if (ltargs[tix].returnCode < 0) {
-		log_error(&state, "Unable to set up Timers");
-		free(gpsParams.portName);
-		free(mpParams.portName);
-		free(nmeaParams.portName);
-		free(i2cParams.busName);
-		free(go.dataPrefix);
-		free(go.stateName);
-		free(threads);
-		return EXIT_FAILURE;
-	}
-	tix++;
-
-	if (gpsParams.portName) {
-		ltargs[tix].tag = "GPS";
-		ltargs[tix].logQ = &log_queue;
-		ltargs[tix].pstate = &state;
-		ltargs[tix].dParams = &gpsParams;
-		ltargs[tix].funcs = gps_getCallbacks();
-
-		ltargs[tix].funcs.startup(&(ltargs[tix]));
-		if (ltargs[tix].returnCode < 0) {
-			log_error(&state, "Unable to set up GPS connection on %s", gpsParams.portName);
-			free(gpsParams.portName);
-			free(mpParams.portName);
-			free(nmeaParams.portName);
-			free(i2cParams.busName);
-			free(go.dataPrefix);
-			free(go.stateName);
-			free(threads);
-			return EXIT_FAILURE;
-		}
-		// All done, let next thread be configured
-		tix++;
-	}
-
-	if (mpParams.portName) {
-		ltargs[tix].tag = "MP";
-		ltargs[tix].logQ = &log_queue;
-		ltargs[tix].pstate = &state;
-		ltargs[tix].dParams = &mpParams;
-		ltargs[tix].funcs = mp_getCallbacks();
-		ltargs[tix].funcs.startup(&(ltargs[tix]));
-		if (ltargs[tix].returnCode < 0) {
-			log_error(&state, "Unable to set up MP connection on %s", mpParams.portName);
-			free(gpsParams.portName);
-			free(mpParams.portName);
-			free(nmeaParams.portName);
-			free(i2cParams.busName);
-			free(go.dataPrefix);
-			free(go.stateName);
-			free(threads);
-			return EXIT_FAILURE;
-		}
-		tix++;
-	}
-
-	if (nmeaParams.portName) {
-		ltargs[tix].tag = "NMEA";
-		ltargs[tix].logQ = &log_queue;
-		ltargs[tix].pstate = &state;
-		ltargs[tix].dParams = &nmeaParams;
-		ltargs[tix].funcs = nmea_getCallbacks();
-		ltargs[tix].funcs.startup(&(ltargs[tix]));
-		if (ltargs[tix].returnCode < 0) {
-			log_error(&state, "Unable to set up NMEA connection on %s", nmeaParams.portName);
-			free(gpsParams.portName);
-			free(mpParams.portName);
-			free(nmeaParams.portName);
-			free(i2cParams.busName);
-			free(go.dataPrefix);
-			free(go.stateName);
-			free(threads);
-			return EXIT_FAILURE;
-		}
-		tix++;
-	}
-
 	if (i2cParams.busName) {
 		i2c_chanmap_add_ina219(&i2cParams, 0x40,  4);
 		i2c_chanmap_add_ina219(&i2cParams, 0x41,  7);
@@ -639,9 +572,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (nextExit) {
-		fprintf(stderr, "XXXX\n");
 		for (int i = 0; i < nThreads; i++) {
 			if (ltargs[i].tag) {free(ltargs[i].tag);}
+			if (ltargs[i].type) {free(ltargs[i].type);}
 			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
 		}
 		free(ltargs);
@@ -658,10 +591,12 @@ int main(int argc, char *argv[]) {
 
 	if (!log_softwareVersion(&log_queue)) {
 		log_error(&state, "Error pushing version message to queue");
-		free(gpsParams.portName);
-		free(mpParams.portName);
-		free(nmeaParams.portName);
-		free(i2cParams.busName);
+		for (int i = 0; i < nThreads; i++) {
+			if (ltargs[i].tag) {free(ltargs[i].tag);}
+			if (ltargs[i].type) {free(ltargs[i].type);}
+			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
+		}
+		free(ltargs);
 		destroy_global_opts(&go);
 		destroy_program_state(&state);
 		free(threads);
@@ -883,6 +818,11 @@ int main(int argc, char *argv[]) {
 		ltargs[tix].funcs.shutdown(&(ltargs[tix]));
 	}
 
+	for (int i = 0; i < nThreads; i++) {
+		if (ltargs[i].tag) {free(ltargs[i].tag);}
+		if (ltargs[i].type) {free(ltargs[i].type);}
+		if (ltargs[i].dParams) {free(ltargs[i].dParams);}
+	}
 	free(ltargs);
 	free(threads);
 
@@ -903,13 +843,17 @@ int main(int argc, char *argv[]) {
 
 	fclose(go.monitorFile);
 	free(go.monFileStem);
+	go.monitorFile = NULL;
+	go.monFileStem = NULL;
 	log_info(&state, 2, "Monitor file closed");
 
 	fclose(go.varFile);
+	go.varFile = NULL;
 	log_info(&state, 2, "Variable file closed");
 
 	log_info(&state, 0, "%d messages read successfully\n\n", msgCount);
 	fclose(state.log);
+	state.log = NULL;
 
 	/***
 	 * While this isn't necessary for the program to run, it keeps Valgrind
@@ -918,10 +862,6 @@ int main(int argc, char *argv[]) {
 	 */
 	destroy_program_state(&state);
 	destroy_global_opts(&go);
-	free(gpsParams.portName);
-	free(mpParams.portName);
-	free(nmeaParams.portName);
-	free(i2cParams.busName);
 	return 0;
 }
 

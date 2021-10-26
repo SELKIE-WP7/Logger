@@ -28,6 +28,13 @@ install(TARGETS PowerHatRead RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONE
 set(CPACK_COMPONENT_POWERHAT_GROUP "Applications")
 set(CPACK_COMPONENT_POWERHAT_DESCRIPTION "Read values from an INA219 based ADC Hat")
 
+add_executable(AutomationHatRead AutomationHatRead.c)
+target_link_libraries(AutomationHatRead PUBLIC SELKIELoggerI2C)
+install(TARGETS AutomationHatRead RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT AutomationHat)
+
+set(CPACK_COMPONENT_AUTOMATIONHAT_GROUP "Applications")
+set(CPACK_COMPONENT_AUTOMATIONHAT_DESCRIPTION "Read values from a Pimoroni Automation Hat")
+
 find_package(ZLIB REQUIRED)
 add_executable(dat2csv dat2csv.c)
 target_link_libraries(dat2csv PUBLIC ZLIB::ZLIB)

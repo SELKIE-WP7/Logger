@@ -13,5 +13,6 @@
  */
 #include "I2C/I2CConnection.h"
 #include "I2C/I2C-INA219.h"
+#include "I2C/I2C-ADS1015.h"
 //! @}
 #endif

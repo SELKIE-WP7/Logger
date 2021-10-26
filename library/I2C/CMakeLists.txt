@@ -1,5 +1,5 @@
-list(APPEND SL_I2C_SRC I2CConnection.c I2C-INA219.c)
-list(APPEND SL_I2C_INC I2CConnection.h I2C-INA219.h)
+list(APPEND SL_I2C_SRC I2CConnection.c I2C-INA219.c I2C-ADS1015.c)
+list(APPEND SL_I2C_INC I2CConnection.h I2C-INA219.h I2C-ADS1015.h)
 
 add_library(SELKIELoggerI2C ${SL_I2C_SRC})
 set_target_properties(SELKIELoggerI2C PROPERTIES VERSION ${PROJECT_VERSION})

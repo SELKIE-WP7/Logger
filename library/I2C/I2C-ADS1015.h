@@ -1,0 +1,127 @@
+#ifndef SELKIELoggerI2C_ADS1015
+#define SELKIELoggerI2C_ADS1015
+
+#include <stdbool.h>
+#include <stdint.h>
+
+/*!
+ * @file I2C-ADS1015.h
+ * @ingroup SELKIELoggerI2C
+ *
+ * Sources used for ADS1015 ADC interface:
+ * - https://www.kernel.org/doc/html/latest/i2c/smbus-protocol.html
+ * - https://www.kernel.org/doc/html/latest/i2c/dev-interface.html
+ * - https://www.ti.com/lit/ds/symlink/ads1015.pdf?ts=1635251674184&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FADS1015
+ *
+ */
+
+#define ADS1015_ADDR_DEFAULT	0x48
+#define ADS1015_ADDR_ALT1	0x49
+#define ADS1015_ADDR_ALT2	0x4A
+#define ADS1015_ADDR_ALT3	0x4B
+
+#define ADS1015_REG_CONFIG	0x01
+#define ADS1015_REG_RESULT	0x00
+
+#define ADS1015_CONFIG_STATE_CLEAR	0x7FFF
+#define ADS1015_CONFIG_STATE_SELECT	0x8000
+#define ADS1015_CONFIG_STATE_IDLE	0x0000
+#define ADS1015_CONFIG_STATE_CONVERT	0x8000
+
+#define ADS1015_CONFIG_MUX_CLEAR 	0x8FFF
+#define ADS1015_CONFIG_MUX_SELECT	0x7000
+#define ADS1015_CONFIG_MUX_DIFF_0_1	0x0000
+#define ADS1015_CONFIG_MUX_DIFF_0_3	0x1000
+#define ADS1015_CONFIG_MUX_DIFF_1_3	0x2000
+#define ADS1015_CONFIG_MUX_DIFF_2_3	0x3000
+#define ADS1015_CONFIG_MUX_SINGLE_0	0x4000
+#define ADS1015_CONFIG_MUX_SINGLE_1	0x5000
+#define ADS1015_CONFIG_MUX_SINGLE_2	0x6000
+#define ADS1015_CONFIG_MUX_SINGLE_3	0x7000
+
+#define ADS1015_CONFIG_PGA_CLEAR	0xF1FF
+#define ADS1015_CONFIG_PGA_SELECT	0x0E00
+#define ADS1015_CONFIG_PGA_6144MV	0x0000
+#define ADS1015_CONFIG_PGA_4096MV	0x0200
+#define ADS1015_CONFIG_PGA_2048MV	0x0400
+#define ADS1015_CONFIG_PGA_1024MV	0x0600
+#define ADS1015_CONFIG_PGA_0512MV	0x0800
+#define ADS1015_CONFIG_PGA_0256MV	0x0A00
+#define ADS1015_CONFIG_PGA_0256MV2	0x0C00
+#define ADS1015_CONFIG_PGA_0256MV3	0x0E00
+
+#define ADS1015_CONFIG_MODE_CLEAR	0xFEFF
+#define ADS1015_CONFIG_MODE_SELECT	0x0100
+#define ADS1015_CONFIG_MODE_CONTIN	0x0000
+#define ADS1015_CONFIG_MODE_SINGLE	0x0100
+
+#define ADS1015_CONFIG_DRATE_CLEAR	0xFF1F
+#define ADS1015_CONFIG_DRATE_SELECT	0x00E0
+#define ADS1015_CONFIG_DRATE_0128	0x0000
+#define ADS1015_CONFIG_DRATE_0250	0x0020
+#define ADS1015_CONFIG_DRATE_0490	0x0040
+#define ADS1015_CONFIG_DRATE_0920	0x0060
+#define ADS1015_CONFIG_DRATE_1600	0x0080	
+#define ADS1015_CONFIG_DRATE_2400	0x00A0
+#define ADS1015_CONFIG_DRATE_3300	0x00C0
+#define ADS1015_CONFIG_DRATE_33002	0x00E0
+
+#define ADS1015_CONFIG_COMP_CLEAR	0xFFEF
+#define ADS1015_CONFIG_COMP_SELECT	0x0010
+#define ADS1015_CONFIG_COMP_TRAD	0x0000
+#define ADS1015_CONFIG_COMP_WINDOW	0x0010
+
+#define ADS1015_CONFIG_CPOL_CLEAR	0xFFF7
+#define ADS1015_CONFIG_CPOL_SELECT	0x0008
+#define ADS1015_CONFIG_CPOL_ALOW	0x0000
+#define ADS1015_CONFIG_CPOL_AHIGH	0x0008
+
+#define ADS1015_CONFIG_CLATCH_CLEAR	0xFFFB
+#define ADS1015_CONFIG_CLATCH_SELECT	0x0004
+#define ADS1015_CONFIG_CLATCH_NO	0x0000
+#define ADS1015_CONFIG_CLATCH_YES	0x0004
+
+#define ADS1015_CONFIG_QUEUE_CLEAR	0xFFFC
+#define ADS1015_CONFIG_QUEUE_SELECT	0x0003
+#define ADS1015_CONFIG_QUEUE_LEN1	0x0000
+#define ADS1015_CONFIG_QUEUE_LEN2	0x0001
+#define ADS1015_CONFIG_QUEUE_LEN4	0x0002
+#define ADS1015_CONFIG_QUEUE_DISABLE	0x0003
+
+#define ADS1015_CONFIG_DEFAULT ((ADS1015_CONFIG_STATE_IDLE | ADS1015_CONFIG_MUX_DIFF_0_1 | ADS1015_CONFIG_PGA_6144MV | ADS1015_CONFIG_MODE_SINGLE | ADS1015_CONFIG_DRATE_0250 | ADS1015_CONFIG_COMP_TRAD | ADS1015_CONFIG_CPOL_ALOW | ADS1015_CONFIG_CLATCH_NO | ADS1015_CONFIG_QUEUE_DISABLE))
+
+
+/*!
+ * @addtogroup ads1015 TI ADS1015: Interface functions
+ * @ingroup SELKIELoggerI2C
+ * @{
+ */
+
+//! Read configuration from device
+uint16_t i2c_ads1015_read_configuration(const int busHandle, const int devAddr);
+
+//! Get single-ended voltage measurement from channel 0
+float i2c_ads1015_read_ch0(const int busHandle, const int devAddr);
+
+//! Get single-ended voltage measurement from channel 1
+float i2c_ads1015_read_ch1(const int busHandle, const int devAddr);
+
+//! Get single-ended voltage measurement from channel 2
+float i2c_ads1015_read_ch2(const int busHandle, const int devAddr);
+
+//! Get single-ended voltage measurement from channel 3
+float i2c_ads1015_read_ch3(const int busHandle, const int devAddr);
+
+//! Get differential voltage measurement between channels 0 and 1
+float i2c_ads1015_read_diff_ch0_ch1(const int busHandle, const int devAddr);
+
+//! Get differential voltage measurement between channels 0 and 3
+float i2c_ads1015_read_diff_ch0_ch3(const int busHandle, const int devAddr);
+
+//! Get differential voltage measurement between channels 1 and 3
+float i2c_ads1015_read_diff_ch1_ch3(const int busHandle, const int devAddr);
+
+//! Get differential voltage measurement between channels 2 and 3
+float i2c_ads1015_read_diff_ch2_ch3(const int busHandle, const int devAddr);
+//! @}
+#endif

@@ -38,21 +38,21 @@ uint16_t i2c_ads1015_read_configuration(const int busHandle, const int devAddr) 
  */
 float i2c_ads1015_pga_to_scale_factor(const uint16_t config) {
 	uint16_t pga = (config & ADS1015_CONFIG_PGA_SELECT);
-	if ((pga & ADS1015_CONFIG_PGA_6144MV) == ADS1015_CONFIG_PGA_6144MV) {
+	if (pga == ADS1015_CONFIG_PGA_6144MV) {
 		return 3;
-	} else if ((pga & ADS1015_CONFIG_PGA_4096MV) == ADS1015_CONFIG_PGA_4096MV) {
+	} else if (pga == ADS1015_CONFIG_PGA_4096MV) {
 		return 2;
-	} else if ((pga & ADS1015_CONFIG_PGA_2048MV) == ADS1015_CONFIG_PGA_2048MV) {
+	} else if (pga == ADS1015_CONFIG_PGA_2048MV) {
 		return 1;
-	} else if ((pga & ADS1015_CONFIG_PGA_1024MV) == ADS1015_CONFIG_PGA_1024MV) {
+	} else if (pga == ADS1015_CONFIG_PGA_1024MV) {
 		return 0.5;
-	} else if ((pga & ADS1015_CONFIG_PGA_0512MV) == ADS1015_CONFIG_PGA_0512MV) {
+	} else if (pga == ADS1015_CONFIG_PGA_0512MV) {
 		return 0.25;
-	} else if ((pga & ADS1015_CONFIG_PGA_0256MV) == ADS1015_CONFIG_PGA_0256MV) {
+	} else if (pga == ADS1015_CONFIG_PGA_0256MV) {
 		return 0.125;
-	} else if ((pga & ADS1015_CONFIG_PGA_0256MV2) == ADS1015_CONFIG_PGA_0256MV2) {
+	} else if (pga == ADS1015_CONFIG_PGA_0256MV2) {
 		return 0.125;
-	} else if ((pga & ADS1015_CONFIG_PGA_0256MV3) == ADS1015_CONFIG_PGA_0256MV3) {
+	} else if (pga == ADS1015_CONFIG_PGA_0256MV3) {
 		return 0.125;
 	} else {
 		return NAN;

@@ -102,6 +102,12 @@
 //! Read configuration from device
 uint16_t i2c_ads1015_read_configuration(const int busHandle, const int devAddr);
 
+//! Generic ADS1015 read function
+float i2c_ads1015_read_mux(const int busHandle, const int devAddr, const uint16_t mux, const uint16_t pga);
+
+//! Get number of millivolts represented by LSB at a given PGA value
+float i2c_ads1015_pga_to_scale_factor(const uint16_t config);
+
 //! Get single-ended voltage measurement from channel 0
 float i2c_ads1015_read_ch0(const int busHandle, const int devAddr);
 

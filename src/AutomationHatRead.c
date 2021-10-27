@@ -24,11 +24,11 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	const float cfact = (float)(8060000 + 402000) / (float)(402000) / 3.3;
-	float ch0 = i2c_ads1015_read_ch0(handle, ADS1015_ADDR_DEFAULT);
-	float ch1 = i2c_ads1015_read_ch1(handle, ADS1015_ADDR_DEFAULT) * cfact;
-	float ch2 = i2c_ads1015_read_ch2(handle, ADS1015_ADDR_DEFAULT) * cfact;
-	float ch3 = i2c_ads1015_read_ch3(handle, ADS1015_ADDR_DEFAULT) * cfact;
+	const float cfact = 7.88842;
+	float ch0 = i2c_ads1015_read_mux(handle, ADS1015_ADDR_DEFAULT, ADS1015_CONFIG_MUX_SINGLE_0, ADS1015_CONFIG_PGA_4096MV);
+	float ch1 = i2c_ads1015_read_mux(handle, ADS1015_ADDR_DEFAULT, ADS1015_CONFIG_MUX_SINGLE_1, ADS1015_CONFIG_PGA_4096MV) * cfact;
+	float ch2 = i2c_ads1015_read_mux(handle, ADS1015_ADDR_DEFAULT, ADS1015_CONFIG_MUX_SINGLE_2, ADS1015_CONFIG_PGA_4096MV) * cfact;
+	float ch3 = i2c_ads1015_read_mux(handle, ADS1015_ADDR_DEFAULT, ADS1015_CONFIG_MUX_SINGLE_3, ADS1015_CONFIG_PGA_4096MV) * cfact;
 
 	float delta_1_3 = i2c_ads1015_read_diff_ch1_ch3(handle, ADS1015_ADDR_DEFAULT);
 	float delta_2_3 = i2c_ads1015_read_diff_ch2_ch3(handle, ADS1015_ADDR_DEFAULT);

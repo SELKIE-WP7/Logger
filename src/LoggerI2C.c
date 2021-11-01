@@ -68,9 +68,17 @@ void *i2c_logging(void *ptargs) {
 		}
 		struct timespec now = {0};
 		clock_gettime(CLOCK_MONOTONIC, &now);
+		msg_t *msg = msg_new_timestamp(i2cInfo->sourceNum, SLCHAN_TSTAMP, (1000 * now.tv_sec + now.tv_nsec / 1000000));
+		if (!queue_push(args->logQ, msg)) {
+			log_error(args->pstate, "[I2C:%s] Error pushing message to queue", i2cInfo->busName);
+			msg_destroy(msg);
+			args->returnCode = -1;
+			pthread_exit(&(args->returnCode));
+		}
 		struct timespec target = {0};
 		if (timespec_subtract(&target, &lastIter, &now)) {
 			// Target has passed!
+			log_warning(args->pstate, "[I2C:%s] Deadline missed", i2cInfo->busName);
 			clock_gettime(CLOCK_MONOTONIC, &lastIter);
 		} else {
 			clock_gettime(CLOCK_MONOTONIC, &lastIter);

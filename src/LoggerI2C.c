@@ -261,3 +261,76 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 
 	return true;
 }
+
+/*!
+ * Adds four entries to the channel map for a specified ADS1015 device,
+ * representing the four single ended measurement channels
+ *
+ * - `baseID`: A0 [V]
+ * - `baseID+1`: A1 [V]
+ * - `baseID+2`: A2 [V]
+ * - `baseID+3`: A3 [V]
+ *
+ * @param[in] ip i2c_params structure to modify
+ * @param[in] devAddr ADS1015 Device Address
+ * @param[in] baseID Message ID for first channel (A0)
+ * @return True on success, false otherwise
+ */
+bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID) {
+	if (!ip) {
+		return false;
+	}
+	if (baseID < 4 || baseID > 121) {
+		return false;
+	}
+	i2c_msg_map *tmp = realloc(ip->chanmap, sizeof(i2c_msg_map) * (ip->en_count + 4));
+	if (!tmp) {
+		return false;
+	}
+	ip->chanmap = tmp;
+
+	char tmpS[50] = {0};
+
+	snprintf(tmpS, 8, "0x%02x:A0", devAddr);
+	ip->chanmap[ip->en_count].messageID = baseID;
+	// Memory was allocated with malloc, so make sure we initialise these values
+	ip->chanmap[ip->en_count].message_name.length = 0;
+	ip->chanmap[ip->en_count].message_name.data = NULL;
+	str_update(&(ip->chanmap[ip->en_count].message_name), 8, tmpS);
+	ip->chanmap[ip->en_count].deviceAddr = devAddr;
+	ip->chanmap[ip->en_count].func = &i2c_ads1015_read_ch0;
+	ip->en_count++;
+
+	snprintf(tmpS, 8, "0x%02x:A1", devAddr);
+	ip->chanmap[ip->en_count].messageID = baseID;
+	// Memory was allocated with malloc, so make sure we initialise these values
+	ip->chanmap[ip->en_count].message_name.length = 0;
+	ip->chanmap[ip->en_count].message_name.data = NULL;
+	str_update(&(ip->chanmap[ip->en_count].message_name), 8, tmpS);
+	ip->chanmap[ip->en_count].deviceAddr = devAddr;
+	ip->chanmap[ip->en_count].func = &i2c_ads1015_read_ch1;
+	ip->en_count++;
+
+
+	snprintf(tmpS, 8, "0x%02x:A2", devAddr);
+	ip->chanmap[ip->en_count].messageID = baseID;
+	// Memory was allocated with malloc, so make sure we initialise these values
+	ip->chanmap[ip->en_count].message_name.length = 0;
+	ip->chanmap[ip->en_count].message_name.data = NULL;
+	str_update(&(ip->chanmap[ip->en_count].message_name), 8, tmpS);
+	ip->chanmap[ip->en_count].deviceAddr = devAddr;
+	ip->chanmap[ip->en_count].func = &i2c_ads1015_read_ch2;
+	ip->en_count++;
+
+	snprintf(tmpS, 8, "0x%02x:A3", devAddr);
+	ip->chanmap[ip->en_count].messageID = baseID;
+	// Memory was allocated with malloc, so make sure we initialise these values
+	ip->chanmap[ip->en_count].message_name.length = 0;
+	ip->chanmap[ip->en_count].message_name.data = NULL;
+	str_update(&(ip->chanmap[ip->en_count].message_name), 8, tmpS);
+	ip->chanmap[ip->en_count].deviceAddr = devAddr;
+	ip->chanmap[ip->en_count].func = &i2c_ads1015_read_ch3;
+	ip->en_count++;
+
+	return true;
+}

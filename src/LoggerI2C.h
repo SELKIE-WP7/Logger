@@ -58,7 +58,7 @@ void *i2c_channels(void *ptargs);
 //! Fill out device callback functions for logging
 device_callbacks i2c_getCallbacks();
 
-//! Fill out default GPS parameters
+//! Fill out default I2C parameters
 i2c_params i2c_getParams();
 
 //! Check channel mapping is valid
@@ -66,5 +66,8 @@ bool i2c_validate_chanmap(i2c_params *ip);
 
 //! Add INA219 voltage and current readings to channel map
 bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID);
+
+//! Add ADS1015 single ended voltage measurements to channel map
+bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID);
 //!@}
 #endif

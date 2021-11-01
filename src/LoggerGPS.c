@@ -22,35 +22,35 @@ void *gps_setup(void *ptargs) {
 
 	gpsInfo->handle = ubx_openConnection(gpsInfo->portName, gpsInfo->initialBaud);
 	if (gpsInfo->handle < 0) {
-		log_error(args->pstate, "[GPS:%s] Unable to open a connection", gpsInfo->portName);
+		log_error(args->pstate, "[GPS:%s] Unable to open a connection", args->tag);
 		args->returnCode = -1;
 		return NULL;
 	}
 
-	log_info(args->pstate, 1, "[GPS:%s] Configuring GPS...", gpsInfo->portName);
+	log_info(args->pstate, 1, "[GPS:%s] Configuring GPS...", args->tag);
 	{
 		bool msgSuccess = true;
 		errno = 0;
-		log_info(args->pstate, 2, "[GPS:%s] Enabling log messages", gpsInfo->portName);
+		log_info(args->pstate, 2, "[GPS:%s] Enabling log messages", args->tag);
 		msgSuccess &= ubx_enableLogMessages(gpsInfo->handle);
 		// The usleep commands are probably not required, but mindful
 		// that there's a limited RX buffer on the GPS module
 		usleep(5E3);
 		msgSuccess &= ubx_enableGalileo(gpsInfo->handle);
-		log_info(args->pstate, 2, "[GPS:%s] Enabling Galileo (GNSS Reset)", gpsInfo->portName);
+		log_info(args->pstate, 2, "[GPS:%s] Enabling Galileo (GNSS Reset)", args->tag);
 		sleep(3); // This one *is* necessary, as enabling Galileo can require a GNSS reset
 		msgSuccess &= ubx_setNavigationRate(gpsInfo->handle, 500, 1); // 500ms Update rate, new output each time
 		usleep(5E3);
 		msgSuccess &= ubx_setI2CAddress(gpsInfo->handle, 0x0a);
 		usleep(5E3);
-		log_info(args->pstate, 2, "[GPS:%s] Configuring message rates", gpsInfo->portName);
+		log_info(args->pstate, 2, "[GPS:%s] Configuring message rates", args->tag);
 		msgSuccess &= ubx_setMessageRate(gpsInfo->handle, 0x01, 0x07, 1); // NAV-PVT on every update
 		usleep(5E3);
 		msgSuccess &= ubx_setMessageRate(gpsInfo->handle, 0x01, 0x35, 120); // NAV-SAT on every 100th update
 		usleep(5E3);
 		msgSuccess &= ubx_setMessageRate(gpsInfo->handle, 0x01, 0x21, 1); // NAV-TIMEUTC on every update
 		usleep(5E3);
-		log_info(args->pstate, 2, "[GPS:%s] Polling for status information", gpsInfo->portName);
+		log_info(args->pstate, 2, "[GPS:%s] Polling for status information", args->tag);
 		msgSuccess &= ubx_pollMessage(gpsInfo->handle, 0x0A, 0x04); // Poll software version
 		usleep(5E3);
 		msgSuccess &= ubx_pollMessage(gpsInfo->handle, 0x0A, 0x28); // Poll for GNSS status (MON)
@@ -59,12 +59,12 @@ void *gps_setup(void *ptargs) {
 		usleep(5E3);
 
 		if (!msgSuccess) {
-			log_error(args->pstate, "[GPS:%s] Unable to configure: %s", gpsInfo->portName, strerror(errno));
+			log_error(args->pstate, "[GPS:%s] Unable to configure: %s", args->tag, strerror(errno));
 			ubx_closeConnection(gpsInfo->handle);
 			args->returnCode = -2;
 			return NULL;
 		}
-		log_info(args->pstate, 1, "[GPS:%s] Configuration completed", gpsInfo->portName);
+		log_info(args->pstate, 1, "[GPS:%s] Configuration completed", args->tag);
 	}
 	args->returnCode = 0;
 	return NULL;
@@ -82,7 +82,7 @@ void *gps_logging(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	gps_params *gpsInfo = (gps_params *) args->dParams;
 
-	log_info(args->pstate, 1, "[GPS:%s] Logging thread started", gpsInfo->portName);
+	log_info(args->pstate, 1, "[GPS:%s] Logging thread started", args->tag);
 
 	uint8_t *buf = calloc(UBX_SERIAL_BUFF, sizeof(uint8_t));
 	int ubx_index = 0;
@@ -98,7 +98,7 @@ void *gps_logging(void *ptargs) {
 				uint32_t ts = out.data[0] + (out.data[1] << 8) + (out.data[2] << 16) + (out.data[3] << 24);
 				msg_t *utc = msg_new_timestamp(gpsInfo->sourceNum, SLCHAN_TSTAMP, ts);
 				if (!queue_push(args->logQ, utc)) {
-					log_error(args->pstate, "[GPS:%s] Error pushing message to queue", gpsInfo->portName);
+					log_error(args->pstate, "[GPS:%s] Error pushing message to queue", args->tag);
 					msg_destroy(utc);
 					args->returnCode = -1;
 					pthread_exit(&(args->returnCode));
@@ -108,7 +108,7 @@ void *gps_logging(void *ptargs) {
 				// NAV-PVT
 				ubx_nav_pvt nav = {0};
 				if (! ubx_decode_nav_pvt(&out, &nav)) {
-					log_error(args->pstate, "[GPS:%s] Unable to decode NAV-PVT message", gpsInfo->portName);
+					log_error(args->pstate, "[GPS:%s] Unable to decode NAV-PVT message", args->tag);
 				} else {
 					float posData[6] = {
 						nav.longitude,
@@ -144,7 +144,7 @@ void *gps_logging(void *ptargs) {
 					msg_t *mdt = msg_new_float_array(gpsInfo->sourceNum, 6, 8, dt);
 
 					if (!queue_push(args->logQ, mnav) || !queue_push(args->logQ, mvel) || !queue_push(args->logQ, mdt)) {
-						log_error(args->pstate, "[GPS:%s] Error pushing messages to queue", gpsInfo->portName);
+						log_error(args->pstate, "[GPS:%s] Error pushing messages to queue", args->tag);
 						msg_destroy(mnav);
 						msg_destroy(mvel);
 						msg_destroy(mdt);
@@ -157,7 +157,7 @@ void *gps_logging(void *ptargs) {
 			if (!handled || gpsInfo->dumpAll) {
 				msg_t *sm = msg_new_bytes(gpsInfo->sourceNum, 3, len, data);
 				if (!queue_push(args->logQ, sm)) {
-					log_error(args->pstate, "[GPS:%s] Error pushing message to queue", gpsInfo->portName);
+					log_error(args->pstate, "[GPS:%s] Error pushing message to queue", args->tag);
 					msg_destroy(sm);
 					args->returnCode = -1;
 					pthread_exit(&(args->returnCode));
@@ -178,7 +178,7 @@ void *gps_logging(void *ptargs) {
 				// for serial monitoring, but might indicate EOF when reading from file
 				//
 				// 0xEE indicates an invalid message following valid sync bytes
-				log_error(args->pstate, "[GPS:%s] Error signalled from gps_readMessage_buf", gpsInfo->portName);
+				log_error(args->pstate, "[GPS:%s] Error signalled from gps_readMessage_buf", args->tag);
 				args->returnCode = -2;
 				free(buf);
 				if (out.extdata) {
@@ -198,7 +198,7 @@ void *gps_logging(void *ptargs) {
 		}
 	}
 	free(buf);
-	log_info(args->pstate, 1, "[GPS:%s] Logging thread exiting", gpsInfo->portName);
+	log_info(args->pstate, 1, "[GPS:%s] Logging thread exiting", args->tag);
 	pthread_exit(NULL);
 	return NULL; // Superfluous, as returning zero via pthread_exit above
 }
@@ -234,7 +234,7 @@ void *gps_channels(void *ptargs) {
 	msg_t *m_sn = msg_new_string(gpsInfo->sourceNum, SLCHAN_NAME, strlen(args->tag), args->tag);
 
 	if (!queue_push(args->logQ, m_sn)) {
-		log_error(args->pstate, "[GPS:%s] Error pushing channel name to queue", gpsInfo->portName);
+		log_error(args->pstate, "[GPS:%s] Error pushing channel name to queue", args->tag);
 		msg_destroy(m_sn);
 		args->returnCode = -1;
 		pthread_exit(&(args->returnCode));
@@ -252,7 +252,7 @@ void *gps_channels(void *ptargs) {
 	msg_t *m_cmap = msg_new_string_array(gpsInfo->sourceNum, SLCHAN_MAP, channels);
 
 	if (!queue_push(args->logQ, m_cmap)) {
-		log_error(args->pstate, "[GPS:%s] Error pushing channel map to queue", gpsInfo->portName);
+		log_error(args->pstate, "[GPS:%s] Error pushing channel map to queue", args->tag);
 		msg_destroy(m_cmap);
 		sa_destroy(channels);
 		free(channels);

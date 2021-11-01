@@ -16,12 +16,12 @@ void *nmea_setup(void *ptargs) {
 
 	nmeaInfo->handle = nmea_openConnection(nmeaInfo->portName, nmeaInfo->baudRate);
 	if (nmeaInfo->handle < 0) {
-		log_error(args->pstate, "[NMEA:%s] Unable to open a connection", nmeaInfo->portName);
+		log_error(args->pstate, "[NMEA:%s] Unable to open a connection", args->tag);
 		args->returnCode = -1;
 		return NULL;
 	}
 
-	log_info(args->pstate, 2, "[NMEA:%s] Connected", nmeaInfo->portName);
+	log_info(args->pstate, 2, "[NMEA:%s] Connected", args->tag);
 	args->returnCode = 0;
 	return NULL;
 }
@@ -40,7 +40,7 @@ void *nmea_logging(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	nmea_params *nmeaInfo = (nmea_params *) args->dParams;
 
-	log_info(args->pstate, 1, "[NMEA:%s] Logging thread started", nmeaInfo->portName);
+	log_info(args->pstate, 1, "[NMEA:%s] Logging thread started", args->tag);
 
 	uint8_t *buf = calloc(NMEA_SERIAL_BUFF, sizeof(uint8_t));
 	int nmea_index = 0;
@@ -59,7 +59,7 @@ void *nmea_logging(void *ptargs) {
 					if (epoch != (time_t)(-1)) {
 						msg_t *tm = msg_new_timestamp(nmeaInfo->sourceNum, 4, epoch);
 						if (!queue_push(args->logQ, tm)) {
-							log_error(args->pstate, "[NMEA:%s] Error pushing message to queue", nmeaInfo->portName);
+							log_error(args->pstate, "[NMEA:%s] Error pushing message to queue", args->tag);
 							msg_destroy(tm);
 							free(t);
 							args->returnCode = -1;
@@ -73,7 +73,7 @@ void *nmea_logging(void *ptargs) {
 			if (!handled) {
 				msg_t *sm = msg_new_bytes(nmeaInfo->sourceNum, 3, len, (uint8_t *)data);
 				if (!queue_push(args->logQ, sm)) {
-					log_error(args->pstate, "[NMEA:%s] Error pushing message to queue", nmeaInfo->portName);
+					log_error(args->pstate, "[NMEA:%s] Error pushing message to queue", args->tag);
 					msg_destroy(sm);
 					args->returnCode = -1;
 					pthread_exit(&(args->returnCode));
@@ -94,7 +94,7 @@ void *nmea_logging(void *ptargs) {
 				// for serial monitoring, but might indicate EOF when reading from file
 				//
 				// 0xEE indicates an invalid message following valid sync bytes
-				log_error(args->pstate, "[NMEA:%s] Error signalled from nmea_readMessage_buf", nmeaInfo->portName);
+				log_error(args->pstate, "[NMEA:%s] Error signalled from nmea_readMessage_buf", args->tag);
 				args->returnCode = -2;
 				free(buf);
 				sa_destroy(&(out.fields));
@@ -110,7 +110,7 @@ void *nmea_logging(void *ptargs) {
 		sa_destroy(&(out.fields));
 	}
 	free(buf);
-	log_info(args->pstate, 1, "[NMEA:%s] Logging thread exiting", nmeaInfo->portName);
+	log_info(args->pstate, 1, "[NMEA:%s] Logging thread exiting", args->tag);
 	pthread_exit(NULL);
 	return NULL; // Superfluous, as returning zero via pthread_exit above
 }
@@ -150,7 +150,7 @@ void *nmea_channels(void *ptargs) {
 	msg_t *m_sn = msg_new_string(nmeaInfo->sourceNum, SLCHAN_NAME, strlen(args->tag), args->tag);
 
 	if (!queue_push(args->logQ, m_sn)) {
-		log_error(args->pstate, "[NMEA:%s] Error pushing channel name to queue", nmeaInfo->portName);
+		log_error(args->pstate, "[NMEA:%s] Error pushing channel name to queue", args->tag);
 		msg_destroy(m_sn);
 		args->returnCode = -1;
 		pthread_exit(&(args->returnCode));
@@ -166,7 +166,7 @@ void *nmea_channels(void *ptargs) {
 	msg_t *m_cmap = msg_new_string_array(nmeaInfo->sourceNum, SLCHAN_MAP, channels);
 
 	if (!queue_push(args->logQ, m_cmap)) {
-		log_error(args->pstate, "[NMEA:%s] Error pushing channel map to queue", nmeaInfo->portName);
+		log_error(args->pstate, "[NMEA:%s] Error pushing channel map to queue", args->tag);
 		msg_destroy(m_cmap);
 		sa_destroy(channels);
 		free(channels);

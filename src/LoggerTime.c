@@ -31,7 +31,7 @@ void *timer_logging(void *ptargs) {
 		// Millisecond precision timestamp, but arbitrary reference point
 		msg_t *msg = msg_new_timestamp(timerInfo->sourceNum, SLCHAN_TSTAMP, (1000 * now.tv_sec + now.tv_nsec / 1000000));
 		if (!queue_push(args->logQ, msg)) {
-			log_error(args->pstate, "[Timer] Error pushing message to queue");
+			log_error(args->pstate, "[Timer:%s] Error pushing message to queue", args->tag);
 			msg_destroy(msg);
 			args->returnCode = -1;
 			pthread_exit(&(args->returnCode));
@@ -42,7 +42,7 @@ void *timer_logging(void *ptargs) {
 			// Unix Epoch referenced timestamp
 			msg_t *epoch_msg = msg_new_timestamp(timerInfo->sourceNum, 4, nstamp);
 			if (!queue_push(args->logQ, epoch_msg)) {
-				log_error(args->pstate, "[Timer] Error pushing message to queue");
+				log_error(args->pstate, "[Timer:%s] Error pushing message to queue", args->tag);
 				msg_destroy(epoch_msg);
 				args->returnCode = -1;
 				pthread_exit(&(args->returnCode));
@@ -64,7 +64,7 @@ void *timer_logging(void *ptargs) {
 		clock_gettime(CLOCK_MONOTONIC, &now);
 		if (timespec_subtract(&target, &nextIter, &now)) {
 			// Target has passed! Update ASAP and continue
-			log_warning(args->pstate, "[Timer] Deadline missed");
+			log_warning(args->pstate, "[Timer:%s] Deadline missed", args->tag);
 			continue;
 		} else {
 			nanosleep(&target, NULL);
@@ -94,7 +94,7 @@ void *timer_channels(void *ptargs) {
 	msg_t *m_sn = msg_new_string(timerInfo->sourceNum, SLCHAN_NAME, 6, timerInfo->sourceName);
 
 	if (!queue_push(args->logQ, m_sn)) {
-		log_error(args->pstate, "[Timers] Error pushing channel name to queue");
+		log_error(args->pstate, "[Timer:%s] Error pushing channel name to queue", args->tag);
 		msg_destroy(m_sn);
 		args->returnCode = -1;
 		pthread_exit(&(args->returnCode));
@@ -109,7 +109,7 @@ void *timer_channels(void *ptargs) {
 	msg_t *m_cmap = msg_new_string_array(timerInfo->sourceNum, SLCHAN_MAP, channels);
 
 	if (!queue_push(args->logQ, m_cmap)) {
-		log_error(args->pstate, "[Timers] Error pushing channel map to queue");
+		log_error(args->pstate, "[Timer:%s] Error pushing channel map to queue", args->tag);
 		msg_destroy(m_cmap);
 		sa_destroy(channels);
 		free(channels);
@@ -143,13 +143,13 @@ timer_params timer_getParams() {
 
 bool timer_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
-		log_error(lta->pstate, "[Timers:%s] Refusing to reconfigure", lta->tag);
+		log_error(lta->pstate, "[Timer:%s] Refusing to reconfigure", lta->tag);
 		return false;
 	}
 
 	timer_params *tp = calloc(1, sizeof(timer_params));
 	if (!tp) {
-		log_error(lta->pstate, "[Timers:%s] Unable to allocate memory for device parameters", lta->tag);
+		log_error(lta->pstate, "[Timer:%s] Unable to allocate memory for device parameters", lta->tag);
 		return false;
 	}
 	(*tp) = timer_getParams();
@@ -167,11 +167,11 @@ bool timer_parseConfig(log_thread_args_t *lta, config_section *s) {
 		errno = 0;
 		tp->frequency = strtol(t->value, NULL, 0);
 		if (errno) {
-			log_error(lta->pstate, "[Timers:%s] Error parsing frequency: %s", lta->tag, strerror(errno));
+			log_error(lta->pstate, "[Timer:%s] Error parsing frequency: %s", lta->tag, strerror(errno));
 			return false;
 		}
 		if (tp->frequency <= 0) {
-			log_error(lta->pstate, "[Timers:%s] Invalid frequency requested (%d) - must be positive and non-zero", lta->tag, tp->frequency);
+			log_error(lta->pstate, "[Timer:%s] Invalid frequency requested (%d) - must be positive and non-zero", lta->tag, tp->frequency);
 			return false;
 		}
 	}
@@ -181,11 +181,11 @@ bool timer_parseConfig(log_thread_args_t *lta, config_section *s) {
 		errno = 0;
 		int sn = strtol(t->value, NULL, 0);
 		if (errno) {
-			log_error(lta->pstate, "[Timers:%s] Error parsing source number: %s", lta->tag, strerror(errno));
+			log_error(lta->pstate, "[Timer:%s] Error parsing source number: %s", lta->tag, strerror(errno));
 			return false;
 		}
 		if (sn < 0) {
-			log_error(lta->pstate, "[Timers:%s] Invalid source number (%s)", lta->tag, t->value);
+			log_error(lta->pstate, "[Timer:%s] Invalid source number (%s)", lta->tag, t->value);
 			return false;
 		}
 		if (sn < 10) {
@@ -193,7 +193,7 @@ bool timer_parseConfig(log_thread_args_t *lta, config_section *s) {
 		} else {
 			tp->sourceNum = sn;
 			if (sn <= SLSOURCE_TIMER || sn > (SLSOURCE_TIMER + 0x0F)) {
-				log_warning(lta->pstate, "[Timers:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems", lta->tag, sn);
+				log_warning(lta->pstate, "[Timer:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems", lta->tag, sn);
 			}
 		}
 	}

@@ -14,18 +14,18 @@ void *i2c_setup(void *ptargs) {
 	i2c_params *i2cInfo = (i2c_params *) args->dParams;
 
 	if (!i2c_validate_chanmap(i2cInfo)) {
-		log_error(args->pstate, "[I2C:%s] Invalid channel map", i2cInfo->busName);
+		log_error(args->pstate, "[I2C:%s] Invalid channel map", args->tag);
 		args->returnCode = -2;
 		return NULL;
 	}
 
 	i2cInfo->handle = i2c_openConnection(i2cInfo->busName);
 	if (i2cInfo->handle < 0) {
-		log_error(args->pstate, "[I2C:%s] Unable to open a connection", i2cInfo->busName);
+		log_error(args->pstate, "[I2C:%s] Unable to open a connection", args->tag);
 		args->returnCode = -1;
 		return NULL;
 	}
-	log_info(args->pstate, 2, "[I2C:%s] Connected", i2cInfo->busName);
+	log_info(args->pstate, 2, "[I2C:%s] Connected", args->tag);
 	args->returnCode = 0;
 	return NULL;
 }
@@ -44,7 +44,7 @@ void *i2c_logging(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	i2c_params *i2cInfo = (i2c_params *) args->dParams;
 
-	log_info(args->pstate, 1, "[I2C:%s] Logging thread started", i2cInfo->busName);
+	log_info(args->pstate, 1, "[I2C:%s] Logging thread started", args->tag);
 
 	struct timespec lastIter = {0};
 	clock_gettime(CLOCK_MONOTONIC, &lastIter);
@@ -62,7 +62,7 @@ void *i2c_logging(void *ptargs) {
 
 			msg_t *msg = msg_new_float(i2cInfo->sourceNum, map->messageID, value);
 			if (!queue_push(args->logQ, msg)) {
-				log_error(args->pstate, "[I2C:%s] Error pushing message to queue", i2cInfo->busName);
+				log_error(args->pstate, "[I2C:%s] Error pushing message to queue", args->tag);
 				msg_destroy(msg);
 				args->returnCode = -1;
 				pthread_exit(&(args->returnCode));
@@ -79,7 +79,7 @@ void *i2c_logging(void *ptargs) {
 		clock_gettime(CLOCK_MONOTONIC, &now);
 		msg_t *msg = msg_new_timestamp(i2cInfo->sourceNum, SLCHAN_TSTAMP, (1000 * now.tv_sec + now.tv_nsec / 1000000));
 		if (!queue_push(args->logQ, msg)) {
-			log_error(args->pstate, "[I2C:%s] Error pushing message to queue", i2cInfo->busName);
+			log_error(args->pstate, "[I2C:%s] Error pushing message to queue", args->tag);
 			msg_destroy(msg);
 			args->returnCode = -1;
 			pthread_exit(&(args->returnCode));
@@ -139,7 +139,7 @@ void *i2c_channels(void *ptargs) {
 	msg_t *m_sn = msg_new_string(i2cInfo->sourceNum, SLCHAN_NAME, strlen(i2cInfo->sourceName), i2cInfo->sourceName);
 
 	if (!queue_push(args->logQ, m_sn)) {
-		log_error(args->pstate, "[I2C:%s] Error pushing channel name to queue", i2cInfo->busName);
+		log_error(args->pstate, "[I2C:%s] Error pushing channel name to queue", args->tag);
 		msg_destroy(m_sn);
 		args->returnCode = -1;
 		pthread_exit(&(args->returnCode));
@@ -163,7 +163,7 @@ void *i2c_channels(void *ptargs) {
 	msg_t *m_cmap = msg_new_string_array(i2cInfo->sourceNum, SLCHAN_MAP, channels);
 
 	if (!queue_push(args->logQ, m_cmap)) {
-		log_error(args->pstate, "[I2C:%s] Error pushing channel map to queue", i2cInfo->busName);
+		log_error(args->pstate, "[I2C:%s] Error pushing channel map to queue", args->tag);
 		msg_destroy(m_cmap);
 		sa_destroy(channels);
 		free(channels);

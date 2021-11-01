@@ -14,12 +14,12 @@ void *mp_setup(void *ptargs) {
 
 	mpInfo->handle = mp_openConnection(mpInfo->portName, mpInfo->baudRate);
 	if (mpInfo->handle < 0) {
-		log_error(args->pstate, "[MP:%s] Unable to open a connection", mpInfo->portName);
+		log_error(args->pstate, "[MP:%s] Unable to open a connection", args->tag);
 		args->returnCode = -1;
 		return NULL;
 	}
 
-	log_info(args->pstate, 2, "[MP:%s] Connected", mpInfo->portName);
+	log_info(args->pstate, 2, "[MP:%s] Connected", args->tag);
 	args->returnCode = 0;
 	return NULL;
 }
@@ -35,7 +35,7 @@ void *mp_logging(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	mp_params *mpInfo = (mp_params *) args->dParams;
 
-	log_info(args->pstate, 1, "[MP:%s] Logging thread started", mpInfo->portName);
+	log_info(args->pstate, 1, "[MP:%s] Logging thread started", args->tag);
 
 	uint8_t *buf = calloc(MP_SERIAL_BUFF, sizeof(uint8_t));
 	int mp_index = 0;
@@ -46,7 +46,7 @@ void *mp_logging(void *ptargs) {
 		if (mp_readMessage_buf(mpInfo->handle, out, buf, &mp_index, &mp_hw)) {
 
 			if (!queue_push(args->logQ, out)) {
-				log_error(args->pstate, "[MP:%s] Error pushing message to queue", mpInfo->portName);
+				log_error(args->pstate, "[MP:%s] Error pushing message to queue", args->tag);
 				msg_destroy(out);
 				args->returnCode = -1;
 				pthread_exit(&(args->returnCode));
@@ -65,7 +65,7 @@ void *mp_logging(void *ptargs) {
 				// for serial monitoring, but might indicate EOF when reading from file
 				//
 				// 0xEE indicates an invalid message following valid sync bytes
-				log_error(args->pstate, "[MP:%s] Error signalled from mp_readMessage_buf", mpInfo->portName);
+				log_error(args->pstate, "[MP:%s] Error signalled from mp_readMessage_buf", args->tag);
 				free(buf);
 				free(out);
 				args->returnCode = -2;

@@ -1,5 +1,6 @@
 Configuration File Options
 --------------------------
+The key to use in the ini file is specified in brackets after the description.
 
 Global Options
 ==============
@@ -50,11 +51,17 @@ MP Source Options
 I2C Source Options
 ==================
 
-- Bus path
-- Sensor definitions:
-  - Sensor Address
-  - Sensor Type
-  - Base address
+- Bus path (bus)
+- Sample rate (frequency)
+  - This is set per bus, not per sensor
+
+Sensor definitions need to define sensor type, I2C address and the (base) message ID.
+Sensor type is provided by the configuration option name (which may be present more than once), with the I2C address and base message ID provided in hex, separated by a colon.
+If the base message ID is missing, a default will be substituted. Mixing automatic and manual allocation of base message ID may lead to conflicts.
+
+- INA219 Voltage and current monitor (ina219)
+  - e.g. ina219 = 0x42:0x05
+- ADS1015 ADC (ads1015)
 
 NMEA Source Options
 ===================

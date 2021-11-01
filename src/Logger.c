@@ -256,6 +256,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Per thread / individual source configuration happens after this global setup section
+	log_info(&state, 3, "Core configuration completed");
 
 /**********************************************************************************************
  * Set up various log files and mechanisms
@@ -371,6 +372,8 @@ int main(int argc, char *argv[]) {
  *			parse() must allocate memory for dparams
 ********************************************************************************************/
 
+	log_info(&state, 2, "Configuring data sources");
+
 	// Set true for graceful exit at next convenient point during configuration
 	bool nextExit = false;
 
@@ -473,6 +476,8 @@ int main(int argc, char *argv[]) {
 		destroy_program_state(&state);
 		return EXIT_FAILURE;
 	}
+	log_info(&state, 2, "Data source configuration complete");
+	log_info(&state, 2, "Initialising threads");
 
 	pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
 	if (!threads) {
@@ -503,33 +508,6 @@ int main(int argc, char *argv[]) {
 		free(threads);
 		return EXIT_FAILURE;
 	}
-
-	/*
-	if (i2cParams.busName) {
-		i2c_chanmap_add_ina219(&i2cParams, 0x40,  4);
-		i2c_chanmap_add_ina219(&i2cParams, 0x41,  7);
-		i2c_chanmap_add_ina219(&i2cParams, 0x42, 10);
-		i2c_chanmap_add_ina219(&i2cParams, 0x43, 13);
-		ltargs[tix].tag = "I2C";
-		ltargs[tix].logQ = &log_queue;
-		ltargs[tix].pstate = &state;
-		ltargs[tix].dParams = &i2cParams;
-		ltargs[tix].funcs = i2c_getCallbacks();
-		ltargs[tix].funcs.startup(&ltargs[tix]);
-		if (ltargs[tix].returnCode < 0) {
-			log_error(&state, "Unable to set up I2C connection on %s", i2cParams.busName);
-			free(gpsParams.portName);
-			free(mpParams.portName);
-			free(nmeaParams.portName);
-			free(i2cParams.busName);
-			free(go.dataPrefix);
-			free(go.stateName);
-			free(threads);
-			return EXIT_FAILURE;
-		}
-		tix++;
-
-	} */
 
 	log_info(&state, 1, "Initialisation complete, starting log threads");
 

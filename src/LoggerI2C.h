@@ -37,6 +37,7 @@ typedef struct {
 typedef struct {
 	char *busName; //!< Target port name
 	uint8_t sourceNum; //!< Source ID for messages
+	char *sourceName; //!< Reported source name
 	int handle; //!< Handle for currently opened device
 	int frequency; //!< Aim to sample this many times per second
 	int en_count; //!< Number of messages in chanmap
@@ -69,5 +70,8 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 
 //! Add ADS1015 single ended voltage measurements to channel map
 bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID);
+
+//! Take a configuration section, parse parameters and register devices
+bool i2c_parseConfig(log_thread_args_t *lta, config_section *s);
 //!@}
 #endif

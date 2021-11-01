@@ -488,8 +488,32 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 				errno = 0;
 				int baddr = strtol(t->value, NULL, 16);
 				int msgid = strtol(strtok_r(NULL, ":", &strtsp), NULL, 16);
-				float scale = strtof(strtok_r(NULL, ":", &strtsp), NULL);
-				float offset = strtof(strtok_r(NULL, ":", &strtsp), NULL);
+				if (errno) {
+					log_error(lta->pstate, "[I2C:%s] Error parsing values in configuration", lta->tag);
+					return false;
+				}
+
+				float scale = 0;
+				float offset = 0;
+				char *tt = strtok_r(NULL, ":", &strtsp);
+				if (tt) {
+					scale = strtof(tt, NULL);
+					if (errno) {
+						log_error(lta->pstate, "[I2C:%s] Error parsing scale value in configuration", lta->tag);
+						return false;
+					}
+
+					tt = strtok_r(NULL, ":", &strtsp);
+					if (tt) {
+						errno = 0;
+						offset = strtof(tt, NULL);
+						if (errno) {
+							log_error(lta->pstate, "[I2C:%s] Error parsing offset value in configuration", lta->tag);
+							return false;
+						}
+					}
+				}
+
 				if (!i2c_chanmap_add_ads1015(ip, baddr, msgid, scale, offset)) {
 					log_error(lta->pstate, "[I2C:%s] Failed to register ADS1015 device at address 0x%02x and base message ID 0x%02x", lta->tag, baddr, msgid);
 					return false;

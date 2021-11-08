@@ -125,6 +125,69 @@ class SLMessageSource:
         assert channelID < len(self.ChannelMap)
         return SLMessage(self.SourceID, channelID, data)
 
+class SLChannelMap:
+    def __init__(self):
+        self._s = dict()
+        self._log = logging.getLogger(__name__)
+
+    def GetSourceName(self, source):
+        """Return formatted name for source ID"""
+        if source in self._s:
+            return self._s[source]['name']
+        else:
+            return f"[{source:02x}]"
+
+    def GetChannelName(self, source, channel):
+        """Return formatted channel name"""
+        if not isinstance(channel, int):
+            self._log.warning(f"Non-integer channel number requested: {channel}")
+            return f"[Invalid:{channel}]"
+        if self.SourceExists(source):
+            if channel < len(self._s[source]['channels']):
+                return self._s[source]['channels'][channel]
+            elif channel == 125:
+                return "Information"
+            elif channel == 126:
+                return "Warning"
+            elif channel == 127:
+                return "Error"
+            else:
+                return f"[{channel:02x}]"
+
+    def NewSource(self, source, name=None):
+        if name is None:
+            name = f'[{source:02x}]'
+        if self.SourceExists(source):
+            self._log.error(f"Source 0x{source:02x} already exists (as {self.GetSourceName(source)})")
+        self._s[source] = {'name': name, 'channels': ["Name", "Channels", "Timestamp"], 'lastTimestamp': 0}
+
+    def SourceExists(self, source):
+        return source in self._s
+
+    def ChannelExists(self, source, channel):
+        if channel in [0, 1, 2, 125, 126, 127]:
+            return True
+
+        if self.SourceExists(source):
+            return channel < len (self._s[source]['channels'])
+        return False
+
+    def SetSourceName(self, source, name):
+        if not self.SourceExists(source):
+            self.NewSource(source, name)
+        else:
+            self._s[source]['name'] = name
+
+    def SetChannelNames(self, source, channels):
+        if not self.SourceExists(source):
+            self.NewSource(source)
+
+        self._s[source]['channels'] = channels
+
+    def UpdateTimestamp(self, source, timestamp):
+        if not self.SourceExists(source):
+            self.NewSource(source)
+        self._s[source]['lastTimestamp'] = int(timestamp)
 
 class SLMessageSink:
     """!
@@ -142,7 +205,7 @@ class SLMessageSink:
         Optionally accepts a logging object for any error, warning, or
         information messages encountered in the source data.
         """
-        self.Sources = dict()
+        self._sm = SLChannelMap()
 
         self._log = logging.getLogger(__name__)
         self._msglog = msglogger
@@ -151,33 +214,9 @@ class SLMessageSink:
             warn("No message logger specified")
             self._msglog = logging.getLogger(f"{__name__}.msg")
 
-    def SourceName(self, source):
-        """Update the map of known source names"""
-        if source in self.Sources:
-            return self.Sources[source]['name']
-        else:
-            return f"[{source:02x}]"
-
-    def ChannelName(self, source, channel):
-        """Update the map of known channel names"""
-        if not isinstance(channel, int):
-            self._log.warning(f"Non-integer channel number requested: {channel}")
-            return f"[Invalid:{channel}]"
-        if source in self.Sources:
-            if channel < (len(self.Sources[source]['channels'])):
-                return self.Sources[source]['channels'][channel]
-            elif channel == 125:
-                return "Information"
-            elif channel == 126:
-                return "Warning"
-            elif channel == 127:
-                return "Error"
-            else:
-                return f"[{channel:02x}]"
-
     def FormatMessage(self, msg):
         """Pretty print a message"""
-        return f"{self.SourceName(msg.SourceID)}\t{self.ChannelName(msg.SourceID, msg.ChannelID)}\t{msg.Data}"
+        return f"{self._sm.GetSourceName(msg.SourceID)}\t{self._sm.GetChannelName(msg.SourceID, msg.ChannelID)}\t{msg.Data}"
 
     def Process(self, message, output="dict", allMessages=False):
         """ Process an incoming message
@@ -199,21 +238,21 @@ class SLMessageSink:
                 self._log.debug(message)
                 return
 
-        if not message.SourceID in self.Sources:
-            self.Sources[message.SourceID] = {'name': f'[{message.SourceID:02x}]', 'channels': ["Name", "Channels", "Timestamp"], 'lastTimestamp': 0}
+        if not self._sm.SourceExists(message.SourceID):
+            self._sm.NewSource(message.SourceID)
 
         suppressOutput = False
         if message.ChannelID == 0:
-            self._log.debug(f"New name for {self.SourceName(message.SourceID)}: {message.Data}")
-            self.Sources[message.SourceID]['name'] = message.Data
+            self._log.debug(f"New name for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
+            self._sm.SetSourceName(message.SourceID, message.Data)
             suppressOutput = True
         elif message.ChannelID == 1:
-            self._log.debug(f"New channels for {self.SourceName(message.SourceID)}: {message.Data}")
-            self.Sources[message.SourceID]['channels'] = message.Data
+            self._log.debug(f"New channels for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
+            self._sm.SetChannelNames(message.SourceID, message.Data)
             suppressOutput = True
         elif message.ChannelID == 2:
-            self._log.debug(f"New update time for {self.SourceName(message.SourceID)}: {message.Data}")
-            self.Sources[message.SourceID]['lastTimestamp'] = message.Data
+            self._log.debug(f"New update time for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
+            self._sm.UpdateTimestamp(message.SourceID, message.Data)
             suppressOutput = True
         elif message.ChannelID == 125:
             self._msglog.info(self.FormatMessage(message))
@@ -228,8 +267,8 @@ class SLMessageSink:
         if allMessages or (not suppressOutput):
             if output == "dict":
                 return {
-                        'sourceID': message.SourceID, 'sourceName': self.SourceName(message.SourceID),
-                        'channelID': message.ChannelID, 'channelName': self.ChannelName(message.SourceID, message.ChannelID),
+                        'sourceID': message.SourceID, 'sourceName': self._sm.GetSourceName(message.SourceID),
+                        'channelID': message.ChannelID, 'channelName': self._sm.GetChannelName(message.SourceID, message.ChannelID),
                         'data': message.Data
                         }
             elif output == "string":

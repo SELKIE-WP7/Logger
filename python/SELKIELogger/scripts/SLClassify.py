@@ -116,5 +116,15 @@ def SLClassify():
     inFile.close()
     print_classifications(res)
 
+    if (args.verbose):
+        print("\n\n==== Sources and channels ===")
+        for x in res.SourceMap:
+            print(f"\t0x{x:02x}: {res.SourceMap[x].name}")
+
+            ix = 0
+            for y in res.SourceMap[x]:
+                print(f"\t\t0x{ix:02x}: {y}")
+                ix += 1
+
 if __name__ == "__main__":
     SLClassify()

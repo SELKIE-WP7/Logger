@@ -126,14 +126,70 @@ class SLMessageSource:
         return SLMessage(self.SourceID, channelID, data)
 
 class SLChannelMap:
+    __slots__ = ["_s", "_log"]
+
+    class Source:
+        __slots__ = ['id', 'name', 'channels', 'lastTimestamp']
+
+        def __init__(self, number, name = None, channels=None, lastTimestamp=None):
+            self.id = number
+            if name:
+                self.name = f'[{number:02x}]'
+            self.name = name
+            if channels:
+                self.channels = channels
+            else:
+                self.channels = ["Name", "Channels", "Timestamp"]
+            self.lastTimestamp = 0
+
+        def __getitem__(self, ch):
+            if ch < len(self.channels):
+                return self.channels.name
+            elif ch == 125:
+                return "Information"
+            elif ch == 126:
+                return "Warning"
+            elif ch == 127:
+                return "Error"
+            else:
+                return f"[{ch:02x}]"
+
+        def __iter__(self):
+            return iter(self.channels)
+
+        def __str__(self):
+            return self.name
+
+
+    class Channel:
+        __slots__ = ['name']
+
+        def __init__(self, name):
+            self.name = name
+
+        def __repr__(self):
+            return self.name
+
     def __init__(self):
         self._s = dict()
         self._log = logging.getLogger(__name__)
 
+    def __getitem__(self, ix):
+        return self._s[ix]
+
+    def __iter__(self):
+        return iter(self._s)
+
+    def __next__(self):
+        return next(self._s)
+
+    def to_dict(self):
+        return {x: self._s[x].channels for x in self._s}
+
     def GetSourceName(self, source):
         """Return formatted name for source ID"""
         if source in self._s:
-            return self._s[source]['name']
+            return self._s[source].name
         else:
             return f"[{source:02x}]"
 
@@ -143,8 +199,8 @@ class SLChannelMap:
             self._log.warning(f"Non-integer channel number requested: {channel}")
             return f"[Invalid:{channel}]"
         if self.SourceExists(source):
-            if channel < len(self._s[source]['channels']):
-                return self._s[source]['channels'][channel]
+            if channel < len(self._s[source].channels):
+                return self._s[source].channels[channel]
             elif channel == 125:
                 return "Information"
             elif channel == 126:
@@ -155,11 +211,9 @@ class SLChannelMap:
                 return f"[{channel:02x}]"
 
     def NewSource(self, source, name=None):
-        if name is None:
-            name = f'[{source:02x}]'
         if self.SourceExists(source):
             self._log.error(f"Source 0x{source:02x} already exists (as {self.GetSourceName(source)})")
-        self._s[source] = {'name': name, 'channels': ["Name", "Channels", "Timestamp"], 'lastTimestamp': 0}
+        self._s[source] = self.Source(source, name)
 
     def SourceExists(self, source):
         return source in self._s
@@ -169,25 +223,25 @@ class SLChannelMap:
             return True
 
         if self.SourceExists(source):
-            return channel < len (self._s[source]['channels'])
+            return channel < len (self._s[source].channels)
         return False
 
     def SetSourceName(self, source, name):
         if not self.SourceExists(source):
             self.NewSource(source, name)
         else:
-            self._s[source]['name'] = name
+            self._s[source].name = name
 
     def SetChannelNames(self, source, channels):
         if not self.SourceExists(source):
             self.NewSource(source)
 
-        self._s[source]['channels'] = channels
+        self._s[source].channels = channels
 
     def UpdateTimestamp(self, source, timestamp):
         if not self.SourceExists(source):
             self.NewSource(source)
-        self._s[source]['lastTimestamp'] = int(timestamp)
+        self._s[source].lastTimestamp = int(timestamp)
 
 class SLMessageSink:
     """!
@@ -213,6 +267,9 @@ class SLMessageSink:
         if self._msglog is None:
             warn("No message logger specified")
             self._msglog = logging.getLogger(f"{__name__}.msg")
+
+    def SourceMap(self):
+        return self._sm
 
     def FormatMessage(self, msg):
         """Pretty print a message"""

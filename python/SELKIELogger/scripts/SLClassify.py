@@ -11,10 +11,12 @@ def process_arguments():
     return options.parse_args()
 
 class ProcessedRecords():
+    __slots__ = ['classes', 'processed', 'SourceMap']
     def __init__(self):
-        self.SourceTypes = ["GPS", "NMEA", "MP", "Total"]
-        self.classes = {x: {} for x in self.SourceTypes}
-        self.processed = {x: 0 for x in self.SourceTypes}
+        SourceTypes = ["GPS", "NMEA", "MP"]
+        self.classes = {x: {} for x in SourceTypes}
+        self.processed = {x: 0 for x in SourceTypes}
+        self.SourceMap = None
 
 def classify_messages(file):
     unpacker = msgpack.Unpacker(file, unicode_errors='ignore')
@@ -81,6 +83,7 @@ def classify_messages(file):
                 tots.classes["NMEA"][talker] = {}
                 tots.classes["NMEA"][talker][message] = 1
 
+    tots.SourceMap = out.SourceMap()
     return tots
 
 

@@ -87,7 +87,7 @@ void *i2c_logging(void *ptargs) {
 		struct timespec target = {0};
 		if (timespec_subtract(&target, &lastIter, &now)) {
 			// Target has passed!
-			log_warning(args->pstate, "[I2C:%s] Deadline missed", i2cInfo->busName);
+			log_warning(args->pstate, "[I2C:%s] Deadline missed", args->tag);
 			clock_gettime(CLOCK_MONOTONIC, &lastIter);
 		} else {
 			clock_gettime(CLOCK_MONOTONIC, &lastIter);

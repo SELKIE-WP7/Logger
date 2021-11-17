@@ -23,7 +23,15 @@ class IOThread:
         self.stop = stop
 
     def __call__(self):
-        res = self.function(self.filename, self.progress, self.stop)
+        try:
+            res = self.function(self.filename, self.progress, self.stop)
+        except Exception as e:
+            if self.queue:
+                self.queue.put(e)
+                if self.onFinish:
+                    self.onFinish()
+                return
+
         if self.stop():
             return # We're being stopped, so just finish here
         if res and self.queue:
@@ -167,9 +175,9 @@ class SLViewGUI:
             return
         root, ext = os.path.splitext(name)
         if not (ext.lower() in [".dat",".var"]):
-            tkmb.showwarning(title="Unexpected file extension", message=f"{os.path.basename(root)}{ext} has an unexpected extension.\nThis may not be a supported file type")
+            tkmb.showwarning(title="Unexpected file extension", message=f"{os.path.basename(root)}{ext} has an unexpected extension.", detail="The file will still be processed, but may not be a supported file type.")
         if (ext.lower() == ".dat") and os.path.exists(root + ".var"):
-            if tkmb.askyesno(title="Variable file", message="A variable information (.var) file with a name matching the data file selected is available. Process the variable file instead?"):
+            if tkmb.askyesno(title="Variable file", message="A variable information (.var) file found matching the selected data file", detail="Do you wish to process the variable file instead?\n\nVariable information files (.var) files are quicker to process, but only contain information about data sources and available channels. Total message counts will not be available."):
                 name = root + ".var"
 
         self.closeFile(event)
@@ -201,7 +209,7 @@ class SLViewGUI:
         self.menu.children["file"].entryconfigure("Process", state=tk.DISABLED)
         self.menu.children["file"].entryconfigure("Close", state=tk.DISABLED)
         newIOThread.start()
-    
+
     def processCancel(self, event=None):
         self.endThreads()
 
@@ -218,7 +226,12 @@ class SLViewGUI:
                 self.threads.remove(i)
 
     def processComplete(self, event=None):
-        self.curSMap, self.curStats = self.EQ.get()
+        res = self.EQ.get()
+        if isinstance(res, Exception):
+            # Handle
+            tkmb.showerror(title="Error", message=f"An unexpected error occurred processing {self.curFileName.get()}", detail=str(res))
+        else:
+            self.curSMap, self.curStats = res
 
         self.progress_bar.stop()
         self.progress_bar.configure(value=100)

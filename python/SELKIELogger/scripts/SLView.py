@@ -6,6 +6,7 @@ from SELKIELogger.SLMessages import SLMessageSink
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as tkfd
+from tkinter import messagebox as tkmb
 
 import os
 import threading
@@ -114,13 +115,13 @@ class SLViewGUI:
 
         self.sourceViewItems = tk.StringVar()
         self.sourceView = tk.Listbox(self.sourceViewPane, listvariable=self.sourceViewItems)
+        self.sourceView.bind("<<ListboxSelect>>", lambda ev: self.updateChannelView())
         self.sourceView.grid(column=0,row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
 
         self.channelViewItems = tk.StringVar()
         self.channelView = tk.Listbox(self.channelViewPane, listvariable=self.channelViewItems)
         self.channelView.grid(column=0,row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
 
-        self.root.bind("<<ListboxSelect>>", lambda ev: self.updateChannelView())
         self.menu = tk.Menu(self.MFrame)
 
         menu_file = tk.Menu(self.menu, name='file')
@@ -142,6 +143,12 @@ class SLViewGUI:
         name = tkfd.askopenfilename(parent=self.MFrame, title="Select data file:", filetypes=(("All Supported Files", ("*.dat","*.var")), ("Data files", "*.dat"), ("Variable files", "*.var")))
         if name is None or len(name) == 0:
             return
+        root, ext = os.path.splitext(name)
+        if not (ext.lower() in [".dat",".var"]):
+            tkmb.showwarning(title="Unexpected file extension", message=f"{os.path.basename(root)}{ext} has an unexpected extension.\nThis may not be a supported file type")
+        if (ext.lower() == ".dat") and os.path.exists(root + ".var"):
+            if tkmb.askyesno(title="Variable file", message="A variable information (.var) file with a name matching the data file selected is available. Process the variable file instead?"):
+                name = root + ".var"
 
         self.closeFile(event)
 
@@ -217,6 +224,7 @@ class SLViewGUI:
         self.channelViewItems.set("")
         self.sourceViewItems.set("")
         self.curSMap = None
+        self.progress_bar.configure(value=0)
 
         self.menu.children["file"].entryconfigure("Process", state=tk.DISABLED)
         self.menu.children["file"].entryconfigure("Close", state=tk.DISABLED)

@@ -28,7 +28,8 @@ setup(
     entry_points = {
         "console_scripts": [
             "SLDump = SELKIELogger.scripts.SLDump:SLDump",
-            "SLClassify = SELKIELogger.scripts.SLClassify:SLClassify"
+            "SLClassify = SELKIELogger.scripts.SLClassify:SLClassify",
+            "SLView = SELKIELogger.scripts.SLView:SLView"
             ]
         }
 )

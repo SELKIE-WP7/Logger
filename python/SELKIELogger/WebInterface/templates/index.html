@@ -1,0 +1,22 @@
+{% extends "selkie_base.html" %}
+
+{% block page_content %}
+	<div>
+		<h3>Data access</h3>
+		<ul>
+			<li>Access data for download and conversion at <a href='http://{{g.ip}}/data/'>http://{{g.ip}}/data/</a></li>
+			<li>Alternatively, connect to <a href='sftp://{{g.ip}}{{g.data_path}}'>{{g.ip}}</a> via SSH / SFTP</li>
+			<ul>
+				<li> Data can be found in {{g.data_path}}</li>
+			</ul>
+		</ul>
+	</div>
+	<div>
+		<h3>System status</h3>
+		<h4>The datalogger service is currently <span class="text-{{"success" if g.is_running else "danger"}}">{{"Running" if g.is_running else "Stopped"}}</span></h4>
+		<ul class='list-inline'>
+			<li><a class="btn btn-success" href="{{url_for('.control_service', action='start')}}"><span class="glyphicon glyphicon-play"></span>&nbsp;Start</a></li>
+			<li><a class="btn btn-danger" href="{{url_for('.control_service', action='stop')}}"><span class="glyphicon glyphicon-stop"></span>&nbsp;Stop</a></li>
+		</ul>
+	</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/utils.html" as util %}
+{% block title %}SELKIE Logger [{{g.name}}] interface{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+	<ul class="nav nav-tabs">
+		<li><a href="/">Home</a></li>
+		{% if g.ip %}
+		<li><a href="http://{{g.ip}}/data">Data</a></li>
+		{% endif %}
+	</ul>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+	  <h1>SELKIE Logger [{{g.name}}]</h1>
+	<div class="row">{{ util.flashed_messages() }}</div>
+	<div class="row">
+		{% block page_content -%}
+		{%- endblock page_content %}
+	</div>
+  </div>
+{% endblock %}

@@ -40,16 +40,24 @@ def getSourceMap(filename, progress=None, stop=None):
     unpacker = msgpack.Unpacker(file, unicode_errors='ignore')
     out = SLMessageSink(msglogger=logging.getLogger("Messages"))
 
-    # Dict of Dicts gpsSeen[class][msg] = count and similar for NMEA
+    stats = {}
     for msg in unpacker:
         if stop and stop():
                 return None
         msg = out.Process(msg, output="raw")
         if msg is None:
             continue
+
+        if not msg.SourceID in stats:
+            stats[msg.SourceID] = {}
+        if not msg.ChannelID in stats[msg.SourceID]:
+            stats[msg.SourceID][msg.ChannelID] = 1
+        else:
+            stats[msg.SourceID][msg.ChannelID] += 1
+
         if progress:
             progress(file.tell() / size)
-    return out.SourceMap()
+    return (out.SourceMap(), stats)
 
 class SLViewGUI:
 
@@ -63,7 +71,7 @@ class SLViewGUI:
         Default configuration can be overriden by providing a dictionary of
         options that will be expanded and passed to .configure()
         """
-        button_defconfig = {'width': 8, 'padx': "2m", 'pady': "2m"}
+        button_defconfig = {'width': 8}
         #b = tk.Button(parent, command=command, **kwargs)
         b = ttk.Button(parent, command=command)
         b.bind("<Return>", command)
@@ -115,12 +123,26 @@ class SLViewGUI:
 
         self.sourceViewItems = tk.StringVar()
         self.sourceView = tk.Listbox(self.sourceViewPane, listvariable=self.sourceViewItems)
-        self.sourceView.bind("<<ListboxSelect>>", lambda ev: self.updateChannelView())
+        self.sourceView.bind("<<ListboxSelect>>", lambda e: self.updateChannelView(e))
         self.sourceView.grid(column=0,row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
 
         self.channelViewItems = tk.StringVar()
         self.channelView = tk.Listbox(self.channelViewPane, listvariable=self.channelViewItems)
         self.channelView.grid(column=0,row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
+        self.channelView.bind("<<ListboxSelect>>", lambda e: self.showChannelStats(e))
+
+        ttk.Separator(orient="horizontal").grid(column=0, row=3, sticky=(tk.N, tk.W, tk.E, tk.S))
+
+        statusArea = ttk.Frame(self.MFrame)
+        statusArea.grid(column=0, row=4, sticky=(tk.N, tk.W, tk.E, tk.S))
+        statusArea.columnconfigure(0, weight=4)
+        statusArea.columnconfigure(1, weight=0)
+
+        self.status = ttk.Label(statusArea, text="Ready")
+        self.status.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
+
+        self.actionbutton = self.Button(statusArea, config={"text": "Cancel", "state": tk.DISABLED}, command=lambda e=None: self.processCancel(e))
+        self.actionbutton.grid(column=1, row=0,  sticky=(tk.N, tk.W, tk.E, tk.S))
 
         self.menu = tk.Menu(self.MFrame)
 
@@ -158,6 +180,7 @@ class SLViewGUI:
         self.menu.children["file"].entryconfigure("Process", state=tk.NORMAL)
 
         self.root.title(f"SLView: {os.path.basename(name)}")
+        self.process(event)
 
     def process(self, event=None):
         if self.curFile is None:
@@ -173,20 +196,36 @@ class SLViewGUI:
         self.progress_bar.start()
         newIOThread = threading.Thread(target=newIO, name="getSourceMap")
         self.threads.append(newIOThread)
+        self.actionbutton.configure(state=tk.NORMAL)
         self.menu.children["file"].entryconfigure("Load...", state=tk.DISABLED)
         self.menu.children["file"].entryconfigure("Process", state=tk.DISABLED)
         self.menu.children["file"].entryconfigure("Close", state=tk.DISABLED)
         newIOThread.start()
-
-
-    def processComplete(self, event=None):
-        self.curSMap = self.EQ.get()
+    
+    def processCancel(self, event=None):
+        self.endThreads()
 
         self.progress_bar.stop()
         self.progress_bar.configure(value=100)
         self.menu.children["file"].entryconfigure("Load...", state=tk.NORMAL)
         self.menu.children["file"].entryconfigure("Process", state=tk.NORMAL)
         self.menu.children["file"].entryconfigure("Close", state=tk.NORMAL)
+        self.actionbutton.configure(state=tk.DISABLED)
+        self.status.configure(text="Processing cancelled")
+
+        for i in self.threads:
+            if not i.is_alive():
+                self.threads.remove(i)
+
+    def processComplete(self, event=None):
+        self.curSMap, self.curStats = self.EQ.get()
+
+        self.progress_bar.stop()
+        self.progress_bar.configure(value=100)
+        self.menu.children["file"].entryconfigure("Load...", state=tk.NORMAL)
+        self.menu.children["file"].entryconfigure("Process", state=tk.NORMAL)
+        self.menu.children["file"].entryconfigure("Close", state=tk.NORMAL)
+        self.actionbutton.configure(state=tk.DISABLED)
 
         for i in self.threads:
             if not i.is_alive():
@@ -194,25 +233,51 @@ class SLViewGUI:
         self.updateSourceView()
         self.updateChannelView()
 
-    def updateSourceView(self):
+    def processProgress(self, event=None):
+        progress = event.state/100
+        self.progress_bar.configure(value=progress)
+        self.status.configure(text=f"Processing file: {progress:.1f}% loaded")
+
+    def updateSourceView(self, event=None):
+        if self.curSMap is None:
+            return
         csmd = self.curSMap.to_dict()
         selectedSource = self.sourceView.curselection()
         items = [f"0x{x:02x}: {self.curSMap[x].name}" for x in csmd.keys()]
         if str(items)[0] != self.sourceViewItems.get():
             self.sourceViewItems.set(items)
 
-    def updateChannelView(self):
+    def updateChannelView(self, event=None):
+        if self.curSMap is None:
+            return
         csmd = self.curSMap.to_dict()
         selectedSource = self.sourceView.curselection()
         if len(selectedSource) < 1:
            return 
 
-        sourceID = selectedSource[0]
-        self.channelViewItems.set([f"0x{x[0]:02x}: {x[1]}" for x in list(enumerate(csmd[list(csmd.keys())[sourceID]]))])
+        self.sourceID = list(csmd.keys())[selectedSource[0]]
+        self.channelViewItems.set([f"0x{x[0]:02x}: {x[1]}" for x in list(enumerate(csmd[self.sourceID]))])
+        self.showChannelStats()
 
-    def processProgress(self, event=None):
-        progress = event.state/100
-        self.progress_bar.configure(value=progress)
+    def showChannelStats(self, event=None):
+        if self.curStats is None or self.curSMap is None:
+            return
+
+        csmd = self.curSMap.to_dict()
+
+        selectedChannel = self.channelView.curselection()
+
+        if len(selectedChannel) != 1:
+            self.status.configure(text="")
+            return
+
+        channelID = selectedChannel[0]
+
+        try:
+            cstat = self.curStats[self.sourceID][channelID]
+            self.status.configure(text=f"{self.curStats[self.sourceID][channelID]:d} messages seen for source 0x{self.sourceID:02x} and channel 0x{channelID:02x}")
+        except Exception as e:
+            self.status.configure(text=f"No messages seen for source 0x{self.sourceID:02x} and channel 0x{channelID:02x} - {e}")
 
     def closeFile(self, event=None):
         if self.stopEvent:
@@ -224,6 +289,8 @@ class SLViewGUI:
         self.channelViewItems.set("")
         self.sourceViewItems.set("")
         self.curSMap = None
+        self.curStats = None
+
         self.progress_bar.configure(value=0)
 
         self.menu.children["file"].entryconfigure("Process", state=tk.DISABLED)
@@ -249,6 +316,10 @@ class SLViewGUI:
 def SLView():
     root = tk.Tk()
     root.geometry("800x600")
+    try:
+        ttk.Style().theme_use("alt")
+    except:
+        pass
     app = SLViewGUI(root)
     app.closeFile() # Make initial GUI state consistent with having no file loaded
     root.protocol("WM_DELETE_WINDOW", app.exit)

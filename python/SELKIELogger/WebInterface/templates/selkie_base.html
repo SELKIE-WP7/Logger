@@ -11,6 +11,9 @@
 		{% if g.ip %}
 		<li><a href="http://{{g.ip}}/data">Data</a></li>
 		{% endif %}
+		{% if url_for('ahc.index') %}
+		<li><a href="{{url_for('ahc.index')}}">AutomationHAT</a></li>
+		{% endif %}
 	</ul>
     </div>
   </div>

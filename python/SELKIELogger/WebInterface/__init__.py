@@ -17,6 +17,14 @@ def create_app(test_config=None):
 
     Bootstrap(app)
     app.register_blueprint(pages)
+ 
+    try:
+        import autohatctl
+        from .autohat import ahc
+        app.register_blueprint(ahc, url_prefix='/autohat')
+    except:
+        raise
+        app.logger.warning("Automation HAT support disabled")
 
     app.logger.info(f"Root path:    \t{app.root_path}")
     app.logger.info(f"Instance path:\t{app.instance_path}")

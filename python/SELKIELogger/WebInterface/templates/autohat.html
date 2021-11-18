@@ -1,0 +1,11 @@
+{% extends "selkie_base.html" %}
+
+{% block page_content %}
+	<div>
+		<h3>Automation HAT Control</h3>
+		<p><em>Work in progress</em></p>
+		<ul>
+			<li><a href="{{url_for(".led_on", num=15)}}">Set</a> or <a href="{{url_for(".led_off", num=15)}}">Clear</a> Warning LED
+		</ul>
+	</div>
+{% endblock %}

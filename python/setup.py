@@ -27,6 +27,7 @@ setup(
     install_requires=['msgpack'],
     extras_require={
         "Web": ['Flask>=1.1.0', 'Flask-Bootstrap>=3.3.7.1'],
+        "AutoHat": ['autohatctl']
     },
     package_data={
         "WebInterface": ['*.html']

@@ -5,7 +5,7 @@ here = path.abspath(path.dirname(__file__))
 
 setup(
     name='SELKIELogger',
-    version='1.3.1',
+    version='1.3.2',
     description='Parsing and processing scripts for SELKIE data logger',
     author='Thomas Lake',
     author_email='t.lake@swansea.ac.uk',

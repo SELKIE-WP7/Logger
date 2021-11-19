@@ -4,9 +4,10 @@
 	<div>
 		<h3>Data access</h3>
 		<ul>
-			<li>Access data for download and conversion at <a href='http://{{g.ip}}/data/'>http://{{g.ip}}/data/</a></li>
-			<li>Alternatively, connect to <a href='sftp://{{g.ip}}{{g.data_path}}'>{{g.ip}}</a> via SSH / SFTP</li>
+			<li>Access data for download and conversion at <a href='{{g.ext_urlip}}/data/'>{{g.ext_url}}/data/</a></li>
+			<li>Alternatively, if on the same network as the device connect over SSH / SFTP.
 			<ul>
+				<li> The best guess at an internal IP is <a href='sftp://{{g.ip}}{{g.data_path}}'>{{g.ip}}</a></li>
 				<li> Data can be found in {{g.data_path}}</li>
 			</ul>
 		</ul>

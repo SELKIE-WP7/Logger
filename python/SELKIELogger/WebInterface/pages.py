@@ -17,6 +17,16 @@ def get_ip():
         s.close()
     return IP
 
+def get_url():
+    try:
+        addr = current_app.config['EXTERNAL_ADDR']
+        return addr
+    except:
+        pass
+
+    return ""
+
+
 def get_status():
     service = current_app.config['SERVICE_NAME']
     return os.system(f"/bin/systemctl is-active --quiet '{service}'") == 0
@@ -37,6 +47,7 @@ def control_service(action):
 @pages.route('/')
 def index():
     g.ip = get_ip()
+    g.ext_url = get_url()
     g.name = current_app.config['DEVICE_NAME']
     g.data_path = current_app.config['DATA_PATH']
     g.is_running = get_status()
@@ -45,6 +56,7 @@ def index():
 @pages.route('/data/')
 def show_data():
     g.ip = get_ip()
+    g.ext_url = get_url()
     g.name = current_app.config['DEVICE_NAME']
     g.files = get_run_files()
     return render_template('data.html')

@@ -4,7 +4,7 @@ from autohatctl import AutoHATctl
 
 from flask import Response, Blueprint, render_template, current_app, flash, redirect, url_for, g
 
-from .pages import get_ip
+from .pages import get_ip, get_url
 
 ahc = Blueprint("ahc", __name__)
 
@@ -22,6 +22,7 @@ ahc.record_once(setControlPath)
 def led_on(num):
     hat = AutoHATctl(controlPath)
     hat.lightCommand(num, 20)
+    
     return redirect(url_for(".index"), 302)
 
 @ahc.route('/led/<int:num>/off')
@@ -51,5 +52,6 @@ def relay_off(num):
 @ahc.route('/')
 def index():
     g.ip = get_ip()
+    g.ext_url = get_url()
     g.name = current_app.config['DEVICE_NAME']
     return render_template('autohat.html')

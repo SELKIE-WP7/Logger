@@ -5,7 +5,7 @@ here = path.abspath(path.dirname(__file__))
 
 setup(
     name='SELKIELogger',
-    version='1.3.0',
+    version='1.3.1',
     description='Parsing and processing scripts for SELKIE data logger',
     author='Thomas Lake',
     author_email='t.lake@swansea.ac.uk',
@@ -30,7 +30,7 @@ setup(
         "AutoHat": ['autohatctl']
     },
     package_data={
-        "WebInterface": ['*.html']
+        "SELKIELogger.WebInterface": ['templates/*.html']
     },
     include_package_data=True,
     entry_points = {

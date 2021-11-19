@@ -36,6 +36,18 @@ def led_set(num, brightness):
     hat.lightCommand(num, brightness)
     return redirect(url_for(".index"), 302)
 
+@ahc.route('/relay/<int:num>/on')
+def relay_on(num):
+    hat = AutoHATctl(controlPath)
+    hat.relayCommand(num, 1)
+    return redirect(url_for(".index"), 302)
+
+@ahc.route('/relay/<int:num>/off')
+def relay_off(num):
+    hat = AutoHATctl(controlPath)
+    hat.relayCommand(num, 0)
+    return redirect(url_for(".index"), 302)
+
 @ahc.route('/')
 def index():
     g.ip = get_ip()

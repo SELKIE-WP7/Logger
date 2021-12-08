@@ -21,7 +21,7 @@ void *timer_logging(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	timer_params *timerInfo = (timer_params *) args->dParams;
 
-	log_info(args->pstate, 1, "[Timer] Logging thread started");
+	log_info(args->pstate, 1, "[Timer:%s] Logging thread started", args->tag);
 
 	const int incr_nsec = (1E9 / timerInfo->frequency);
 	time_t lstamp = 0;
@@ -91,7 +91,7 @@ void *timer_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	timer_params *timerInfo = (timer_params *) args->dParams;
 
-	msg_t *m_sn = msg_new_string(timerInfo->sourceNum, SLCHAN_NAME, 6, timerInfo->sourceName);
+	msg_t *m_sn = msg_new_string(timerInfo->sourceNum, SLCHAN_NAME, strlen(timerInfo->sourceName), timerInfo->sourceName);
 
 	if (!queue_push(args->logQ, m_sn)) {
 		log_error(args->pstate, "[Timer:%s] Error pushing channel name to queue", args->tag);

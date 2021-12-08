@@ -110,6 +110,7 @@ typedef bool (*dc_parser)(log_thread_args_t *, config_section *);
 #include "LoggerMP.h"
 #include "LoggerNMEA.h"
 #include "LoggerI2C.h"
+#include "LoggerSerial.h"
 #include "LoggerTime.h"
 #include "LoggerDMap.h" // Include after all data sources/devices defined
 

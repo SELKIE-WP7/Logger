@@ -13,6 +13,8 @@ struct dmap dmap[] = {
 	{"MP", &mp_getCallbacks, &mp_parseConfig},
 	{"SL", &mp_getCallbacks, &mp_parseConfig},
 	{"SERIAL", &rx_getCallbacks, &rx_parseConfig},
+	{"NET", &net_getCallbacks, &net_parseConfig},
+	{"TCP", &net_getCallbacks, &net_parseConfig},
 	{"TIMER", &timer_getCallbacks, &timer_parseConfig},
 	{"TICK", &timer_getCallbacks, &timer_parseConfig},
 	{NULL, NULL} // End of list sentinel value

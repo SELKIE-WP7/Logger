@@ -231,7 +231,7 @@ void *gps_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	gps_params *gpsInfo = (gps_params *) args->dParams;
 
-	msg_t *m_sn = msg_new_string(gpsInfo->sourceNum, SLCHAN_NAME, strlen(args->tag), args->tag);
+	msg_t *m_sn = msg_new_string(gpsInfo->sourceNum, SLCHAN_NAME, strlen(gpsInfo->sourceName), gpsInfo->sourceName);
 
 	if (!queue_push(args->logQ, m_sn)) {
 		log_error(args->pstate, "[GPS:%s] Error pushing channel name to queue", args->tag);

@@ -147,7 +147,7 @@ void *nmea_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *) ptargs;
 	nmea_params *nmeaInfo = (nmea_params *) args->dParams;
 
-	msg_t *m_sn = msg_new_string(nmeaInfo->sourceNum, SLCHAN_NAME, strlen(args->tag), args->tag);
+	msg_t *m_sn = msg_new_string(nmeaInfo->sourceNum, SLCHAN_NAME, strlen(nmeaInfo->sourceName), nmeaInfo->sourceName);
 
 	if (!queue_push(args->logQ, m_sn)) {
 		log_error(args->pstate, "[NMEA:%s] Error pushing channel name to queue", args->tag);

@@ -141,4 +141,5 @@ bool i2c_sn3218_reset(const int busHandle);
 //! Configure SN3218 chip to match state object
 bool i2c_sn3218_update(const int busHandle, const i2c_sn3218_state *state);
 
+//! @}
 #endif

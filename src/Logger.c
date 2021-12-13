@@ -565,6 +565,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	state.started = true;
+	fflush(stdout);
 	log_info(&state, 1, "Startup complete");
 
 	if (!log_softwareVersion(&log_queue)) {
@@ -774,7 +775,10 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		msgCount++;
-		mp_writeMessage(fileno(go.monitorFile), res);
+		if (!mp_writeMessage(fileno(go.monitorFile), res)) {
+			log_error(&state, "Unable to write out data to log file: %s", strerror(errno));
+			return -1;
+		}
 		if (res->type == SLCHAN_MAP || res->type == SLCHAN_NAME) {
 			mp_writeMessage(fileno(go.varFile), res);
 		}
@@ -787,7 +791,7 @@ int main(int argc, char *argv[]) {
 	for (int it=0; it < nThreads; it++) {
 		pthread_join(threads[it], NULL);
 		if (ltargs[it].returnCode != 0) {
-			log_error(&state, "Thread %d has signalled an error: %d", it, ltargs[it].returnCode);
+			log_error(&state, "Thread %d (%s) has signalled an error: %d", it, ltargs[it].tag, ltargs[it].returnCode);
 		}
 	}
 

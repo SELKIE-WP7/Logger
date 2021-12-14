@@ -45,14 +45,34 @@ void *net_logging(void *ptargs) {
 
 	uint8_t *buf = calloc(netInfo->maxBytes, sizeof(uint8_t));
 	int net_hw = 0;
+	time_t lastRead = time(NULL);
 	while (!shutdownFlag) {
-		// Need to implement a message handling loop here
+		time_t now = time(NULL);
+		if ((lastRead + netInfo->timeout) < now) {
+			log_warning(args->pstate, "[Network:%s] Network timeout, reconnecting", args->tag);
+			close(netInfo->handle);
+			netInfo->handle = -1;
+			errno = 0;
+			if (net_connect(args)) {
+				log_info(args->pstate, 1, "[Network:%s] Reconnected", args->tag);
+			} else {
+				log_error(args->pstate, "[Network:%s] Unable to reconnect: %s", args->tag, strerror(errno));
+				args->returnCode = -2;
+				pthread_exit(&(args->returnCode));
+				return NULL;
+			}
+		}
+
 		int ti = 0;
 		if (net_hw < netInfo->maxBytes - 1) {
 			errno = 0;
 			ti = read(netInfo->handle, &(buf[net_hw]), netInfo->maxBytes - net_hw);
 			if (ti >= 0) {
 				net_hw += ti;
+				if (ti > 0) {
+					// 0 may not be an error, but could be a dropped connection if it persists
+					lastRead = now;
+				}
 			} else {
 				if (errno != EAGAIN) {
 					log_error(args->pstate, "[Network:%s] Unexpected error while reading from network (%s)", args->tag, strerror(errno));

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-import logging
 import msgpack
+from . import log
 from ..SLMessages import SLMessageSink
 
 def process_arguments():
@@ -17,11 +17,10 @@ def processMessages(up, out, allM):
             print(msg)
 
 def SLDump():
-    logging.basicConfig(level=logging.INFO)
     args = process_arguments()
     inFile = open(args.file, "rb")
     unpacker = msgpack.Unpacker(inFile, unicode_errors='ignore')
-    out = SLMessageSink(msglogger=logging.getLogger("Messages"))
+    out = SLMessageSink(msglogger=log)
     processMessages(unpacker, out, args.verbose)
     inFile.close()
 

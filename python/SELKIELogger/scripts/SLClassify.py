@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-import logging
 import msgpack
+from . import log
 from ..SLMessages import SLMessageSink
 
 def process_arguments():
@@ -20,7 +20,7 @@ class ProcessedRecords():
 
 def classify_messages(file):
     unpacker = msgpack.Unpacker(file, unicode_errors='ignore')
-    out = SLMessageSink(msglogger=logging.getLogger("Messages"))
+    out = SLMessageSink(msglogger=log)
 
     tots = ProcessedRecords()
 
@@ -109,7 +109,6 @@ def print_classifications(res):
             print(f"\t{t:3s}\t{m:3s}\t{res.classes['NMEA'][t][m]:d}")
 
 def SLClassify():
-    logging.basicConfig(level=logging.INFO)
     args = process_arguments()
     inFile = open(args.file, "rb")
     res = classify_messages(inFile)

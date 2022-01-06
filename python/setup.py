@@ -20,6 +20,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
 
     packages=find_packages(),  # Required
@@ -27,7 +28,8 @@ setup(
     install_requires=['msgpack'],
     extras_require={
         "Web": ['Flask>=1.1.0', 'Flask-Bootstrap>=3.3.7.1'],
-        "AutoHat": ['autohatctl']
+        "AutoHat": ['autohatctl'],
+        "Conversion": ['pandas']
     },
     package_data={
         "SELKIELogger.WebInterface": ['templates/*.html']
@@ -37,6 +39,7 @@ setup(
         "console_scripts": [
             "SLDump = SELKIELogger.scripts.SLDump:SLDump",
             "SLClassify = SELKIELogger.scripts.SLClassify:SLClassify",
+            "SLConvert = SELKIELogger.scripts.SLConvert:SLConvert[Conversion]",
             "SLWebDev = SELKIELogger.WebInterface:run_dev_server[Web]",
         ],
         "gui_scripts": [

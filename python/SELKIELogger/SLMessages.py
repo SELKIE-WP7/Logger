@@ -2,6 +2,30 @@ import msgpack
 import logging
 from warnings import warn
 
+class IDs:
+    SLSOURCE_LOCAL=0x00
+    SLSOURCE_CONV=0x01
+    SLSOURCE_TIMER=0x02
+    SLSOURCE_TEST1=0x05
+    SLSOURCE_TEST2=0x06
+    SLSOURCE_TEST3=0x07
+    SLSOURCE_GPS=0x10
+    SLSOURCE_ADC=0x20
+    SLSOURCE_NMEA=0x30
+    SLSOURCE_I2C=0x40
+    SLSOURCE_EXT=0x60
+    SLSOURCE_MP=0x70
+    SLSOURCE_IMU = SLSOURCE_MP
+
+    SLCHAN_NAME=0x00
+    SLCHAN_MAP=0x01
+    SLCHAN_TSTAMP=0x02
+    SLCHAN_RAW=0x03
+    SLCHAN_LOG_INFO=0x7
+    SLCHAN_LOG_WARN=0x7
+    SLCHAN_LOG_ERR=0x7
+
+
 
 ## @brief Python representation of a logged message
 class SLMessage:
@@ -23,7 +47,7 @@ class SLMessage:
         Note that the C library and utilities only support a limited range of
         types within these messages. Check the library documentation for
         details.
-        
+
         @sa library/base/sources.h
         """
         try:

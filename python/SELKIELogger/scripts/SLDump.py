@@ -7,7 +7,7 @@ def process_arguments():
     import argparse
     options = argparse.ArgumentParser(description="Read messages from SELKIE Logger or compatible devices and parse details to screen", epilog="Created as part of the SELKIE project")
     options.add_argument("file",  help="Input file name")
-    options.add_argument("-v, --verbose", dest="verbose", action="store_true", default=False, help="Include timing and source/channel information messages")
+    options.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Include timing and source/channel information messages")
     return options.parse_args()
 
 def processMessages(up, out, allM): 

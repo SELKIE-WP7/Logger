@@ -54,8 +54,8 @@ class SLMessage:
             assert (0 <= sourceID  and sourceID < 128)
             assert (0 <= channelID and channelID < 128)
         except:
-            print(f"Source: {sourceID}, Channel: {channelID}, Data: {data}")
-            raise
+            log.error(f"Invalid source/channel values: Source: {sourceID}, Channel: {channelID}, Data: {data}")
+            raise ValueError("Invalid source/channel values")
 
         self.SourceID = sourceID
         self.ChannelID = channelID
@@ -168,7 +168,7 @@ class SLChannelMap:
 
         def __getitem__(self, ch):
             if ch < len(self.channels):
-                return self.channels.name
+                return self.channels[ch]
             elif ch == 125:
                 return "Information"
             elif ch == 126:

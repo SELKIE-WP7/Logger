@@ -13,7 +13,11 @@ def process_arguments():
     options.add_argument("file", metavar="DATFILE",  help="Main data file name")
     options.add_argument("-v", "--verbose", action="count", default=0, help="Increase output verbosity")
     options.add_argument("-c", "--varfile", default=None, help="Path to channel mapping file (.var file). Default: Auto detect or fall back to details in data file (slow)")
+    options.add_argument("-d", "--dropna", default=False, action="store_const", const=True, help="Drop empty records during processing")
     options.add_argument("-o", "--output", metavar="OUTFILE", default=None, help="Output file name")
+    options.add_argument("-T", "--timesource", metavar="ID", default=IDs.SLSOURCE_TIMER, help="Data source to use as master clock")
+    options.add_argument("-t", "--format", default="csv", choices=["csv", "xlsx", "parquet"], help="Output file format")
+    options.add_argument("-z", "--compress", default=False, action="store_const", const=True, help="Enable compression of CSV output")
     return options.parse_args()
 
 def SLConvert():
@@ -25,6 +29,12 @@ def SLConvert():
 
     log.debug(f"Log level set to {log.getLevelName(log.getEffectiveLevel())}")
     log.info(f"Using '{args.file}' as main data file")
+
+    if args.compress:
+        if not args.format=="csv":
+            log.warning("Explicit compression only supported for CSV output")
+        else:
+            args.format="csv.gz"
 
     if args.varfile is None:
         log.warning("No channel map file provided")
@@ -43,19 +53,28 @@ def SLConvert():
         vf.printSourceMap(smap)
 
     log.info("Channel map created")
+    log.info(f"Using {smap[args.timesource]} as master clock source")
 
     log.info("Beginning message processing")
-    df = DatFile(args.file)
+    df = DatFile(args.file, pcs=args.timesource)
     df.addSourceMap(smap)
-    data = df.asDataFrame()
+    data = df.asDataFrame(dropna=args.dropna)
     log.info("Message processing completed")
 
     log.info("Writing data out to file")
     if args.output is None:
-        cf = path.splitext(args.file)[0] + '.csv'
+        cf = path.splitext(args.file)[0] + '.' + args.format
+
     else:
         cf = args.output
-    data.to_csv(cf)
+    if args.format == "csv":
+        data.to_csv(cf)
+    elif args.format == "csv.gz":
+        data.to_csv(cf, compression="gzip")
+    elif args.format == "xlsx":
+        data.to_excel(cf, freeze_panes=(1,1))
+    elif args.format == "parquet":
+        data.reset_index().to_parquet(cf, index=False)
     log.info(f"Data output to {cf}")
 
 

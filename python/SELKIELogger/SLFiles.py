@@ -208,12 +208,14 @@ class DatFile:
         # Out of messages
         log.debug(f"Out of data - {len(stack)} messages abandoned beyond last timestanp")
 
-    def asDataFrame(self):
+    def asDataFrame(self, dropna=False):
         df = None
         count = 0
         for chunk in self.processMessages():
             ndf = pd.DataFrame(data=[x[1] for x in chunk], index=[x[0] for x in chunk])
             count += len(ndf)
+            if dropna:
+                ndf.dropna(how='all', inplace=True)
             if df is None:
                 df = ndf
             else:

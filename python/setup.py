@@ -25,11 +25,10 @@ setup(
 
     packages=find_packages(),  # Required
     python_requires='>=3.6, <4',
-    install_requires=['msgpack'],
+    install_requires=['msgpack', 'pandas'],
     extras_require={
         "Web": ['Flask>=1.1.0', 'Flask-Bootstrap>=3.3.7.1'],
         "AutoHat": ['autohatctl'],
-        "Conversion": ['pandas']
     },
     package_data={
         "SELKIELogger.WebInterface": ['templates/*.html']
@@ -39,7 +38,7 @@ setup(
         "console_scripts": [
             "SLDump = SELKIELogger.scripts.SLDump:SLDump",
             "SLClassify = SELKIELogger.scripts.SLClassify:SLClassify",
-            "SLConvert = SELKIELogger.scripts.SLConvert:SLConvert[Conversion]",
+            "SLConvert = SELKIELogger.scripts.SLConvert:SLConvert",
             "SLWebDev = SELKIELogger.WebInterface:run_dev_server[Web]",
         ],
         "gui_scripts": [

@@ -2,7 +2,7 @@ import logging
 
 # Put general logging configuration in one place
 def setupLogging():
-    log = logging.getLogger(__name__)
+    log = logging.getLogger("")
     try:
         from rich.logging import RichHandler
         _rh = RichHandler(enable_link_path=False)

@@ -198,7 +198,7 @@ def processMessages(datFile, srcMap):
 ##             nextstep++;
 ##         }
         if nextTime != currentTime:
-            tsdf = recordToDataFrame(fields, primaryClockSource, nextTime, stack)
+            tsdf = recordToDataFrame(fields, primaryClockSource, currentTime, stack)
             stack.clear()
             currentTime = nextTime
             yield tsdf

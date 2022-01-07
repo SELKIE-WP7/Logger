@@ -162,7 +162,8 @@ def recordToDataFrame(fields, primaryClockSource, timeStamp, msgStack):
         for x in range(len(ls)):
             record[ls[x]] = dat[x]
 
-    return pd.DataFrame(record, index=[timeStamp])
+    #return pd.DataFrame(record, index=[timeStamp])
+    return (timeStamp, record)
 
 def processMessages(datFile, srcMap):
     unpacker = msgpack.Unpacker(datFile, unicode_errors='ignore')
@@ -245,12 +246,15 @@ def SLConvert():
             df.append(ts)
             count += 1
             if (len(df) % 10000) == 0:
-                delta = ((df[1].index.values - df[0].index.values).mean()) * 1E-3
+                # delta = ((df[1].index.values - df[0].index.values).mean()) * 1E-3
+                delta = ((df[1][0] - df[0][0]) * 1E-3)
                 log.info(f"{count} records processed ({pd.to_timedelta(count*delta, unit='s')})")
     log.info(f"Message processing completed ({count} records)")
 
     log.info("Consolidating data")
-    allData = pd.concat(df)
+    index = [x[0] for x in df]
+    data = [x[1] for x in df]
+    allData = pd.DataFrame(data=data, index=index)
     allData.index.name = "Timestamp"
     log.info("Writing data out to file")
     if args.output is None:

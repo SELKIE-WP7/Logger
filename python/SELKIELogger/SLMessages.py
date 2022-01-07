@@ -286,6 +286,7 @@ class SLMessageSink:
         self._sm = SLChannelMap()
 
         self._log = logging.getLogger(__name__)
+        logging.addLevelName(5, "DDebug")
         self._msglog = msglogger
 
         if self._msglog is None:
@@ -324,15 +325,15 @@ class SLMessageSink:
 
         suppressOutput = False
         if message.ChannelID == 0:
-            self._log.debug(f"New name for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
+            self._log.log(5, f"New name for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
             self._sm.SetSourceName(message.SourceID, message.Data)
             suppressOutput = True
         elif message.ChannelID == 1:
-            self._log.debug(f"New channels for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
+            self._log.log(5, f"New channels for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
             self._sm.SetChannelNames(message.SourceID, message.Data)
             suppressOutput = True
         elif message.ChannelID == 2:
-            self._log.debug(f"New update time for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
+            self._log.log(5, f"New update time for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
             self._sm.UpdateTimestamp(message.SourceID, message.Data)
             suppressOutput = True
         elif message.ChannelID == 125:

@@ -156,7 +156,7 @@ class DatFile:
                 record[ls[x]] = dat[x]
         return record
 
-    def processMessages(self, includeTS=False, force=False):
+    def processMessages(self, includeTS=False, force=False, chunkSize=100000):
         if self._records and not force:
             return self._records
 
@@ -197,7 +197,7 @@ class DatFile:
                 currentTime = nextTime
                 self._records.extend([(currentTime, tsdf)])
                 numTS = len(self._records)
-                if (numTS % 100000) == 0:
+                if (numTS % chunkSize) == 0:
                     yield self._records
                     self._records.clear()
                     tsdf.clear()
@@ -205,7 +205,10 @@ class DatFile:
 
             stack.extend([msg])
 
-        # Out of messages
+        ## Out of messages, so yield remaining processes timesteps
+        yield self._records
+
+        # Out of messages and no more timestamps available
         log.debug(f"Out of data - {len(stack)} messages abandoned beyond last timestanp")
 
     def asDataFrame(self, dropna=False):

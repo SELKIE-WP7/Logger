@@ -25,7 +25,7 @@ setup(
 
     packages=find_packages(),  # Required
     python_requires='>=3.6, <4',
-    install_requires=['msgpack', 'pandas'],
+    install_requires=['msgpack', 'pandas', 'scipy'],
     extras_require={
         "Web": ['Flask>=1.1.0', 'Flask-Bootstrap>=3.3.7.1'],
         "AutoHat": ['autohatctl'],

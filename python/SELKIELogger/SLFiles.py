@@ -211,12 +211,19 @@ class DatFile:
         # Out of messages and no more timestamps available
         log.debug(f"Out of data - {len(stack)} messages abandoned beyond last timestanp")
 
-    def asDataFrame(self, dropna=False):
+    def asDataFrame(self, dropna=False, resample=None):
         df = None
         count = 0
         for chunk in self.processMessages():
-            ndf = pd.DataFrame(data=[x[1] for x in chunk], index=[x[0] for x in chunk])
+            ndf = pd.DataFrame(data=[x[1] for x in chunk], index=[pd.to_timedelta(x[0], unit='ms') for x in chunk])
             count += len(ndf)
+            if resample:
+                ndf = ndf.resample(resample).mean()
+                # Double 'astype' here to ensure we get an integer representing milliseconds back
+                ndf.index = [x.astype('m8[ms]').astype(int) for x in ndf.index.values]
+            for x in ndf.columns:
+                if pd.api.types.is_numeric_dtype(ndf[x].dtype):
+                    ndf[x] = ndf[x].astype(pd.SparseDtype(ndf[x].dtype, pd.NA))
             if dropna:
                 ndf.dropna(how='all', inplace=True)
             if df is None:

@@ -14,6 +14,7 @@ def process_arguments():
     options.add_argument("-v", "--verbose", action="count", default=0, help="Increase output verbosity")
     options.add_argument("-c", "--varfile", default=None, help="Path to channel mapping file (.var file). Default: Auto detect or fall back to details in data file (slow)")
     options.add_argument("-d", "--dropna", default=False, action="store_const", const=True, help="Drop empty records during processing")
+    options.add_argument("-r", "--resample", default=None, help="Resample data before writing to file")
     options.add_argument("-o", "--output", metavar="OUTFILE", default=None, help="Output file name")
     options.add_argument("-T", "--timesource", metavar="ID", default=IDs.SLSOURCE_TIMER, help="Data source to use as master clock")
     options.add_argument("-t", "--format", default="csv", choices=["csv", "xlsx", "parquet", "mat"], help="Output file format")
@@ -58,12 +59,15 @@ def SLConvert():
     log.info("Beginning message processing")
     df = DatFile(args.file, pcs=args.timesource)
     df.addSourceMap(smap)
-    data = df.asDataFrame(dropna=args.dropna)
+    data = df.asDataFrame(dropna=args.dropna, resample=args.resample)
     log.info("Message processing completed")
 
     log.info("Writing data out to file")
     if args.output is None:
-        cf = path.splitext(args.file)[0] + '.' + args.format
+        if args.resample:
+            cf = path.splitext(args.file)[0] + '-' + args.resample + '.' + args.format
+        else:
+            cf = path.splitext(args.file)[0] + '.' + args.format
 
     else:
         cf = args.output

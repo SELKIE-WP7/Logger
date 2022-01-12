@@ -51,7 +51,31 @@ void *mp_logging(void *ptargs) {
 				args->returnCode = -1;
 				pthread_exit(&(args->returnCode));
 			}
-			// Do not destroy or free out here
+
+			if (out->type == SLCHAN_NAME) {
+				if (mpInfo->csource > 0 && mpInfo->csource != out->source) {
+					log_warning(args->pstate, "[MP:%s] Received source ID (0x%02x) does not match cached value (0x%02x) - multiple devices on a single input not currently supported!", args->tag, out->source, mpInfo->csource);
+				}
+				mpInfo->csource = out->source;
+
+				if (mpInfo->cname) {
+					free(mpInfo->cname);
+					mpInfo->cname = NULL;
+				}
+				mpInfo->cname = strdup(out->data.string.data);
+			} else if (out->type == SLCHAN_MAP) {
+				if (mpInfo->csource > 0 && mpInfo->csource != out->source) {
+					log_warning(args->pstate, "[MP:%s] Received source ID (0x%02x) does not match cached value (0x%02x) - multiple devices on a single input not currently supported!", args->tag, out->source, mpInfo->csource);
+				}
+				mpInfo->csource = out->source;
+
+				if (!sa_copy(&mpInfo->cmap, &(out->data.names))) {
+					log_error(args->pstate, "[MP:%s] Error caching channel map", args->tag);
+					// Not destroying "out", as already queued
+					args->returnCode = -1;
+					pthread_exit(&(args->returnCode));
+				}
+			}
 			// After pushing it to the queue, it is the responsibility of the consumer
 			// to dispose of it after use.
 		} else {
@@ -85,6 +109,43 @@ void *mp_logging(void *ptargs) {
 	pthread_exit(NULL);
 	return NULL; // Superfluous, as returning zero via pthread_exit above
 }
+/*!
+ * Duplicate cached channel map and enqueue
+ *
+ * @param ptargs Pointer to log_thread_args_t
+ */
+void *mp_channels(void *ptargs) {
+	log_thread_args_t *args = (log_thread_args_t *) ptargs;
+	mp_params *mpInfo = (mp_params *) args->dParams;
+	if (mpInfo->csource == 0) {
+		// No device ID yet
+		return NULL;
+	}
+
+	if (mpInfo->cname != NULL) {
+		msg_t *out = msg_new_string(mpInfo->csource, SLCHAN_NAME, strlen(mpInfo->cname),  mpInfo->cname);
+
+		if (!queue_push(args->logQ, out)) {
+			log_error(args->pstate, "[MP:%s] Error pushing source name to queue", args->tag);
+			msg_destroy(out);
+			args->returnCode = -1;
+			pthread_exit(&(args->returnCode));
+		}
+	}
+
+	if (mpInfo->cmap.entries > 0) {
+		msg_t *out = msg_new_string_array(mpInfo->csource, SLCHAN_MAP, &mpInfo->cmap);
+
+		if (!queue_push(args->logQ, out)) {
+			log_error(args->pstate, "[MP:%s] Error pushing channel map to queue", args->tag);
+			msg_destroy(out);
+			args->returnCode = -1;
+			pthread_exit(&(args->returnCode));
+		}
+	}
+
+	return NULL;
+}
 
 /*!
  * Simple wrapper around mp_closeConnection(), which will do any cleanup required.
@@ -110,7 +171,7 @@ device_callbacks mp_getCallbacks() {
 		.startup = &mp_setup,
 		.logging = &mp_logging,
 		.shutdown = &mp_shutdown,
-		.channels = NULL // No channel map - will be supplied by connected device(s)
+		.channels = &mp_channels
 	};
 	return cb;
 }
@@ -119,7 +180,10 @@ mp_params mp_getParams() {
 	mp_params mp = {
 		.portName = NULL,
 		.baudRate = 115200,
-		.handle = -1
+		.handle = -1,
+		.csource = 0,
+		.cname = NULL,
+		.cmap  = {0}
 	};
 	return mp;
 }

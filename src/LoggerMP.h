@@ -25,6 +25,9 @@ typedef struct {
 	char *portName; //!< Target port name
 	int baudRate; //!< Baud rate for operations (currently unused)
 	int handle; //!< Handle for currently opened device
+	uint8_t csource; //!< Cache source ID
+	char *cname; //!< Cache latest device name
+	strarray cmap; //!< Cache latest channel map
 } mp_params;
 
 //! MP connection setup
@@ -32,6 +35,9 @@ void *mp_setup(void *ptargs);
 
 //! MP source main logging loop
 void *mp_logging(void *ptargs);
+
+//! Push device information from cache to queue
+void *mp_channels(void *ptargs);
 
 //! MP source shutdown
 void *mp_shutdown(void *ptargs);

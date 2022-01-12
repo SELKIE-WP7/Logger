@@ -1,6 +1,7 @@
 import logging
 import msgpack
 import pandas as pd
+from numpy import nan
 
 from .SLMessages import IDs, SLMessage, SLMessageSink
 log = logging.getLogger(__name__)
@@ -223,7 +224,7 @@ class DatFile:
                 ndf.index = [x.astype('m8[ms]').astype(int) for x in ndf.index.values]
             for x in ndf.columns:
                 if pd.api.types.is_numeric_dtype(ndf[x].dtype):
-                    ndf[x] = ndf[x].astype(pd.SparseDtype(ndf[x].dtype, pd.NA))
+                    ndf[x] = ndf[x].astype(pd.SparseDtype(ndf[x].dtype, nan))
             if dropna:
                 ndf.dropna(how='all', inplace=True)
             if df is None:

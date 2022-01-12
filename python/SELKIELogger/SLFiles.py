@@ -72,7 +72,7 @@ class DatFile:
             return self._fields
 
         simpleSources  = [x for x in range(IDs.SLSOURCE_I2C, IDs.SLSOURCE_I2C + 0x10)]
-        simpleSources += [x for x in range(IDs.SLSOURCE_IMU, IDs.SLSOURCE_IMU + 0x10)]
+        simpleSources += [x for x in range(IDs.SLSOURCE_MP, IDs.SLSOURCE_MP + 0x10)]
         simpleSources += [x for x in range(IDs.SLSOURCE_ADC, IDs.SLSOURCE_ADC + 0x10)]
 
         fields = {}
@@ -135,7 +135,8 @@ class DatFile:
                         fields[src][cid] = [[f"{chan}:0x{src:02x}"], [lambda x: x.Data]]
                         cid += 1
             else:
-                log.info(f"No conversion routine known for source {src} ({self._sm[src]})")
+                if src >= 0x02:
+                    log.info(f"No conversion routine known for source 0x{src:02x} ({self._sm[src]})")
         self._fields = fields
         return self._fields
 
@@ -216,12 +217,15 @@ class DatFile:
         df = None
         count = 0
         for chunk in self.processMessages():
-            ndf = pd.DataFrame(data=[x[1] for x in chunk], index=[pd.to_timedelta(x[0], unit='ms') for x in chunk])
+            ndf = pd.DataFrame(data=[x[1] for x in chunk], index=[x[0] for x in chunk])
             count += len(ndf)
             if resample:
+                ndf.index = pd.to_timedelta(ndf.index.values, unit='ms')
                 ndf = ndf.resample(resample).mean()
+
                 # Double 'astype' here to ensure we get an integer representing milliseconds back
                 ndf.index = [x.astype('m8[ms]').astype(int) for x in ndf.index.values]
+
             for x in ndf.columns:
                 if pd.api.types.is_numeric_dtype(ndf[x].dtype):
                     ndf[x] = ndf[x].astype(pd.SparseDtype(ndf[x].dtype, nan))

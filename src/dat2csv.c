@@ -324,7 +324,7 @@ int main(int argc, char *argv[]) {
 		}
 		// Although these sources have to be communicated with differently, both output named channels with single floating point values
 		if ( (usedSources[i] >= SLSOURCE_I2C && usedSources[i] < (SLSOURCE_I2C + 0x10)) ||
-			(usedSources[i] >= SLSOURCE_IMU && usedSources[i] < (SLSOURCE_IMU + 0x10)) ||
+			(usedSources[i] >= SLSOURCE_MP  && usedSources[i] < (SLSOURCE_MP  + 0x10)) ||
 			(usedSources[i] >= SLSOURCE_ADC && usedSources[i] < (SLSOURCE_ADC + 0x10)) ) {
 			// Start at first valid data channel (3)
 			for (int c = 3; c < 128; c++) {

@@ -8,6 +8,7 @@ add_subdirectory(base)
 add_subdirectory(DW)
 add_subdirectory(GPS)
 add_subdirectory(MP)
+add_subdirectory(MQTT)
 add_subdirectory(NMEA)
 add_subdirectory(I2C)
 

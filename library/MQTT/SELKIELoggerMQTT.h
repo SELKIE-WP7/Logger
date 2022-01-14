@@ -12,7 +12,6 @@
  * @{
  */
 #include "MQTT/MQTTTypes.h"
-#include "MQTT/MQTTMessages.h"
 #include "MQTT/MQTTConnection.h"
 //! @}
 #endif

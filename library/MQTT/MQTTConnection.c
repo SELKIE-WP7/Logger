@@ -61,6 +61,7 @@ bool mqtt_subscribe_batch(mqtt_conn *conn, strarray *topics) {
 		return false;
 	}
 
+	free(topStr);
 	return true;
 }
 
@@ -113,7 +114,7 @@ typedef struct {
 			out = msg_new_float(qm->sourcenum, qm->msgnums[ix], val);
 		}
 	}
-	if (!queue_push(qm->q, out)) {
+	if (!queue_push(&qm->q, out)) {
 		perror("mqtt_enqueue_messages:queue_push");
 		return;
 	}

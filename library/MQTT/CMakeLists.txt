@@ -1,4 +1,4 @@
-list(APPEND SL_MQTT_SRC MQTTConnection.c)
+list(APPEND SL_MQTT_SRC MQTTTypes.c MQTTConnection.c)
 list(APPEND SL_MQTT_INC MQTTTypes.h MQTTConnection.h)
 
 add_library(SELKIELoggerMQTT ${SL_MQTT_SRC})

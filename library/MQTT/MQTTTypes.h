@@ -6,6 +6,7 @@
  * @ingroup SELKIELoggerMQTT
  */
 
+#include <mosquitto.h>
 #include <stdbool.h>
 #include "SELKIELoggerBase.h"
 
@@ -13,6 +14,7 @@
  * @addtogroup SELKIELoggerMQTT
  * @{
  */
+typedef struct mosquitto mqtt_conn;
 
 enum dtype {
 	MQTT_TEXT,
@@ -30,7 +32,7 @@ typedef struct {
 
 
 typedef struct {
-	msgqueue *q;
+	msgqueue q;
 	uint8_t sourcenum;
 	strarray topics;
 	uint8_t *msgnums;
@@ -38,5 +40,7 @@ typedef struct {
 	bool dumpall;
 } mqtt_queue_map;
 
+bool mqtt_init_queue_map(mqtt_queue_map *qm, const int entries);
+void mqtt_destroy_queue_map(mqtt_queue_map *qm);
 //! @}
 #endif

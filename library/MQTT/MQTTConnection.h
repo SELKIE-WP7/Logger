@@ -1,14 +1,11 @@
-#ifndef SELKIELoggerMQTT_Messages
-#define SELKIELoggerMQTT_Messages
+#ifndef SELKIELoggerMQTT_Connection
+#define SELKIELoggerMQTT_Connection
 
 #include <stdbool.h>
 #include <mosquitto.h>
 
 #include "SELKIELoggerBase.h"
 #include "MQTTTypes.h"
-
-typedef struct mosquitto mqtt_conn;
-
 
 mqtt_conn *mqtt_openConnection(const char *host, const int port, mqtt_queue_map *qm);
 void mqtt_closeConnection(mqtt_conn *conn);

@@ -31,7 +31,7 @@ void *net_setup(void *ptargs) {
 }
 
 /*!
- * Reads messages from the serial connection established by net_setup(), and pushes them to the queue.
+ * Reads messages from the connection established by net_setup(), and pushes them to the queue.
  * As messages are already in the right format, no further processing is done here.
  *
  * @param ptargs Pointer to log_thread_args_t

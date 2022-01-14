@@ -17,7 +17,7 @@
  *
  * @{
  */
-//! Serial device specific parameters
+//! Network device specific parameters
 typedef struct {
 	char *sourceName; //!< User defined name for this source
 	uint8_t sourceNum; //!< Source ID for messages

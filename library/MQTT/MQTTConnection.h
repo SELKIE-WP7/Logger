@@ -2,7 +2,6 @@
 #define SELKIELoggerMQTT_Connection
 
 #include <stdbool.h>
-#include <mosquitto.h>
 
 #include "SELKIELoggerBase.h"
 #include "MQTTTypes.h"

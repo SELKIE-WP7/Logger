@@ -6,7 +6,14 @@
 
 bool mqtt_init_queue_map(mqtt_queue_map *qm, const int entries) {
 	queue_init(&qm->q);
-	sa_init(&qm->topics, entries);
+	if (!sa_init(&qm->topics, entries)) {
+		return false;
+	}
+
+	if (!sa_init(&qm->names, entries)) {
+		sa_destroy(&qm->topics);
+		return false;
+	}
 
 	qm->msgnums = calloc(entries, sizeof(uint8_t));
 	if (qm->msgnums == NULL) {
@@ -26,6 +33,7 @@ bool mqtt_init_queue_map(mqtt_queue_map *qm, const int entries) {
 
 void mqtt_destroy_queue_map(mqtt_queue_map *qm) {
 	sa_destroy(&qm->topics);
+	sa_destroy(&qm->names);
 	free(qm->msgnums);
 	free(qm->msgtext);
 }

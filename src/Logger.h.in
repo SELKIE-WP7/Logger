@@ -15,6 +15,7 @@
 
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerGPS.h"
+#include "SELKIELoggerMQTT.h"
 #include "SELKIELoggerNMEA.h"
 #include "SELKIELoggerI2C.h"
 
@@ -108,6 +109,7 @@ typedef bool (*dc_parser)(log_thread_args_t *, config_section *);
 
 #include "LoggerGPS.h"
 #include "LoggerMP.h"
+#include "LoggerMQTT.h"
 #include "LoggerNet.h"
 #include "LoggerNMEA.h"
 #include "LoggerI2C.h"

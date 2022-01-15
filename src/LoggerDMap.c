@@ -11,6 +11,7 @@ struct dmap dmap[] = {
 	{"I2C", &i2c_getCallbacks, &i2c_parseConfig},
 	{"NMEA", &nmea_getCallbacks, &nmea_parseConfig},
 	{"MP", &mp_getCallbacks, &mp_parseConfig},
+	{"MQTT", &mqtt_getCallbacks, &mqtt_parseConfig},
 	{"SL", &mp_getCallbacks, &mp_parseConfig},
 	{"SERIAL", &rx_getCallbacks, &rx_parseConfig},
 	{"NET", &net_getCallbacks, &net_parseConfig},

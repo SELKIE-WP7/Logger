@@ -54,12 +54,21 @@ bool mqtt_subscribe_batch(mqtt_conn *conn, strarray *topics) {
 		topStr[i] = topics->strings[i].data;
 	}
 
-	int subsMID = 0; // Callback message ID, set by mosquitto lib
-	if (mosquitto_subscribe_multiple(conn, &subsMID, nTopics, topStr, 0, 0, NULL) != MOSQ_ERR_SUCCESS) {
+#if LIBMOSQUITTO_VERSION_NUMBER > 1006000
+	if (mosquitto_subscribe_multiple(conn, NULL, nTopics, topStr, 0, 0, NULL) != MOSQ_ERR_SUCCESS) {
 		perror("mqtt_subscribe_batch:mosquitto");
 		free(topStr);
 		return false;
 	}
+#else
+	for (int i=0; i < nTopics; i++) {
+		if(mosquitto_subscribe(conn, NULL, topStr[i], 0) != MOSQ_ERR_SUCCESS) {
+			perror("mqtt_subscribe_batch:mosquitto");
+			free(topStr);
+			return false;
+		}
+	}
+#endif
 
 	free(topStr);
 	return true;

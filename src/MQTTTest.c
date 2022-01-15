@@ -22,8 +22,8 @@ int main(int argc, char *argv[]) {
 	state.verbose = 1;
 
         char *usage =  "Usage: %1$s -h host -p port topic [topic ...]\n"
-                "\t-h\tIncrease verbosity\n"
-		"\t-p\tDecrease verbosity\n"
+                "\t-h\tMQTT Broker Host name\n"
+		"\t-p\tMQTT Broker port\n"
                 "\nVersion: " GIT_VERSION_STRING "\n";
 
 	char *host = NULL;
@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
 	if (doUsage) {
 		log_error(&state, "Invalid options provided");
 		fprintf(stderr, usage, argv[0]);
+		return -1;
 	}
 
 	if (host == NULL) {
@@ -103,6 +104,8 @@ int main(int argc, char *argv[]) {
 	sigaction(SIGINT, &saShutdown, NULL);
 	sigaction(SIGQUIT, &saShutdown, NULL);
 	sigaction(SIGRTMIN + 1, &saShutdown, NULL);
+
+	log_info(&state, 1, "Starting message loop...");
 
 	while (!shutdown) {
 		msg_t *in = NULL;

@@ -24,15 +24,17 @@ int main(int argc, char *argv[]) {
         char *usage =  "Usage: %1$s -h host -p port topic [topic ...]\n"
                 "\t-h\tMQTT Broker Host name\n"
 		"\t-p\tMQTT Broker port\n"
+		"\t-v\tDump all messages\n"
                 "\nVersion: " GIT_VERSION_STRING "\n";
 
 	char *host = NULL;
 	int port = 0;
+	bool dumpAll = false;
 
         opterr = 0; // Handle errors ourselves
         int go = 0;
 	bool doUsage = false;
-        while ((go = getopt(argc, argv, "h:p:")) != -1) {
+        while ((go = getopt(argc, argv, "h:p:v")) != -1) {
                 switch(go) {
                         case 'h':
 				if (host) {
@@ -48,6 +50,9 @@ int main(int argc, char *argv[]) {
 					log_error(&state, "Invalid port number (%s)", optarg);
 					doUsage = true;
 				}
+				break;
+			case 'v':
+				dumpAll = true;
 				break;
 			case '?':
 				log_error(&state, "Unknown option `-%c'", optopt);
@@ -77,16 +82,20 @@ int main(int argc, char *argv[]) {
 	}
 
 	mqtt_queue_map qm = {0};
-	mqtt_init_queue_map(&qm, remaining);
+	mqtt_init_queue_map(&qm);
 	for (int t=0; t < remaining; t++) {
-		sa_create_entry(&qm.topics, t, strlen(argv[optind+t]), argv[optind+t]);
-		qm.msgnums[t] = 4 + t;
-		qm.msgtext[t] = true;
+		qm.numtopics++;
+		qm.tc[t].type = 4 + t;
+		qm.tc[t].topic = strdup(argv[optind + t]);
+		qm.tc[t].name = strdup(argv[optind + t]);
+		qm.tc[t].text = true;
 	}
+
+	qm.dumpall = dumpAll;
 
 	log_info(&state, 1, "Connecting to %s:%d...", host, port);
 	mqtt_conn *mc = mqtt_openConnection(host, port, &qm);
-	if (!mqtt_subscribe_batch(mc, &(qm.topics))) {
+	if (!mqtt_subscribe_batch(mc, &qm)) {
 		log_error(&state, "Unable to subscribe to topics");
 		return EXIT_FAILURE;
 	}
@@ -113,7 +122,7 @@ int main(int argc, char *argv[]) {
 		if (in == NULL) {
 			continue;
 		}
-		log_info(&state, 1, "[0x%02x] %s - %s", in->type, qm.topics.strings[in->type-4].data, in->data.string.data);
+		log_info(&state, 1, "[0x%02x] %s - %s", in->type, in->type >= 4 ? qm.tc[in->type-4].name : "RAW", in->data.string.data);
 		msg_destroy(in);
 		free(in);
 	}

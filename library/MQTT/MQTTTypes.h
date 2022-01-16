@@ -17,17 +17,23 @@
 
 typedef struct mosquitto mqtt_conn;
 
+//! MQTT Topic mapping
+typedef struct {
+	uint8_t type;
+	char *topic;
+	char *name;
+	bool text;
+} mqtt_topic_config;
+
 typedef struct {
 	msgqueue q;
-	uint8_t sourcenum;
-	strarray topics;
-	strarray names;
-	uint8_t *msgnums;
-	bool *msgtext;
+	uint8_t sourceNum;
+	int numtopics;
+	mqtt_topic_config tc[120];
 	bool dumpall;
 } mqtt_queue_map;
 
-bool mqtt_init_queue_map(mqtt_queue_map *qm, const int entries);
+bool mqtt_init_queue_map(mqtt_queue_map *qm);
 void mqtt_destroy_queue_map(mqtt_queue_map *qm);
 //! @}
 #endif

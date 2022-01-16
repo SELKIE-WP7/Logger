@@ -4,7 +4,6 @@
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerMQTT.h"
 
-
 //! MQTT source specific parameters
 typedef struct {
 	char *sourceName; //!< User defined name for this source

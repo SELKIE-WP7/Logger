@@ -49,6 +49,8 @@
 
 #define SLSOURCE_EXT	0x60 //!< External data sources recorded but not interpreted by the logging software
 
+#define SLSOURCE_MQTT	0x68 //!< MQTT derived data
+
 #define SLSOURCE_MP	0x70 //!< Devices with suitable MessagePack output returning single value channels
 #define SLSOURCE_IMU	SLSOURCE_MP //!< IMUs (e.g. SURFTEC IMU devices). Alias for SLSOURCE_MP
 

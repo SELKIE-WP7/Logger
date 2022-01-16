@@ -42,56 +42,42 @@ void mqtt_closeConnection(mqtt_conn *conn) {
 	mosquitto_destroy(conn);
 }
 
-bool mqtt_subscribe_batch(mqtt_conn *conn, strarray *topics) {
-	const int nTopics = topics->entries;
-	char **topStr = calloc(sizeof(char *), nTopics);
+bool mqtt_subscribe_batch(mqtt_conn *conn, mqtt_queue_map *qm) {
+#if LIBMOSQUITTO_VERSION_NUMBER > 1006000
+	char **topStr = calloc(sizeof(char *), qm->numtopics);
 	if (topStr == NULL) {
 		perror("mqtt_subscribe_batch:topStr");
 		return false;
 	}
-	for (int i=0; i < nTopics; i++) {
+	for (int i=0; i < qm->numtopics; i++) {
 		// Essentially, assemble topStr as an array of classical char * strings
-		topStr[i] = topics->strings[i].data;
+		topStr[i] = qm->tc[i].topic;
 	}
 
-#if LIBMOSQUITTO_VERSION_NUMBER > 1006000
-	if (mosquitto_subscribe_multiple(conn, NULL, nTopics, topStr, 0, 0, NULL) != MOSQ_ERR_SUCCESS) {
+	if ((mosquitto_subscribe_multiple(conn, NULL, qm->numtopics, topStr, 0, 0, NULL)) != MOSQ_ERR_SUCCESS) {
 		perror("mqtt_subscribe_batch:mosquitto");
 		free(topStr);
 		return false;
 	}
+	free(topStr);
 #else
-	for (int i=0; i < nTopics; i++) {
-		if(mosquitto_subscribe(conn, NULL, topStr[i], 0) != MOSQ_ERR_SUCCESS) {
+	for (int i=0; i < qm->numtopics; i++) {
+		if(mosquitto_subscribe(conn, NULL, qm->tc[i].topic, 0) != MOSQ_ERR_SUCCESS) {
 			perror("mqtt_subscribe_batch:mosquitto");
-			free(topStr);
 			return false;
 		}
 	}
 #endif
 
-	free(topStr);
 	return true;
 }
 
 void mqtt_enqueue_messages(mqtt_conn *conn, void *userdat_qm, const struct mosquitto_message *inmsg) {
 	mqtt_queue_map *qm = (mqtt_queue_map *) (userdat_qm);
-	/*
-	 * inmsg->topic, inmsg->payload?
-	 * Find index of topic in the map
-	 * Get type ID from corresponding index of typenums list
-	 * Create msg_t and add to queue
-	 *
-typedef struct {
-	queue *q;
-	uint8_t sourcenum;
-	strarray *topics;
-	uint8_t *msgnums;
-} mqtt_queue_map;
-	 */
+
 	int ix= -1;
-	for (int m=0; m < qm->topics.entries; m++) {
-		if (strncasecmp(inmsg->topic, qm->topics.strings[m].data, qm->topics.strings[m].length) == 0) {
+	for (int m=0; m < qm->numtopics; m++) {
+		if (strcasecmp(inmsg->topic, qm->tc[m].topic) == 0) {
 			// Found it!
 			ix = m;
 			break;
@@ -112,15 +98,15 @@ typedef struct {
 			return;
 		}
 		snprintf(mqstr, msglen, "%s: %s", inmsg->topic, (char *)inmsg->payload);
-		out = msg_new_string(qm->sourcenum, SLCHAN_RAW, msglen, mqstr);
+		out = msg_new_string(qm->sourceNum, SLCHAN_RAW, msglen, mqstr);
 		free(mqstr);
 	} else {
 		// This message is needed and has an allocated channel number
-		if (qm->msgtext[ix]) {
-			out = msg_new_string(qm->sourcenum, qm->msgnums[ix], inmsg->payloadlen, inmsg->payload);
+		if (qm->tc[ix].text) {
+			out = msg_new_string(qm->sourceNum, qm->tc[ix].type, inmsg->payloadlen, inmsg->payload);
 		} else {
 			float val = strtof(inmsg->payload, NULL);
-			out = msg_new_float(qm->sourcenum, qm->msgnums[ix], val);
+			out = msg_new_float(qm->sourceNum, qm->tc[ix].type, val);
 		}
 	}
 	if (!queue_push(&qm->q, out)) {

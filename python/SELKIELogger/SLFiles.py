@@ -5,7 +5,6 @@ from numpy import nan
 
 from .SLMessages import IDs, SLMessage, SLMessageSink
 log = logging.getLogger(__name__)
-
 class VarFile:
     """! Represent a channel mapping (.var) file, caching information as necessary """
     def __init__(self, filename):
@@ -66,6 +65,25 @@ class DatFile:
             log.warning("Overriding existing source map")
         self._sm = sm
 
+    @staticmethod
+    def tryParse(value):
+        try:
+            x = float(value)
+            return x
+        except ValueError:
+            pass
+
+        try:
+            import json
+            x = json.loads(value, parse_int=float, parse_constant=float)
+            if len(x) == 1:
+                return float(x.popitem()[1])
+            elif "value" in x:
+                return float(x["value"])
+        except:
+            return nan
+
+
     def prepConverters(self, force=False, includeTS=False):
         if self._fields and not force:
             log.debug("Returning cached converters")
@@ -86,7 +104,7 @@ class DatFile:
                     if cid > IDs.SLCHAN_TSTAMP and chan != "":
                         fields[src][cid] = [[f"{chan}:0x{src:02x}"], [lambda x: x.Data]]
                     cid += 1
-            elif src >= IDs.SLSOURCE_GPS and src < (IDs.SLSOURCE_GPS + 0x10):
+            elif src in range(IDs.SLSOURCE_GPS, IDs.SLSOURCE_GPS + 0x10):
                 cid = 0
                 for chan in list(self._sm[src]):
                     if cid == IDs.SLCHAN_TSTAMP:
@@ -119,10 +137,25 @@ class DatFile:
                     else:
                         fields[src][cid] = [[f"{chan}:0x{src:02x}"], [lambda x: x.Data]]
                         cid += 1
+            elif src in range(IDs.SLSOURCE_MQTT, IDs.SLSOURCE_MQTT + 0x07):
+                cid = 0
+                for chan in list(self._sm[src]):
+                    if cid in [IDs.SLCHAN_NAME, IDs.SLCHAN_MAP]:
+                        cid += 1
+                        continue
+                    elif chan == "":
+                        cid += 1
+                        continue
+                    elif cid == IDs.SLCHAN_TSTAMP:
+                        fields[src][cid] = [[f"Timestamp:0x{src:02x}"], [lambda x: x.Data]]
+                        cid += 1
+                    else:
+                        fields[src][cid] =[[f"{chan}:0x{src:02x}"], [lambda x: self.tryParse(x.Data)]]
+                        cid += 1
             elif src in simpleSources:
                 cid = 0
                 for chan in list(self._sm[src]):
-                    if cid in [IDs.SLCHAN_NAME, IDs.SLCHAN_MAP, IDs.SLCHAN_RAW]:
+                    if cid in [IDs.SLCHAN_NAME, IDs.SLCHAN_MAP]:#, IDs.SLCHAN_RAW]:
                         cid += 1
                         continue
                     elif chan == "":

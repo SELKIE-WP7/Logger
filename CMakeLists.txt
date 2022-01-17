@@ -47,7 +47,8 @@ endif()
 
 add_subdirectory(library)
 add_subdirectory(ext)
-add_subdirectory(src)
+add_subdirectory(logger)
+add_subdirectory(utils)
 
 enable_testing()
 add_subdirectory(tests)

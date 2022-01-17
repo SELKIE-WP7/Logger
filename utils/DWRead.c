@@ -107,6 +107,11 @@ int main(int argc, char *argv[]) {
 						break;
 					}
 					// TODO: print cycdata
+					for (int c=0; c < 18; c++) {
+						fprintf(stdout, "%04x%c", cycdata[c], c == 17 ? '\n' : ' ');
+					}
+					fprintf(stdout, "\n");
+
 					uint8_t sysWord = (cycdata[1] & 0xF000) >> 12;
 					fprintf(stdout, "Cyclic data collected, containing system data word 0x%02x\n", sysWord);
 					sysdata[sysWord] = (cycdata[1] & 0x0FFF);
@@ -121,7 +126,11 @@ int main(int argc, char *argv[]) {
 						}
 					}
 					if (count == 16) {
-						fprintf(stdout, "System data found\n");
+						fprintf(stdout, "System data found:\n");
+						for (int s=0; s < 16; s++) {
+							fprintf(stdout, "%04x%c", sysdata[s], s == 15 ? '\n' : ' ');
+						}
+						fprintf(stdout, "\n");
 						memset(&sysdata, 0, 16*sizeof(uint16_t));
 					}
 

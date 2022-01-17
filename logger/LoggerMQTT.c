@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include "Logger.h"
 #include "LoggerMQTT.h"
 
@@ -35,7 +37,20 @@ void *mqtt_logging(void *ptargs) {
 	mqtt_params *mqttInfo = (mqtt_params *) args->dParams;
 	log_info(args->pstate, 1, "[MQTT:%s] Logging thread started", args->tag);
 
+	time_t lastKA = 0;
+	uint16_t count = 0; // Unsigned so that it wraps around
 	while (!shutdownFlag) {
+		if (mqttInfo->victron_keepalives && (count % 1000) == 0) {
+			time_t now = time(NULL);
+			if ((now - lastKA) > 30) {
+				lastKA = now;
+				if (!mqtt_victron_keepalive(mqttInfo->conn, &(mqttInfo->qm), mqttInfo->sysid)) {
+					log_warning(args->pstate, "[MQTT:%s] Error sending keepalive message", args->tag);
+				}
+			}
+		}
+		count++;
+
 		msg_t *in = NULL;
 		in = queue_pop(&mqttInfo->qm.q);
 		if (in == NULL) {
@@ -64,6 +79,10 @@ void *mqtt_shutdown(void *ptargs) {
 	if (mqttInfo->sourceName) {
 		free(mqttInfo->sourceName);
 		mqttInfo->sourceName = NULL;
+	}
+	if (mqttInfo->sysid) {
+		free(mqttInfo->sysid);
+		mqttInfo->sysid = NULL;
 	}
 	return NULL;
 }
@@ -123,6 +142,8 @@ mqtt_params mqtt_getParams() {
 		.sourceNum = 0x68,
 		.addr = NULL,
 		.port = 1883,
+		.victron_keepalives = false,
+		.sysid = NULL,
 		.conn = NULL,
 		.qm = {{0}},
 	};
@@ -175,6 +196,19 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 				}
 			}
 			mqtt->qm.sourceNum = mqtt->sourceNum;
+		} else if (strcasecmp(t->key, "victron_keepalives") == 0) {
+			int tmp = config_parse_bool(t->value);
+			if (tmp < 0) {
+				log_error(lta->pstate, "[MQTT:%s] Invalid value provided for 'victron_keepalives': %s", lta->tag, t->value);
+				return false;
+			}
+			mqtt->victron_keepalives = (tmp > 0);
+		} else if (strcasecmp(t->key, "sysid") == 0) {
+			if (mqtt->sysid != NULL) {
+				log_error(lta->pstate, "[MQTT:%s] Only a single system ID is supported for Victron keepalive messages", lta->tag);
+				return false;
+			}
+			mqtt->sysid = strdup(t->value);
 		} else if (strcasecmp(t->key, "dumpall") == 0) {
 			int tmp = config_parse_bool(t->value);
 			if (tmp < 0) {
@@ -211,6 +245,14 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 		}
 	}
 
+	if (mqtt->qm.numtopics < 1) {
+		log_error(lta->pstate, "[MQTT:%s] Must provide at least one topic to log", lta->tag);
+		return false;
+	}
+	if (mqtt->victron_keepalives && mqtt->sysid == NULL) {
+		log_error(lta->pstate, "[MQTT:%s] Must provide a system ID if enabling Victron-style keepalive messages", lta->tag);
+		return false;
+	}
 	lta->dParams = mqtt;
 	return true;
 }

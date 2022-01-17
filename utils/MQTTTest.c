@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <signal.h>
+#include <time.h>
 #include <unistd.h>
 #include <version.h>
 
@@ -21,20 +22,24 @@ int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
 
-        char *usage =  "Usage: %1$s -h host -p port topic [topic ...]\n"
+        char *usage =  "Usage: %1$s [-h host] [-p port] [-k sysid] topic [topic ...]\n"
                 "\t-h\tMQTT Broker Host name\n"
 		"\t-p\tMQTT Broker port\n"
+		"\t-k sysid\tEnable Victron compatible keepalive messages/requests for given system ID\n"
 		"\t-v\tDump all messages\n"
+		"\nDefaults equivalent to %1$s -h localhost -p 1883\n"
                 "\nVersion: " GIT_VERSION_STRING "\n";
 
 	char *host = NULL;
 	int port = 0;
 	bool dumpAll = false;
+	bool keepalive = false;
+	char *sysid = NULL;
 
         opterr = 0; // Handle errors ourselves
         int go = 0;
 	bool doUsage = false;
-        while ((go = getopt(argc, argv, "h:p:v")) != -1) {
+        while ((go = getopt(argc, argv, "h:k:p:v")) != -1) {
                 switch(go) {
                         case 'h':
 				if (host) {
@@ -50,6 +55,10 @@ int main(int argc, char *argv[]) {
 					log_error(&state, "Invalid port number (%s)", optarg);
 					doUsage = true;
 				}
+				break;
+			case 'k':
+				keepalive = true;
+				sysid = strdup(optarg);
 				break;
 			case 'v':
 				dumpAll = true;
@@ -116,10 +125,22 @@ int main(int argc, char *argv[]) {
 
 	log_info(&state, 1, "Starting message loop...");
 
+	time_t lastKA = 0;
+	uint16_t count = 0;
 	while (!shutdown) {
+		if (keepalive && (count % 100) == 0) {
+			time_t now = time(NULL);
+			if ((now - lastKA) >= 60) {
+				lastKA = now;
+				mqtt_victron_keepalive(mc, &qm, sysid);
+			}
+		}
+		count++;
+
 		msg_t *in = NULL;
 		in = queue_pop(&qm.q);
 		if (in == NULL) {
+			usleep(5E-2);
 			continue;
 		}
 		log_info(&state, 1, "[0x%02x] %s - %s", in->type, in->type >= 4 ? qm.tc[in->type-4].name : "RAW", in->data.string.data);

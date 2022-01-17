@@ -10,4 +10,5 @@ mqtt_conn *mqtt_openConnection(const char *host, const int port, mqtt_queue_map 
 void mqtt_closeConnection(mqtt_conn *conn);
 bool mqtt_subscribe_batch(mqtt_conn *conn, mqtt_queue_map *qm);
 void mqtt_enqueue_messages(mqtt_conn *conn, void *userdat_qm, const struct mosquitto_message *inmsg);
+bool mqtt_victron_keepalive(mqtt_conn *conn, mqtt_queue_map *qm, char *sysid);
 #endif

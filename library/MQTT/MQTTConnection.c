@@ -7,6 +7,10 @@
 #include "SELKIELoggerBase.h"
 
 mqtt_conn *mqtt_openConnection(const char *host, const int port, mqtt_queue_map *qm) {
+	if (host == NULL || qm == NULL || port < 0) {
+		return NULL;
+	}
+
 	if (mosquitto_lib_init() != MOSQ_ERR_SUCCESS) {
 		perror("mosquitto_lib_init");
 		return NULL;
@@ -43,6 +47,9 @@ void mqtt_closeConnection(mqtt_conn *conn) {
 }
 
 bool mqtt_subscribe_batch(mqtt_conn *conn, mqtt_queue_map *qm) {
+	if (conn == NULL || qm == NULL) {
+		return false;
+	}
 #if LIBMOSQUITTO_VERSION_NUMBER > 1006000
 	char **topStr = calloc(sizeof(char *), qm->numtopics);
 	if (topStr == NULL) {
@@ -114,4 +121,65 @@ void mqtt_enqueue_messages(mqtt_conn *conn, void *userdat_qm, const struct mosqu
 		return;
 	}
 	return;
+}
+
+bool mqtt_victron_keepalive(mqtt_conn *conn, mqtt_queue_map *qm, char *sysid) {
+	if (sysid == NULL || qm == NULL || conn == NULL) {
+		return false;
+	}
+	// R/<sysid>/keepalive
+	const size_t toplen = strlen(sysid) + 13;
+	char *topic = calloc(toplen, sizeof(char));
+	if (topic == NULL) {
+		perror("mqtt_victron_keepalive:topic");
+		return false;
+	}
+	if (snprintf(topic, toplen, "R/%s/keepalive", sysid) < 0) {
+		free(topic);
+		return false;
+	}
+
+	const size_t prefixlen = 3 + strlen(sysid); // + 3 as looking for "N/<sysid>/"
+	size_t payloadlen = 3; // [ + ] + \0
+	for (int t = 0; t < qm->numtopics; t++) {
+		payloadlen += strlen(qm->tc[t].topic) + 4; // topic + quotes + , + space
+	}
+
+	char *payload = calloc(payloadlen, sizeof(char));
+	for (int t = 0; t < qm->numtopics; t++) {
+		char *tmp = strdup(payload);
+		char *target = NULL;
+		if (strlen(qm->tc[t].topic) > (prefixlen + 1) ) { // Need prefix and <at least one char>
+			target = &(qm->tc[t].topic[prefixlen]);
+		} else {
+			target = qm->tc[t].topic;
+		}
+		if (snprintf(payload, payloadlen, "%s%s\"%s\"", tmp, (t == 0 ? "[" : ", "), target) < 0 ) {
+			perror("mqtt_victron_keepalive:payload");
+			free(tmp);
+			free(payload);
+			free(topic);
+			return false;
+		}
+		free(tmp);
+	}
+	char *tmp = strdup(payload);
+	if (snprintf(payload, payloadlen, "%s]", tmp) < 0) {
+			perror("mqtt_victron_keepalive:payload-end");
+			free(tmp);
+			free(payload);
+			free(topic);
+			return false;
+	}
+	free(tmp);
+	tmp = NULL;
+
+	int rc = mosquitto_publish(conn, NULL, topic, strlen(payload), payload, 0, false);
+	if (rc != MOSQ_ERR_SUCCESS) {
+		perror("mqtt_victron_keepalive:publish");
+		free(payload);
+		free(topic);
+		return false;
+	}
+	return true;
 }

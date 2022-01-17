@@ -1,6 +1,9 @@
 #ifndef SL_LOGGER_MQTT_H
 #define SL_LOGGER_MQTT_H
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerMQTT.h"
 
@@ -10,6 +13,8 @@ typedef struct {
 	uint8_t sourceNum; //!< Source ID for messages
 	char *addr; //!< Target host
 	int port; //!< Target port number
+	bool victron_keepalives; //!< Victron compatible keep alives
+	char *sysid; //!< Portal/System ID for use with victron_keepalive
 	mqtt_conn *conn; //!< Connection
 	mqtt_queue_map qm; //!< Topic mapping
 } mqtt_params;

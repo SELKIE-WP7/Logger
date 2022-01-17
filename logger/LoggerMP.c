@@ -53,6 +53,11 @@ void *mp_logging(void *ptargs) {
 			}
 
 			if (out->type == SLCHAN_NAME) {
+				if (out->dtype != MSG_STRING) {
+					log_warning(args->pstate, "[MP:%s] Unexpected message type (0x%02x) for source name (Source ID: 0x{%02x})", args->tag, out->dtype, out->source);
+					continue;
+				}
+
 				if (mpInfo->csource > 0 && mpInfo->csource != out->source) {
 					log_warning(args->pstate, "[MP:%s] Received source ID (0x%02x) does not match cached value (0x%02x) - multiple devices on a single input not currently supported!", args->tag, out->source, mpInfo->csource);
 				}

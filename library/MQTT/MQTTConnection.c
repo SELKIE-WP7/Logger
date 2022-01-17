@@ -90,7 +90,7 @@ void mqtt_enqueue_messages(mqtt_conn *conn, void *userdat_qm, const struct mosqu
 			break;
 		}
 	}
-
+	if (inmsg->payloadlen == 0) { return; } // Don't queue zero sized messages
 	msg_t *out = NULL;
 	if (ix < 0) {
 		// Not a message we want

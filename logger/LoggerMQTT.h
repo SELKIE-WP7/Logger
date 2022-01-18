@@ -14,6 +14,7 @@ typedef struct {
 	char *addr; //!< Target host
 	int port; //!< Target port number
 	bool victron_keepalives; //!< Victron compatible keep alives
+	int keepalive_interval; //!< Interval between keepalives
 	char *sysid; //!< Portal/System ID for use with victron_keepalive
 	mqtt_conn *conn; //!< Connection
 	mqtt_queue_map qm; //!< Topic mapping

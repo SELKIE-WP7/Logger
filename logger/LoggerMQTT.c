@@ -40,9 +40,9 @@ void *mqtt_logging(void *ptargs) {
 	time_t lastKA = 0;
 	uint16_t count = 0; // Unsigned so that it wraps around
 	while (!shutdownFlag) {
-		if (mqttInfo->victron_keepalives && (count % 1000) == 0) {
+		if (mqttInfo->victron_keepalives && (count % 200) == 0) { // Check ~ every 10 seconds
 			time_t now = time(NULL);
-			if ((now - lastKA) > 30) {
+			if ((now - lastKA) >= mqttInfo->keepalive_interval) {
 				lastKA = now;
 				if (!mqtt_victron_keepalive(mqttInfo->conn, &(mqttInfo->qm), mqttInfo->sysid)) {
 					log_warning(args->pstate, "[MQTT:%s] Error sending keepalive message", args->tag);
@@ -143,6 +143,7 @@ mqtt_params mqtt_getParams() {
 		.addr = NULL,
 		.port = 1883,
 		.victron_keepalives = false,
+		.keepalive_interval = 30,
 		.sysid = NULL,
 		.conn = NULL,
 		.qm = {{0}},
@@ -209,6 +210,14 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 				return false;
 			}
 			mqtt->sysid = strdup(t->value);
+		} else if (strcasecmp(t->key, "keepalive_interval") == 0) {
+			errno = 0;
+			int ki = strtol(t->value, NULL, 0);
+			if (errno) {
+				log_error(lta->pstate, "[MQTT:%s] Error parsing keepalive interval: %s", lta->tag, strerror(errno));
+				return false;
+			}
+			mqtt->keepalive_interval = ki;
 		} else if (strcasecmp(t->key, "dumpall") == 0) {
 			int tmp = config_parse_bool(t->value);
 			if (tmp < 0) {

@@ -200,7 +200,6 @@ int main(int argc, char *argv[]) {
 		mon_nextyday = mon_yday;
 	}
 
-
 	errno = 0;
 	log_info(&state, 1, "Using %s as output file prefix", go.dataPrefix);
 	go.monitorFile = openSerialNumberedFile(go.dataPrefix, "dat", &go.monFileStem);
@@ -509,7 +508,26 @@ int main(int argc, char *argv[]) {
 	signalHandlersUnblock();
 
 	//! Number of successfully handled messages
-	int msgCount = 0; 
+	int msgCount = 0;
+
+	//! Per-source, Per-channel message counts
+	channel_stats stats[128][128] = {0};
+
+	//! Last 'tick' / timestamp value seen
+	uint32_t lastTimestamp = 0;
+
+	//! Last statefile save time
+	time_t lastSave = 0;
+
+	if (go.saveState) {
+		errno = 0;
+		if (!write_state_file(go.stateName, stats, lastTimestamp)) {
+			log_error(&state, "Unable to write out state file: %s", strerror(errno));
+			return -1;
+		}
+	}
+	lastSave = time(NULL);
+
 	//! Loop count. Used to avoid checking e.g. date on every iteration
 	unsigned int loopCount = 0;
 	while (!shutdownFlag) {
@@ -577,6 +595,17 @@ int main(int argc, char *argv[]) {
 				 * otherwise this check needs to be moved out a level
 				 */
 				fflush(NULL);
+				if (go.saveState) {
+					time_t now = time(NULL);
+					if ((now - lastSave) > 60) {
+						errno = 0;
+						if (!write_state_file(go.stateName, stats, lastTimestamp)) {
+							log_error(&state, "Unable to write out state file: %s", strerror(errno));
+							return -1;
+						}
+						lastSave = now;
+					}
+				}
 				loopCount = 0;
 			}
 		}
@@ -702,6 +731,14 @@ int main(int argc, char *argv[]) {
 		if (res->type == SLCHAN_MAP || res->type == SLCHAN_NAME) {
 			mp_writeMessage(fileno(go.varFile), res);
 		}
+
+		if (res->type == SLCHAN_TSTAMP && res->source == 0x02) {
+			lastTimestamp = res->data.timestamp;
+		}
+
+		stats[res->source][res->type].count++;
+		stats[res->source][res->type].lastTimestamp = lastTimestamp;
+
 		msg_destroy(res);
 		free(res);
 	}
@@ -831,4 +868,19 @@ void destroy_global_opts(struct global_opts *go) {
 
 	go->monitorFile = NULL;
 	go->varFile = NULL;
+}
+
+bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS) {
+	FILE *stateFile = fopen(sFName, "w");
+	if (stateFile == NULL) { return false;}
+	fprintf(stateFile, "%u\n", lTS);
+	for (int s = 0; s < 128; s++) {
+		for (int c = 0; c < 128; c++) {
+			if (stats[s][c].count > 0) {
+				fprintf(stateFile, "0x%02x,0x%02x,%u,%u\n", s, c, stats[s][c].count, stats[s][c].lastTimestamp);
+			}
+		}
+	}
+	fclose(stateFile);
+	return true;
 }

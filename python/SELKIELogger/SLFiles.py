@@ -1,7 +1,7 @@
 import logging
 import msgpack
 import pandas as pd
-from numpy import nan
+import numpy as np
 
 from .SLMessages import IDs, SLMessage, SLMessageSink
 log = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ class DatFile:
             elif "value" in x:
                 return float(x["value"])
         except:
-            return nan
+            return np.nan
 
 
     def prepConverters(self, force=False, includeTS=False):
@@ -261,7 +261,7 @@ class DatFile:
 
             for x in ndf.columns:
                 if pd.api.types.is_numeric_dtype(ndf[x].dtype):
-                    ndf[x] = ndf[x].astype(pd.SparseDtype(ndf[x].dtype, nan))
+                    ndf[x] = ndf[x].astype(pd.SparseDtype(ndf[x].dtype, np.nan))
             if dropna:
                 ndf.dropna(how='all', inplace=True)
             if df is None:
@@ -272,3 +272,19 @@ class DatFile:
             log.debug(f"{count} steps processed ({pd.to_timedelta((df.index.max() - df.index.min()), unit='ms')})")
         df.index.name='Timestamp'
         return df
+
+class StateFile:
+    """! Represent a channel mapping (.var) file, caching information as necessary """
+    def __init__(self, filename):
+        self._fn = filename
+        self._sm = None
+        self._ts = 0
+        self._stats = None
+
+    def parse(self):
+        with open(self._fn) as sf:
+            self._ts = int(sf.readline())
+            cols = ["Source", "Channel", "Count", "Last"]
+            self._stats = pd.read_csv(sf, header=None, names = cols, index_col=["Source","Channel"], converters = {x: lambda z: int(z, base=0) for x in cols})
+        self._stats["SecondsAgo"] = (self._stats["Last"] - self._ts) / 1000
+        return self._stats

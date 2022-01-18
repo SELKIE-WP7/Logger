@@ -8,6 +8,7 @@
     <div class="navbar-header">
 	<ul class="nav nav-tabs">
 		<li><a href="/">Home</a></li>
+		<li><a href="{{url_for('.show_state')}}">Current State</a></li>
 		{% if g.ip %}
 		<li><a href="{{g.ext_url}}/data">Data</a></li>
 		{% endif %}

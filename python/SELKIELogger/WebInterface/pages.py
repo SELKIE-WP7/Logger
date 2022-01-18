@@ -65,11 +65,21 @@ def show_data():
 def download_file(fileName, fileFormat='raw'):
     if fileFormat == "raw":
         return Response(stream_data_file(os.path.join(current_app.config['DATA_PATH'], fileName)), mimetype="application/octet-stream", headers={'Content-Disposition': f'attachment, filename="{fileName}"'})
-    elif fileFormat == "csv":
-        from ..RaceTech import RTCSVExporter
-        rtcsv = RTCSVExporter(os.path.join(current_app.config['DATA_PATH'], fileName))
-        return Response(rtcsv.stream(), mimetype="text/csv", headers={'Content-Disposition': f'attachment, filename="{fileName.replace(".run",".csv")}"'})
+#    elif fileFormat == "csv":
+#        from ..RaceTech import RTCSVExporter
+#        rtcsv = RTCSVExporter(os.path.join(current_app.config['DATA_PATH'], fileName))
+#        return Response(rtcsv.stream(), mimetype="text/csv", headers={'Content-Disposition': f'attachment, filename="{fileName.replace(".run",".csv")}"'})
+    flash("Unsupported file format requested", "danger")
+    return redirect(url_for(".index"), 302)
 
+@pages.route("/state/")
+def show_state():
+    from ..SLFiles import StateFile
+    sf = StateFile(os.path.join(current_app.config['DATA_PATH'], current_app.config['STATE_NAME']))
+    stats = sf.parse()
+    g.stats = stats.to_records()
+    g.lastTS = sf._ts
+    return render_template("state.html")
 
 def get_run_files():
     files = []

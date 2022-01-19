@@ -1,5 +1,6 @@
 import logging
 import msgpack
+import os
 import pandas as pd
 import numpy as np
 
@@ -287,4 +288,15 @@ class StateFile:
             cols = ["Source", "Channel", "Count", "Last"]
             self._stats = pd.read_csv(sf, header=None, names = cols, index_col=["Source","Channel"], converters = {x: lambda z: int(z, base=0) for x in cols})
         self._stats["SecondsAgo"] = (self._stats["Last"] - self._ts) / 1000
+        self._stats["DateTime"] = self._stats["Last"].apply(self.to_clocktime).apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S"))
         return self._stats
+
+    def timestamp(self):
+        return self._ts
+
+    def to_clocktime(self, timestamp):
+        if self._ts is None:
+            return None
+        mtime = os.stat(self._fn).st_mtime
+        delta = (mtime - self._ts/1000)
+        return pd.to_datetime(timestamp/1000 + delta, unit='s')

@@ -78,7 +78,11 @@ def show_state():
     sf = StateFile(os.path.join(current_app.config['DATA_PATH'], current_app.config['STATE_NAME']))
     stats = sf.parse()
     g.stats = stats.to_records()
-    g.lastTS = sf._ts
+    g.lastTS = sf.timestamp()
+    g.lastDT = sf.to_clocktime(sf.timestamp()).strftime("%Y-%m-%d %H:%M:%S")
+    g.ip = get_ip()
+    g.ext_url = get_url()
+    g.name = current_app.config['DEVICE_NAME']
     return render_template("state.html")
 
 def get_run_files():

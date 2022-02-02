@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <math.h>
+
 #include "DWMessages.h"
 #include "DWTypes.h"
 
@@ -31,3 +33,39 @@ uint16_t dw_hxv_parity(const dw_hxv *in) {
 	return ((in->data[6] & 0x0F) << 8) + in->data[7];
 }
 
+bool dw_spectrum_from_array(const uint16_t *arr, dw_spectrum *out) {
+	if (arr == NULL || out == NULL) {
+		return false;
+	}
+
+	out->sysseq = (arr[1] & 0xF000) >> 12;
+	out->sysword = (arr[1] & 0x0FFF);
+
+	if ( dw_spectral_block(arr, 0, out) &&
+		dw_spectral_block(arr, 1, out) &&
+		dw_spectral_block(arr, 2, out) &&
+		dw_spectral_block(arr, 3, out)) {
+		return true;
+	}
+	return false;
+}
+
+bool dw_spectral_block(const uint16_t *arr, const int ix, dw_spectrum *out) {
+	out->frequencyBin[ix] = (arr[2 + 4 * ix] & 0x3F00) >> 8;
+	if (out->frequencyBin[ix] > 63) {
+		return false;
+	}
+
+	if (out->frequencyBin[ix] < 16) {
+		out->frequency[ix] = 0.025 + out->frequencyBin[ix] * 0.005;
+	} else {
+		out->frequency[ix] = 0.11 + out->frequencyBin[ix] * 0.01;
+	}
+	out->direction[ix] = (arr[2 + 4 * ix] & 0x00FF) * 360.0 / 256.0;
+	out->spread[ix] = 0.4476 * (((arr[4 + 4 * ix] & 0xFF00) >> 8) + ((arr[2 + 4 * ix] & 0xC000) >> 14) / 4.0);
+	out->rpsd[ix] = expf(-((float) (arr[3 + 4 * ix] & 0x00FF) / 200.0));
+	out->m2[ix] = ((arr[4 + 4 * ix] & 0x00FF) + ((arr[3 + 4 * ix] & 0xC000) >> 14) / 4.0 - 128) / 128;
+	out->n2[ix] = (((arr[5 + 4 * ix] & 0xFF00) >> 8) + ((arr[3 + 4 * ix] & 0x3000) >> 12) / 4.0 - 128) / 128;
+	out->checkFactor[ix] = (arr[5 + 4 * ix] & 0x00FF) / 100.0;
+	return true;
+}

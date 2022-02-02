@@ -81,6 +81,20 @@ typedef struct dw_hxv {
 	uint8_t data[8]; //!< 8 bytes of data
 } dw_hxv;
 
+typedef struct {
+	uint8_t sysseq; //!< System data sequence number
+	uint16_t sysword; //!< 12 bits of system data
+	uint8_t frequencyBin[4];
+	float frequency[4];
+	float spread[4];
+	float direction[4];
+	float rpsd[4];
+	float m2[4];
+	float n2[4];
+	float checkFactor[4];
+} dw_spectrum;
+
+
 //! Convert a string of hexadecimal characters to corresponding value
 bool hexpair_to_uint(const char *in, uint8_t *out);
 

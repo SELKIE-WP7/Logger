@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
 	uint16_t cycdata[20] = {0};
 	uint8_t cycCount = 0;
 
+	bool sdset[16] = {0};
 	uint16_t sysdata[16] = {0};
 
 	while (processing || hw > 25) {
@@ -90,7 +91,7 @@ int main(int argc, char *argv[]) {
 				// Read HXV
 				if (dw_string_hxv(buf, &end, &tmp)) {
 					cycdata[cycCount++] = dw_hxv_cycdat(&tmp);
-					fprintf(stdout, "N: %+.2f\tW: %+.2f\tV: %+.2f\n", dw_hxv_north(&tmp)/100.0, dw_hxv_west(&tmp)/100.0, dw_hxv_vertical(&tmp)/100.0);
+					fprintf(stdout, "[%d] N: %+.2f\tW: %+.2f\tV: %+.2f\n", tmp.status, dw_hxv_north(&tmp)/100.0, dw_hxv_west(&tmp)/100.0, dw_hxv_vertical(&tmp)/100.0);
 				}
 				if (cycCount > 18) {
 					bool syncFound = false;
@@ -112,25 +113,25 @@ int main(int argc, char *argv[]) {
 						memset(cycdata, 0, 20 * sizeof(cycdata[0]));
 						break;
 					}
-					// TODO: print cycdata
-					for (int c=0; c < 18; c++) {
-						fprintf(stdout, "%04x%c", cycdata[c], c == 17 ? '\n' : ' ');
-					}
-					fprintf(stdout, "\n");
 
-					uint8_t sysWord = (cycdata[1] & 0xF000) >> 12;
-					fprintf(stdout, "Cyclic data collected, containing system data word 0x%02x\n", sysWord);
-					sysdata[sysWord] = (cycdata[1] & 0x0FFF);
+					dw_spectrum ds = {0};
+					if (dw_spectrum_from_array(cycdata, &ds)) {
+						sysdata[ds.sysseq] = ds.sysword;
+						sdset[ds.sysseq] = true;
+					} else {
+						fprintf(stderr, "Failed to extract spectrum data\n");
+					}
 
 					uint8_t count = 0;
 					for (int i = 0; i < 16; ++i) {
-						if (sysdata[i]) {
+						if (sdset[i]) {
 							++count;
 						} else {
 							// First gap found, no point continuing to count
 							break;
 						}
 					}
+
 					if (count == 16) {
 						fprintf(stdout, "System data found:\n");
 						for (int s=0; s < 16; s++) {
@@ -138,6 +139,7 @@ int main(int argc, char *argv[]) {
 						}
 						fprintf(stdout, "\n");
 						memset(&sysdata, 0, 16*sizeof(uint16_t));
+						memset(&sdset, 0, 16*sizeof(bool));
 					}
 
 					cycdata[0] = cycdata[18];

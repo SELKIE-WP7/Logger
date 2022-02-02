@@ -93,17 +93,23 @@ int main(int argc, char *argv[]) {
 					fprintf(stdout, "N: %+.2f\tW: %+.2f\tV: %+.2f\n", dw_hxv_north(&tmp)/100.0, dw_hxv_west(&tmp)/100.0, dw_hxv_vertical(&tmp)/100.0);
 				}
 				if (cycCount > 18) {
+					bool syncFound = false;
 					for (int i = 0; i < cycCount; ++i) {
 						if (cycdata[i] == 0x7FFF) {
-							for (int j = 0; j < cycCount && (j+i) < 20; ++j) {
-								cycdata[j] = cycdata[j+i];
+							syncFound = true;
+							// fprintf(stderr, "Sync word found at %d/%d\n",  i, cycCount);
+							if (i > 0) {
+								for (int j = 0; j < cycCount && (j+i) < 20; ++j) {
+									cycdata[j] = cycdata[j+i];
+								}
+								cycCount = cycCount - i;
 							}
-							cycCount -= i;
 							break;
 						}
 					}
-					if (cycCount < 18) {
-						// Might have had a sync byte too close to the end
+					if (!syncFound) {
+						cycCount = 0;
+						memset(cycdata, 0, 20 * sizeof(cycdata[0]));
 						break;
 					}
 					// TODO: print cycdata
@@ -134,8 +140,10 @@ int main(int argc, char *argv[]) {
 						memset(&sysdata, 0, 16*sizeof(uint16_t));
 					}
 
-					memset(&cycdata, 0, 18*sizeof(uint16_t));
-					cycCount -= 18;
+					cycdata[0] = cycdata[18];
+					cycdata[1] = cycdata[19];
+					memset(&(cycdata[2]), 0, 18*sizeof(uint16_t));
+					cycCount = 2;
 
 				}
 				break;

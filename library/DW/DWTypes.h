@@ -91,9 +91,27 @@ typedef struct {
 	float rpsd[4];
 	float m2[4];
 	float n2[4];
-	float checkFactor[4];
+	float K[4];
 } dw_spectrum;
 
+typedef struct {
+	int number;
+	bool GPSfix;
+	float Hrms;
+	float fzero;
+	float PSD;
+	float refTemp;
+	float waterTemp;
+	int opTime;
+	int battStatus;
+	float a_z_off;
+	float a_x_off;
+	float a_y_off;
+	float lat;
+	float lon;
+	float orient;
+	float incl;
+} dw_system;
 
 //! Convert a string of hexadecimal characters to corresponding value
 bool hexpair_to_uint(const char *in, uint8_t *out);

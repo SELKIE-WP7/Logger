@@ -23,5 +23,6 @@ uint16_t dw_hxv_parity(const dw_hxv *in);
 
 bool dw_spectrum_from_array(const uint16_t *arr, dw_spectrum *out);
 bool dw_spectral_block(const uint16_t *arr, const int ix, dw_spectrum *out);
+bool dw_system_from_array(const uint16_t *arr, dw_system *out);
 //! @}
 #endif

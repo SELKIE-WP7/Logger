@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
 				// Read HXV
 				if (dw_string_hxv(buf, &end, &tmp)) {
 					cycdata[cycCount++] = dw_hxv_cycdat(&tmp);
-					fprintf(stdout, "[%d] N: %+.2f\tW: %+.2f\tV: %+.2f\n", tmp.status, dw_hxv_north(&tmp)/100.0, dw_hxv_west(&tmp)/100.0, dw_hxv_vertical(&tmp)/100.0);
+					fprintf(stdout, "[cyc] Signal: %d, Displacements - N: %+.2f\tW: %+.2f\tV: %+.2f\n", tmp.status, dw_hxv_north(&tmp)/100.0, dw_hxv_west(&tmp)/100.0, dw_hxv_vertical(&tmp)/100.0);
 				}
 				if (cycCount > 18) {
 					bool syncFound = false;
@@ -115,11 +115,17 @@ int main(int argc, char *argv[]) {
 					}
 
 					dw_spectrum ds = {0};
-					if (dw_spectrum_from_array(cycdata, &ds)) {
+					if (!dw_spectrum_from_array(cycdata, &ds)) {
+						fprintf(stderr, "Failed to extract spectrum data\n");
+					} else {
 						sysdata[ds.sysseq] = ds.sysword;
 						sdset[ds.sysseq] = true;
-					} else {
-						fprintf(stderr, "Failed to extract spectrum data\n");
+						fprintf(stdout, "[spe] System data word %d\n", ds.sysseq);
+						fprintf(stdout, "[spe] #\tBin\tFreq\tDir.\tSpread\tM2\tN2\tRPSD\tK\n");
+						for (int n = 0; n < 4; ++n) {
+							fprintf(stdout, "[spe] %1d\t%02d\t%.3f\t%.2f\t%.2f\t%.3f\t%.3f\t%.3f\t%.3f\n", n, ds.frequencyBin[n], ds.frequency[n], ds.direction[n], ds.spread[n], ds.m2[n], ds.n2[n], ds.rpsd[n], ds.K[n]);
+						}
+						fprintf(stdout, "\n");
 					}
 
 					uint8_t count = 0;
@@ -133,14 +139,37 @@ int main(int argc, char *argv[]) {
 					}
 
 					if (count == 16) {
-						fprintf(stdout, "System data found:\n");
-						for (int s=0; s < 16; s++) {
-							fprintf(stdout, "%04x%c", sysdata[s], s == 15 ? '\n' : ' ');
+						dw_system dsys = {0};
+						if (!dw_system_from_array(sysdata, &dsys)) {
+							fprintf(stderr, "Failed to extract system data\n");
+						} else {
+							fprintf(stdout, "[sys] Transmission number %d\n", dsys.number);
+							fprintf(stdout, "[sys] GPS position %s\n", dsys.GPSfix ? "OK" : "old or invalid");
+							fprintf(stdout, "[sys] RMS Height: %.3f, Fz: %.3f\n", dsys.Hrms, dsys.fzero);
+							fprintf(stdout, "[sys] Ref. Temp: %.1f'C, Water Temp: %.1f'C\n", dsys.refTemp, dsys.waterTemp);
+							fprintf(stdout, "[sys] Expected operational time remaining: %d weeks\n", dsys.opTime);
+							fprintf(stdout, "[sys] Accelerometer offsets: X: %.3f, Y: %.3f, Z: %.3f\n", dsys.a_x_off, dsys.a_y_off, dsys.a_z_off);
+							{
+								int latm = 1;
+								char latc = 'N';
+								int lonm =1;
+								char lonc = 'E';
+								if (dsys.lat < 0) {
+									latm = -1;
+									latc = 'S';
+								}
+								if (dsys.lon < 0) {
+									lonm = -1;
+									lonc = 'W';
+								}
+								fprintf(stdout, "[sys] Position: %.6f%c %.6f%c, Orientation: %.3f, Inclination: %.3f\n", latm * dsys.lat, latc, lonm * dsys.lon, lonc, dsys.orient, dsys.incl);
+								fprintf(stdout, "\n");
+							}
 						}
-						fprintf(stdout, "\n");
 						memset(&sysdata, 0, 16*sizeof(uint16_t));
 						memset(&sdset, 0, 16*sizeof(bool));
 					}
+
 
 					cycdata[0] = cycdata[18];
 					cycdata[1] = cycdata[19];

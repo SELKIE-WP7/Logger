@@ -247,8 +247,7 @@ class DatFile:
         # Out of messages and no more timestamps available
         log.debug(f"Out of data - {len(stack)} messages abandoned beyond last timestanp")
 
-    def asDataFrame(self, dropna=False, resample=None):
-        df = None
+    def yieldDataFrame(self, dropna=False, resample=None):
         count = 0
         for chunk in self.processMessages():
             ndf = pd.DataFrame(data=[x[1] for x in chunk], index=[x[0] for x in chunk])
@@ -265,12 +264,20 @@ class DatFile:
                     ndf[x] = ndf[x].astype(pd.SparseDtype(ndf[x].dtype, np.nan))
             if dropna:
                 ndf.dropna(how='all', inplace=True)
+            ndf.index.name="Timestamp"
+            yield ndf
+
+    def asDataFrame(self, dropna=False, resample=None):
+        df = None
+        for ndf in self.yieldDataFrame(dropna, resample):
+            count = len(ndf)
             if df is None:
                 df = ndf
             else:
                 df = pd.concat([df, ndf], copy=False)
                 del ndf
             log.debug(f"{count} steps processed ({pd.to_timedelta((df.index.max() - df.index.min()), unit='ms')})")
+
         df.index.name='Timestamp'
         return df
 

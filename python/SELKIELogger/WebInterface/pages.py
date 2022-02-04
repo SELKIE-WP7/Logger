@@ -65,10 +65,32 @@ def show_data():
 def download_file(fileName, fileFormat='raw'):
     if fileFormat == "raw":
         return Response(stream_data_file(os.path.join(current_app.config['DATA_PATH'], fileName)), mimetype="application/octet-stream", headers={'Content-Disposition': f'attachment, filename="{fileName}"'})
-#    elif fileFormat == "csv":
-#        from ..RaceTech import RTCSVExporter
-#        rtcsv = RTCSVExporter(os.path.join(current_app.config['DATA_PATH'], fileName))
-#        return Response(rtcsv.stream(), mimetype="text/csv", headers={'Content-Disposition': f'attachment, filename="{fileName.replace(".run",".csv")}"'})
+    elif fileFormat == "csv" and fileName.endswith(".dat"):
+        from .. import SLFiles as SLF
+
+        fileName = os.path.join(current_app.config['DATA_PATH'], fileName)
+        vf = os.path.splitext(fileName)[0] + '.var'
+        if not os.path.exists(vf):
+            flash("No channel map file identified - automatic export not available", "danger")
+            return redirect(url_for(".index"), 302)
+
+        vf = SLF.VarFile(vf)
+        smap = vf.getSourceMap()
+        df = SLF.DatFile(fileName, pcs=0x02)
+        df.addSourceMap(smap)
+        from tempfile import TemporaryDirectory
+        def streamCSV():
+            headerSent = False
+            i = 0
+            with TemporaryDirectory() as td:
+                for data in df.yieldDataFrame(dropna=False, resample='1s'):
+                    tfn = os.path.join(td, f"part{i:04d}")
+                    if data is None:
+                        return
+                    data.to_csv(tfn, header=(not headerSent))
+                    headerSent = True
+                    yield "".join(open(tfn, "r").readlines())
+        return Response(streamCSV(), mimetype="text/csv", headers={'Content-Disposition': f'attachment, filename="{os.path.basename(fileName).replace(".dat","-1s.csv")}"'})
     flash("Unsupported file format requested", "danger")
     return redirect(url_for(".index"), 302)
 
@@ -93,11 +115,15 @@ def get_run_files():
             if (ext in [".log", ".var", ".dat"]) and path.is_file():
                 s = path.stat()
                 files.append((path.name, datetime.fromtimestamp(s.st_mtime), s.st_size))
-    files.sort(reverse=True)
+    files.sort(key=lambda x: x[1], reverse=True)
     return files
 
 def stream_data_file(fileName):
-    f = open(fileName, 'rb')
+    if isinstance(fileName, file):
+        f = fileName
+    else:
+        f = open(fileName, 'rb')
+
     data = f.read(1024)
     try:
         while len(data) > 0:

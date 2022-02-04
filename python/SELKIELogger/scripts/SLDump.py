@@ -8,6 +8,7 @@ def process_arguments():
     options = argparse.ArgumentParser(description="Read messages from SELKIE Logger or compatible devices and parse details to screen", epilog="Created as part of the SELKIE project")
     options.add_argument("file",  help="Input file name")
     options.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Include timing and source/channel information messages")
+    options.add_argument("-s", "--source-map", dest="map", action="store_true", default=False, help="Dump source map")
     return options.parse_args()
 
 def processMessages(up, out, allM): 
@@ -23,6 +24,12 @@ def SLDump():
     out = SLMessageSink(msglogger=log)
     processMessages(unpacker, out, args.verbose)
     inFile.close()
+
+    if args.map:
+        sm = out.SourceMap()
+        print("Source          \tChannels")
+        for src in sm:
+            print(f"0x{src:02x} - {sm.GetSourceName(src):16s}{list(sm[src])}")
 
 if __name__ == "__main__":
     SLDump()

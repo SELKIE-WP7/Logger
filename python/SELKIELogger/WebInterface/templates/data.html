@@ -12,11 +12,13 @@
 		{% for f in g.files %}
 		<tr>
 			<td>{{ f[0] }}</td>
-			<td>{{f[1]}}</td>
-			<td>{{(f[2] / 1024 / 1024)|round(precision=2) }} MB</td>
+			<td>{{ f[1] }}</td>
+			<td>{{ f[2] | filesizeformat}}</td>
 			<td>
-				<a class="btn btn-default" href="{{url_for('.download_file', fileName=f[0], fileFormat='raw')}}">Raw</a>
+				<a class="btn btn-default" href="{{url_for('.download_file', fileName=f[0], fileFormat='raw')}}">Download</a>
+				{% if ".dat" in f[0] %}
 				<a class="btn btn-success" href="{{url_for('.download_file', fileName=f[0], fileFormat='csv')}}">CSV</a>
+				{% endif %}
 			</td>
 		</tr>
 		{% endfor %}

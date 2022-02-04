@@ -45,6 +45,8 @@
 
 #define SLSOURCE_NMEA	0x30 //!< NMEA Bus
 
+#define SLSOURCE_N2K	0x38 //!< N2K bus
+
 #define SLSOURCE_I2C	0x40 //!< I2C Bus
 
 #define SLSOURCE_EXT	0x60 //!< External data sources recorded but not interpreted by the logging software

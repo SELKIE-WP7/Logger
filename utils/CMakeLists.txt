@@ -5,6 +5,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} PRIVATE)
 
 add_executable(PowerHatRead PowerHatRead.c)
 target_link_libraries(PowerHatRead PUBLIC SELKIELoggerI2C)
+target_link_libraries(PowerHatRead PUBLIC m)
 install(TARGETS PowerHatRead RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT PowerHat)
 
 set(CPACK_COMPONENT_POWERHAT_GROUP "Applications")

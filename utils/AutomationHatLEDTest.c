@@ -4,8 +4,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include <math.h>
-
 #include "SELKIELoggerI2C.h"
 
 /*!

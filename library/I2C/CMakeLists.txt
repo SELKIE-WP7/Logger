@@ -14,6 +14,7 @@ set_target_properties(SELKIELoggerI2C PROPERTIES PRIVATE_HEADER "${SL_I2C_INC}")
 
 find_library(I2CTools NAMES i2c REQUIRED)
 target_link_libraries(SELKIELoggerI2C PUBLIC ${I2CTools})
+target_link_libraries(SELKIELoggerI2C PUBLIC m)
 
 include(GNUInstallDirs)
 

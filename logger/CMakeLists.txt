@@ -23,5 +23,4 @@ set(CPACK_COMPONENT_LOGGER_DEPENDS Base GPS NMEA MP I2C)
 
 if (CODE_COVERAGE)
 	target_code_coverage(Logger)
-	target_code_coverage(PowerHatRead)
 endif()

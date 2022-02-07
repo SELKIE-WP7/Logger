@@ -64,7 +64,10 @@ def show_data():
 @pages.route('/data/<fileName>/<fileFormat>')
 def download_file(fileName, fileFormat='raw'):
     if fileFormat == "raw":
-        return Response(stream_data_file(os.path.join(current_app.config['DATA_PATH'], fileName)), mimetype="application/octet-stream", headers={'Content-Disposition': f'attachment, filename="{fileName}"'})
+        mime="application/octet-stream"
+        if fileName.endswith(".log"):
+            mime="text/plain"
+        return Response(stream_data_file(os.path.join(current_app.config['DATA_PATH'], fileName)), mimetype=mime, headers={'Content-Disposition': f'attachment; filename="{fileName}"'})
     elif fileFormat == "csv" and fileName.endswith(".dat"):
         from .. import SLFiles as SLF
 
@@ -90,7 +93,7 @@ def download_file(fileName, fileFormat='raw'):
                     data.to_csv(tfn, header=(not headerSent))
                     headerSent = True
                     yield "".join(open(tfn, "r").readlines())
-        return Response(streamCSV(), mimetype="text/csv", headers={'Content-Disposition': f'attachment, filename="{os.path.basename(fileName).replace(".dat","-1s.csv")}"'})
+        return Response(streamCSV(), mimetype="text/csv", headers={'Content-Disposition': f'attachment; filename="{os.path.basename(fileName).replace(".dat","-1s.csv")}"'})
     flash("Unsupported file format requested", "danger")
     return redirect(url_for(".index"), 302)
 
@@ -119,10 +122,7 @@ def get_run_files():
     return files
 
 def stream_data_file(fileName):
-    if isinstance(fileName, file):
-        f = fileName
-    else:
-        f = open(fileName, 'rb')
+    f = open(fileName, 'rb')
 
     data = f.read(1024)
     try:

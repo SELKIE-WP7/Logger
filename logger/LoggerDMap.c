@@ -7,6 +7,7 @@ struct dmap {
 };
 
 struct dmap dmap[] = {
+	{"DW", &dw_getCallbacks, &dw_parseConfig},
 	{"GPS", &gps_getCallbacks, &gps_parseConfig},
 	{"I2C", &i2c_getCallbacks, &i2c_parseConfig},
 	{"NMEA", &nmea_getCallbacks, &nmea_parseConfig},

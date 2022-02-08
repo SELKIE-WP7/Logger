@@ -121,6 +121,7 @@ bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS)
 //! Data source specific configuration parsers;
 typedef bool (*dc_parser)(log_thread_args_t *, config_section *);
 
+#include "LoggerDW.h"
 #include "LoggerGPS.h"
 #include "LoggerMP.h"
 #include "LoggerMQTT.h"

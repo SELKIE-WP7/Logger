@@ -22,8 +22,7 @@ struct dmap dmap[] = {
 	{NULL, NULL} // End of list sentinel value
 };
 
-
-device_callbacks dmap_getCallbacks(const char * source) {
+device_callbacks dmap_getCallbacks(const char *source) {
 	size_t ix = 0;
 	while (dmap[ix].tag) {
 		if (strncasecmp(source, dmap[ix].tag, strlen(dmap[ix].tag)) == 0) {
@@ -34,7 +33,7 @@ device_callbacks dmap_getCallbacks(const char * source) {
 	return (device_callbacks){0};
 }
 
-dc_parser dmap_getParser(const char * source) {
+dc_parser dmap_getParser(const char *source) {
 	size_t ix = 0;
 	while (dmap[ix].tag) {
 		if (strncasecmp(source, dmap[ix].tag, strlen(dmap[ix].tag)) == 0) {

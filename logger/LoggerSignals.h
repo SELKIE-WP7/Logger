@@ -2,8 +2,8 @@
 #define SL_LOGGER_SIGS_H
 
 #include <signal.h>
-#include <stdbool.h>
 #include <stdatomic.h>
+#include <stdbool.h>
 
 /*!
  * @addtogroup loggerTriggers Logger: Global triggers/signal handlers
@@ -43,7 +43,7 @@ void signalRotate(int signnum);
 /*! @brief Set logger pause flag
  *
  * By default, this is hooked to SIGRTMIN + 3
- * 
+ *
  * The pause flag can only be cleared by the unpause signal handler, or during shutdown.
  * Calling this function while already paused will have no additional effect.
  */
@@ -57,7 +57,6 @@ void signalPause(int signnum);
  */
 void signalUnpause(int signnum);
 /*! @} */
-
 
 //! Install signal handlers
 void signalHandlersInstall();

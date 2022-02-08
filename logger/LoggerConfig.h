@@ -27,7 +27,7 @@ typedef struct {
 	config_section *sects;
 } ini_config;
 
-int config_handler(void* user, const char* section, const char* name, const char* value);
+int config_handler(void *user, const char *section, const char *name, const char *value);
 
 bool new_config(ini_config *c);
 
@@ -43,5 +43,5 @@ config_kv *config_get_option(const ini_config *in, const char *sn, const char *k
 
 int config_parse_bool(const char *b);
 
-char *config_qstrdup(const char * c);
+char *config_qstrdup(const char *c);
 #endif

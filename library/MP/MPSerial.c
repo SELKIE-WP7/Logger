@@ -9,9 +9,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <msgpack.h>
-#include "MPTypes.h"
 #include "MPSerial.h"
+#include "MPTypes.h"
+#include <msgpack.h>
 
 /*!
  * Currently just wraps openSerialConnection()
@@ -46,10 +46,9 @@ void mp_closeConnection(int handle) {
 bool mp_readMessage(int handle, msg_t *out) {
 	static uint8_t buf[MP_SERIAL_BUFF];
 	static int index = 0; // Current read position
-	static int hw = 0; // Current array end
+	static int hw = 0;    // Current array end
 	return mp_readMessage_buf(handle, out, buf, &index, &hw);
 }
-
 
 /*!
  * This function maintains a static internal message buffer, filling it from
@@ -63,7 +62,8 @@ bool mp_readMessage(int handle, msg_t *out) {
  * field is set to an error value:
  * - 0xFF means no message found yet, and more data is required
  * - 0xFD is a synonym for 0xFF, but indicates that zero bytes were read from source.
- *   This could indicate EOF if reading from file, but can be ignored when streaming from a device.
+ *   This could indicate EOF if reading from file, but can be ignored when streaming from
+ *   a device.
  * - 0xAA means that an error occurred reading in data
  * - 0XEE means a valid message header was found, but no valid message
  *
@@ -77,9 +77,7 @@ bool mp_readMessage(int handle, msg_t *out) {
  */
 bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int *index, int *hw) {
 	int ti = 0;
-	if (out == NULL || (*index) < 0 || (*hw) < 0 || buf==NULL) {
-		return false;
-	}
+	if (out == NULL || (*index) < 0 || (*hw) < 0 || buf == NULL) { return false; }
 	if ((*hw) < MP_SERIAL_BUFF - 1) {
 		errno = 0;
 		ti = read(handle, &(buf[(*hw)]), MP_SERIAL_BUFF - (*hw));
@@ -87,7 +85,8 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 			(*hw) += ti;
 		} else {
 			if (errno != EAGAIN) {
-				fprintf(stderr, "Unexpected error while reading from serial port (handle ID: 0x%02x)\n", handle);
+				fprintf(stderr, "Unexpected error while reading from serial port (handle ID: 0x%02x)\n",
+				        handle);
 				fprintf(stderr, "read returned \"%s\" in readMessage\n", strerror(errno));
 				out->dtype = MSG_ERROR;
 				out->data.value = 0xAA;
@@ -107,12 +106,10 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 			(*hw) -= (*index);
 			(*index) = 0;
 		}
-		//fprintf(stderr, "Buffer empty - returning\n");
+		// fprintf(stderr, "Buffer empty - returning\n");
 		out->dtype = MSG_ERROR;
 		out->data.value = 0xFF;
-		if (ti == 0) {
-			out->data.value = 0xFD;
-		}
+		if (ti == 0) { out->data.value = 0xFD; }
 		return false;
 	}
 
@@ -120,13 +117,11 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 		// Not enough data for any valid message, come back later
 		out->dtype = MSG_ERROR;
 		out->data.value = 0xFF;
-		if (ti == 0) {
-			out->data.value = 0xFD;
-		}
+		if (ti == 0) { out->data.value = 0xFD; }
 		return false;
 	}
 
-	if (buf[(*index)+1] != MP_SYNC_BYTE2) {
+	if (buf[(*index) + 1] != MP_SYNC_BYTE2) {
 		// Found first sync byte, but second not valid
 		// Advance the index so we skip this message and go back around
 		(*index)++;
@@ -137,16 +132,15 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 
 	// We now know we have a good candidate for a valid MessagePacked message
 	msgpack_unpacker unpack;
-	if (!msgpack_unpacker_init(&unpack, 64 + (*hw)-(*index))) {
+	if (!msgpack_unpacker_init(&unpack, 64 + (*hw) - (*index))) {
 		out->dtype = MSG_ERROR;
 		out->data.value = 0xAA;
 		fprintf(stderr, "Unable to initialise msgpack unpacker\n");
 		return false;
 	}
 	const size_t upInitialOffset = unpack.off;
-	memcpy(msgpack_unpacker_buffer(&unpack), &(buf[(*index)]), (*hw)-(*index));
-	msgpack_unpacker_buffer_consumed(&unpack, (*hw)-(*index));
-
+	memcpy(msgpack_unpacker_buffer(&unpack), &(buf[(*index)]), (*hw) - (*index));
+	msgpack_unpacker_buffer_consumed(&unpack, (*hw) - (*index));
 
 	msgpack_unpacked mpupd = {0};
 	{
@@ -169,7 +163,8 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 				out->dtype = MSG_ERROR;
 				out->data.value = 0xFF;
 				msgpack_unpacker_destroy(&unpack);
-				(*index)++; // Assume bad message, so advance 1 byte further into buffer
+				(*index)++; // Assume bad message, so advance 1 byte
+				            // further into buffer
 				return false;
 		}
 
@@ -192,33 +187,33 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 
 	// Verify our marker byte
 	if (inArr[0].type != MSGPACK_OBJECT_POSITIVE_INTEGER || inArr[0].via.u64 != MP_SYNC_BYTE2) {
-			msgpack_unpacked_destroy(&mpupd);
-			out->dtype = MSG_ERROR;
-			out->data.value = 0xFF;
-			msgpack_unpacker_destroy(&unpack);
-			(*index)++;
-			return false;
+		msgpack_unpacked_destroy(&mpupd);
+		out->dtype = MSG_ERROR;
+		out->data.value = 0xFF;
+		msgpack_unpacker_destroy(&unpack);
+		(*index)++;
+		return false;
 	}
 
 	// Next should be our Source ID
 	if (inArr[1].type != MSGPACK_OBJECT_POSITIVE_INTEGER || inArr[1].via.u64 >= 128) {
-			msgpack_unpacked_destroy(&mpupd);
-			out->dtype = MSG_ERROR;
-			out->data.value = 0xFF;
-			msgpack_unpacker_destroy(&unpack);
-			(*index)++;
-			return false;
+		msgpack_unpacked_destroy(&mpupd);
+		out->dtype = MSG_ERROR;
+		out->data.value = 0xFF;
+		msgpack_unpacker_destroy(&unpack);
+		(*index)++;
+		return false;
 	}
 	out->source = inArr[1].via.u64;
 
 	// Then our Channel ID
 	if (inArr[2].type != MSGPACK_OBJECT_POSITIVE_INTEGER || inArr[2].via.u64 >= 128) {
-			msgpack_unpacked_destroy(&mpupd);
-			out->dtype = MSG_ERROR;
-			out->data.value = 0xFF;
-			msgpack_unpacker_destroy(&unpack);
-			(*index)++;
-			return false;
+		msgpack_unpacked_destroy(&mpupd);
+		out->dtype = MSG_ERROR;
+		out->data.value = 0xFF;
+		msgpack_unpacker_destroy(&unpack);
+		(*index)++;
+		return false;
 	}
 	out->type = inArr[2].via.u64;
 
@@ -258,9 +253,7 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 				case MSGPACK_OBJECT_FLOAT64:
 					out->dtype = MSG_NUMARRAY;
 					out->length = mp_unpack_numarray(&(out->data.farray), &(inArr[3].via.array));
-					if (out->length > 0) {
-						valid = true;
-					}
+					if (out->length > 0) { valid = true; }
 					break;
 				default:
 					valid = false;
@@ -296,11 +289,10 @@ bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int
 	if (valid == false) {
 		out->dtype = MSG_ERROR;
 		out->data.value = 0xFF; // Invalid message
-		// Index already incremented and reset above
+		                        // Index already incremented and reset above
 	}
 	return valid;
 }
-
 
 /*!
  * Pack a message into the provided buffer, ready for writing.
@@ -316,7 +308,7 @@ bool mp_packMessage(msgpack_sbuffer *sbuf, const msg_t *out) {
 	msgpack_packer pack = {0};
 	msgpack_sbuffer_init(sbuf);
 	msgpack_packer_init(&pack, sbuf, msgpack_sbuffer_write);
-	msgpack_pack_array(&pack,4); // MP_SYNC_BYTE1
+	msgpack_pack_array(&pack, 4); // MP_SYNC_BYTE1
 	msgpack_pack_int(&pack, MP_SYNC_BYTE2);
 	msgpack_pack_int(&pack, out->source);
 	msgpack_pack_int(&pack, out->type);
@@ -337,9 +329,7 @@ bool mp_packMessage(msgpack_sbuffer *sbuf, const msg_t *out) {
 
 		case MSG_STRING:
 			sl = out->data.string.length;
-			if (strlen(out->data.string.data) < sl) {
-				sl = strlen(out->data.string.data);
-			}
+			if (strlen(out->data.string.data) < sl) { sl = strlen(out->data.string.data); }
 			msgpack_pack_str(&pack, sl);
 			msgpack_pack_str_body(&pack, out->data.string.data, sl);
 			break;
@@ -368,12 +358,10 @@ bool mp_packMessage(msgpack_sbuffer *sbuf, const msg_t *out) {
  */
 bool mp_writeMessage(int handle, const msg_t *out) {
 	msgpack_sbuffer sbuf;
-	if (!mp_packMessage(&sbuf, out)) {
-		return false;
-	}
+	if (!mp_packMessage(&sbuf, out)) { return false; }
 	int ret = write(handle, sbuf.data, sbuf.size);
 	msgpack_sbuffer_destroy(&sbuf);
-	return (ret==sbuf.size);
+	return (ret == sbuf.size);
 }
 
 /*!
@@ -390,16 +378,15 @@ bool mp_writeData(int handle, const msg_t *out) {
 			return (write(handle, &(out->data.value), sizeof(out->data.value)) == sizeof(out->data.value));
 
 		case MSG_TIMESTAMP:
-			return (write(handle, &(out->data.timestamp), sizeof(out->data.timestamp)) == sizeof(out->data.timestamp));
+			return (write(handle, &(out->data.timestamp), sizeof(out->data.timestamp)) ==
+			        sizeof(out->data.timestamp));
 
 		case MSG_BYTES:
 			return (write(handle, out->data.bytes, out->length) == out->length);
 
 		case MSG_STRING:
 			sl = out->data.string.length;
-			if (strlen(out->data.string.data) < sl) {
-				sl = strlen(out->data.string.data);
-			}
+			if (strlen(out->data.string.data) < sl) { sl = strlen(out->data.string.data); }
 			return (write(handle, &(out->data.string.data), sl) == sl);
 
 		case MSG_STRARRAY:
@@ -408,14 +395,13 @@ bool mp_writeData(int handle, const msg_t *out) {
 				if (sl > 0 && strlen(out->data.names.strings[ix].data) < sl) {
 					sl = strlen(out->data.names.strings[ix].data);
 				}
-				if (!(write(handle, out->data.names.strings[ix].data, sl) == sl)) {
-					return false;
-				}
+				if (!(write(handle, out->data.names.strings[ix].data, sl) == sl)) { return false; }
 			}
 			return true;
 
 		case MSG_NUMARRAY:
-			return (write(handle, out->data.farray, sizeof(out->data.farray[0]) * out->length) == sizeof(out->data.farray[0]) * out->length);
+			return (write(handle, out->data.farray, sizeof(out->data.farray[0]) * out->length) ==
+			        sizeof(out->data.farray[0]) * out->length);
 
 		case MSG_ERROR:
 		case MSG_UNDEF:
@@ -439,9 +425,7 @@ void mp_pack_strarray(msgpack_packer *pack, const strarray *sa) {
 	for (int ix = 0; ix < sa->entries; ix++) {
 		string *s = &(sa->strings[ix]);
 		size_t sl = s->length;
-		if (sl > 0 && strlen(s->data) < sl) {
-			sl = strlen(s->data);
-		}
+		if (sl > 0 && strlen(s->data) < sl) { sl = strlen(s->data); }
 		msgpack_pack_str(pack, sl);
 		msgpack_pack_str_body(pack, s->data, sl);
 	}
@@ -478,9 +462,7 @@ bool mp_unpack_strarray(strarray *sa, msgpack_object_array *obj) {
 	sa->entries = nEntries;
 	sa->strings = calloc(nEntries, sizeof(string));
 
-	if (sa->strings == NULL) {
-		return false;
-	}
+	if (sa->strings == NULL) { return false; }
 
 	for (int ix = 0; ix < nEntries; ix++) {
 		if (obj->ptr[ix].type != MSGPACK_OBJECT_STR) {
@@ -509,9 +491,7 @@ size_t mp_unpack_numarray(float **fa, msgpack_object_array *obj) {
 	const int nEntries = obj->size;
 	(*fa) = calloc(nEntries, sizeof(float));
 
-	if ((*fa) == NULL) {
-		return -1;
-	}
+	if ((*fa) == NULL) { return -1; }
 
 	for (int ix = 0; ix < nEntries; ix++) {
 		if (!((obj->ptr[ix].type == MSGPACK_OBJECT_FLOAT32) || (obj->ptr[ix].type == MSGPACK_OBJECT_FLOAT64))) {

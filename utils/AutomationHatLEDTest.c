@@ -1,7 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "SELKIELoggerI2C.h"
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 		}
 		s.led[j] = 30;
 		if (!i2c_sn3218_update(handle, &s)) {
-			fprintf(stderr, "Unable to update state (LED %02d)\n", j+1);
+			fprintf(stderr, "Unable to update state (LED %02d)\n", j + 1);
 			return -1;
 		}
 		sleep(1);

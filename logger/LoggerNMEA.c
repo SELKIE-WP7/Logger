@@ -1,7 +1,6 @@
-#include "Logger.h"
 #include "LoggerNMEA.h"
+#include "Logger.h"
 #include "LoggerSignals.h"
-
 
 /*!
  * Set up connection to an NMEA serial gateway device.
@@ -9,10 +8,10 @@
  * No other steps required.
  *
  * @param ptargs Pointer to log_thread_args_t
- */ 
+ */
 void *nmea_setup(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	nmea_params *nmeaInfo = (nmea_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	nmea_params *nmeaInfo = (nmea_params *)args->dParams;
 
 	nmeaInfo->handle = nmea_openConnection(nmeaInfo->portName, nmeaInfo->baudRate);
 	if (nmeaInfo->handle < 0) {
@@ -27,7 +26,7 @@ void *nmea_setup(void *ptargs) {
 }
 
 /*!
- * Takes a nmea_params struct (passed via log_thread_args_t) 
+ * Takes a nmea_params struct (passed via log_thread_args_t)
  * messages from a device configured with nmea_setup() and pushes them to the
  * message queue.
  *
@@ -37,8 +36,8 @@ void *nmea_setup(void *ptargs) {
  */
 void *nmea_logging(void *ptargs) {
 	signalHandlersBlock();
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	nmea_params *nmeaInfo = (nmea_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	nmea_params *nmeaInfo = (nmea_params *)args->dParams;
 
 	log_info(args->pstate, 1, "[NMEA:%s] Logging thread started", args->tag);
 
@@ -52,14 +51,20 @@ void *nmea_logging(void *ptargs) {
 			ssize_t len = nmea_flat_array(&out, &data);
 			bool handled = false;
 
-			if ((strncmp(out.talker, "II", 2) == 0) && (strncmp(out.message, "ZDA", 3) == 0)) {
+			if ((strncmp(out.talker, "II", 2) == 0) &&
+			    (strncmp(out.message, "ZDA", 3) == 0)) {
 				struct tm *t = nmea_parse_zda(&out);
 				if (t != NULL) {
 					time_t epoch = mktime(t) - t->tm_gmtoff;
 					if (epoch != (time_t)(-1)) {
+						// clang-format off
 						msg_t *tm = msg_new_timestamp(nmeaInfo->sourceNum, 4, epoch);
+						// clang-format on
 						if (!queue_push(args->logQ, tm)) {
-							log_error(args->pstate, "[NMEA:%s] Error pushing message to queue", args->tag);
+							log_error(
+								args->pstate,
+								"[NMEA:%s] Error pushing message to queue",
+								args->tag);
 							msg_destroy(tm);
 							free(t);
 							args->returnCode = -1;
@@ -67,34 +72,41 @@ void *nmea_logging(void *ptargs) {
 						}
 						handled = true; // Suppress ZDA messages
 					}
-
 				}
 			}
 			if (!handled) {
-				msg_t *sm = msg_new_bytes(nmeaInfo->sourceNum, 3, len, (uint8_t *)data);
+				msg_t *sm = msg_new_bytes(nmeaInfo->sourceNum, 3, len,
+				                          (uint8_t *)data);
 				if (!queue_push(args->logQ, sm)) {
-					log_error(args->pstate, "[NMEA:%s] Error pushing message to queue", args->tag);
+					log_error(args->pstate,
+					          "[NMEA:%s] Error pushing message to queue",
+					          args->tag);
 					msg_destroy(sm);
 					args->returnCode = -1;
 					pthread_exit(&(args->returnCode));
 				}
 			}
 			if (data) {
-				free(data); // Copied into message, so can safely free here
+				// Copied into message, so can safely free here
+				free(data);
 			}
 			// Do not destroy or free sm here
-			// After pushing it to the queue, it is the responsibility of the consumer
-			// to dispose of it after use.
+			// After pushing it to the queue, it is the responsibility of the
+			// consumer to dispose of it after use.
 		} else {
 			if (!(out.raw[0] == 0xFF || out.raw[0] == 0xFD || out.raw[0] == 0xEE)) {
-				// 0xFF, 0xFD and 0xEE are used to signal recoverable states that resulted
-				// in no valid message.
-				// 
-				// 0xFF and 0xFD indicate an out of data error, which is not a problem
-				// for serial monitoring, but might indicate EOF when reading from file
+				// 0xFF, 0xFD and 0xEE are used to signal recoverable
+				// states that resulted in no valid message.
 				//
-				// 0xEE indicates an invalid message following valid sync bytes
-				log_error(args->pstate, "[NMEA:%s] Error signalled from nmea_readMessage_buf", args->tag);
+				// 0xFF and 0xFD indicate an out of data error, which is
+				// not a problem for serial monitoring, but might indicate
+				// EOF when reading from file
+				//
+				// 0xEE indicates an invalid message following valid sync
+				// bytes
+				log_error(args->pstate,
+				          "[NMEA:%s] Error signalled from nmea_readMessage_buf",
+				          args->tag);
 				args->returnCode = -2;
 				free(buf);
 				sa_destroy(&(out.fields));
@@ -121,8 +133,9 @@ void *nmea_logging(void *ptargs) {
  * @param ptargs Pointer to log_thread_args_t
  */
 void *nmea_shutdown(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	nmea_params *nmeaInfo = (nmea_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	nmea_params *nmeaInfo = (nmea_params *)args->dParams;
+
 	if (nmeaInfo->handle >= 0) { // Admittedly 0 is unlikely
 		nmea_closeConnection(nmeaInfo->handle);
 	}
@@ -144,13 +157,15 @@ void *nmea_shutdown(void *ptargs) {
  * @param ptargs Pointer to log_thread_args_t
  */
 void *nmea_channels(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	nmea_params *nmeaInfo = (nmea_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	nmea_params *nmeaInfo = (nmea_params *)args->dParams;
 
-	msg_t *m_sn = msg_new_string(nmeaInfo->sourceNum, SLCHAN_NAME, strlen(nmeaInfo->sourceName), nmeaInfo->sourceName);
+	msg_t *m_sn = msg_new_string(nmeaInfo->sourceNum, SLCHAN_NAME,
+	                             strlen(nmeaInfo->sourceName), nmeaInfo->sourceName);
 
 	if (!queue_push(args->logQ, m_sn)) {
-		log_error(args->pstate, "[NMEA:%s] Error pushing channel name to queue", args->tag);
+		log_error(args->pstate, "[NMEA:%s] Error pushing channel name to queue",
+		          args->tag);
 		msg_destroy(m_sn);
 		args->returnCode = -1;
 		pthread_exit(&(args->returnCode));
@@ -180,22 +195,16 @@ void *nmea_channels(void *ptargs) {
 }
 
 device_callbacks nmea_getCallbacks() {
-	device_callbacks cb = {
-		.startup = &nmea_setup,
-		.logging = &nmea_logging,
-		.shutdown = &nmea_shutdown,
-		.channels = &nmea_channels
-	};
+	device_callbacks cb = {.startup = &nmea_setup,
+	                       .logging = &nmea_logging,
+	                       .shutdown = &nmea_shutdown,
+	                       .channels = &nmea_channels};
 	return cb;
 }
 
 nmea_params nmea_getParams() {
 	nmea_params gp = {
-		.portName = NULL,
-		.sourceNum = SLSOURCE_NMEA,
-		.baudRate = 115200,
-		.handle = -1
-	};
+		.portName = NULL, .sourceNum = SLSOURCE_NMEA, .baudRate = 115200, .handle = -1};
 	return gp;
 }
 
@@ -207,22 +216,22 @@ bool nmea_parseConfig(log_thread_args_t *lta, config_section *s) {
 
 	nmea_params *nmp = calloc(1, sizeof(nmea_params));
 	if (!nmp) {
-		log_error(lta->pstate, "[NMEA:%s] Unable to allocate memory for device parameters", lta->tag);
+		log_error(lta->pstate, "[NMEA:%s] Unable to allocate memory for device parameters",
+		          lta->tag);
 		return false;
 	}
 	(*nmp) = nmea_getParams();
 
 	config_kv *t = NULL;
-	if ((t = config_get_key(s, "port"))) {
-		nmp->portName = config_qstrdup(t->value);
-	}
+	if ((t = config_get_key(s, "port"))) { nmp->portName = config_qstrdup(t->value); }
 	t = NULL;
 
 	if ((t = config_get_key(s, "baud"))) {
 		errno = 0;
 		nmp->baudRate = strtol(t->value, NULL, 0);
 		if (errno) {
-			log_error(lta->pstate, "[NMEA:%s] Error parsing baud rate: %s", lta->tag, strerror(errno));
+			log_error(lta->pstate, "[NMEA:%s] Error parsing baud rate: %s", lta->tag,
+			          strerror(errno));
 			return false;
 		}
 	}
@@ -232,11 +241,13 @@ bool nmea_parseConfig(log_thread_args_t *lta, config_section *s) {
 		errno = 0;
 		int sn = strtol(t->value, NULL, 0);
 		if (errno) {
-			log_error(lta->pstate, "[NMEA:%s] Error parsing source number: %s", lta->tag, strerror(errno));
+			log_error(lta->pstate, "[NMEA:%s] Error parsing source number: %s",
+			          lta->tag, strerror(errno));
 			return false;
 		}
 		if (sn < 0) {
-			log_error(lta->pstate, "[NMEA:%s] Invalid source number (%s)", lta->tag, t->value);
+			log_error(lta->pstate, "[NMEA:%s] Invalid source number (%s)", lta->tag,
+			          t->value);
 			return false;
 		}
 		if (sn < 10) {
@@ -244,7 +255,10 @@ bool nmea_parseConfig(log_thread_args_t *lta, config_section *s) {
 		} else {
 			nmp->sourceNum = sn;
 			if (sn < SLSOURCE_NMEA || sn > (SLSOURCE_NMEA + 0x0F)) {
-				log_warning(lta->pstate, "[NMEA:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems", lta->tag, sn);
+				log_warning(
+					lta->pstate,
+					"[NMEA:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems",
+					lta->tag, sn);
 			}
 		}
 	}
@@ -252,4 +266,3 @@ bool nmea_parseConfig(log_thread_args_t *lta, config_section *s) {
 	lta->dParams = nmp;
 	return true;
 }
-

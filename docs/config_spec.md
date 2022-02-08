@@ -74,4 +74,3 @@ Datawell Source Options
 =======================
 - Serial port, *or*
 - Network address and port
-

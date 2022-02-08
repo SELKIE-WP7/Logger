@@ -1,5 +1,6 @@
 #include "GPSTypes.h"
 
+// clang-format off
 //! Human readable message names by class and ID
 const ubx_message_name ubx_message_names[] = {
 	{UBXACK, 0x00, "UBX-ACK-NAK"},

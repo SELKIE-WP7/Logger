@@ -9,9 +9,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "NMEATypes.h"
 #include "NMEAMessages.h"
 #include "NMEASerial.h"
+#include "NMEATypes.h"
 
 /*!
  * Currently just wraps openSerialConnection()
@@ -46,10 +46,9 @@ void nmea_closeConnection(int handle) {
 bool nmea_readMessage(int handle, nmea_msg_t *out) {
 	static uint8_t buf[NMEA_SERIAL_BUFF];
 	static int index = 0; // Current read position
-	static int hw = 0; // Current array end
+	static int hw = 0;    // Current array end
 	return nmea_readMessage_buf(handle, out, buf, &index, &hw);
 }
-
 
 /*!
  * Pulls data from `handle` and stores it in `buf`, tracking the current search
@@ -63,7 +62,8 @@ bool nmea_readMessage(int handle, nmea_msg_t *out) {
  *
  * - 0xFF means no message found yet, and more data is required
  * - 0xFD is a synonym for 0xFF, but indicates that zero bytes were read from source.
- *   This could indicate EOF if reading from file, but can be ignored when streaming from a device.
+ *   This could indicate EOF if reading from file, but can be ignored when streaming from
+ * a device.
  * - 0xAA means that an error occurred reading in data
  * - 0XEE means a valid message header was found, but no valid message
  *
@@ -84,7 +84,8 @@ bool nmea_readMessage_buf(int handle, nmea_msg_t *out, uint8_t buf[NMEA_SERIAL_B
 			(*hw) += ti;
 		} else {
 			if (errno != EAGAIN) {
-				fprintf(stderr, "Unexpected error while reading from serial port (handle ID: 0x%02x)\n", handle);
+				fprintf(stderr, "Unexpected error while reading from serial port (handle ID: 0x%02x)\n",
+				        handle);
 				fprintf(stderr, "read returned \"%s\" in readMessage\n", strerror(errno));
 				out->rawlen = 1;
 				out->raw[0] = 0xAA;
@@ -92,17 +93,15 @@ bool nmea_readMessage_buf(int handle, nmea_msg_t *out, uint8_t buf[NMEA_SERIAL_B
 			}
 		}
 	}
-	if (((*hw) == NMEA_SERIAL_BUFF) && (*index) > 0 && (*index) > (*hw)-8) {
+	if (((*hw) == NMEA_SERIAL_BUFF) && (*index) > 0 && (*index) > (*hw) - 8) {
 		// Full buffer, very close to the fill limit
 		// Assume we're full of garbage before index
 		memmove(buf, &(buf[(*index)]), NMEA_SERIAL_BUFF - (*index));
 		(*hw) -= (*index);
 		(*index) = 0;
 		out->rawlen = 1;
-		out->raw[0] =  0xFF;
-		if (ti == 0) {
-			out->raw[0] =  0xFD;
-		}
+		out->raw[0] = 0xFF;
+		if (ti == 0) { out->raw[0] = 0xFD; }
 		return false;
 	}
 	// Check buf[index] matches either of the valid start bytes
@@ -117,31 +116,28 @@ bool nmea_readMessage_buf(int handle, nmea_msg_t *out, uint8_t buf[NMEA_SERIAL_B
 			(*index) = 0;
 		}
 		out->rawlen = 1;
-		out->raw[0] =  0xFF;
-		if (ti == 0) {
-			out->raw[0] =  0xFD;
-		}
+		out->raw[0] = 0xFF;
+		if (ti == 0) { out->raw[0] = 0xFD; }
 		return false;
 	}
 
 	if (((*hw) - (*index)) < 8) {
 		// Not enough data for any valid message, come back later
 		out->rawlen = 1;
-		out->raw[0] =  0xFF;
-		if (ti == 0) {
-			out->raw[0] =  0xFD;
-		}
+		out->raw[0] = 0xFF;
+		if (ti == 0) { out->raw[0] = 0xFD; }
 		return false;
 	}
 
-	int eom = (*index) +1;
+	int eom = (*index) + 1;
 	// Spec says \r\n, but the USB gateway seems to do \n\n at startup
-	while (!(buf[eom] == NMEA_END_BYTE2 && (buf[eom-1] == NMEA_END_BYTE1 || buf[eom-1] == NMEA_END_BYTE2)) && eom < (*hw)) {
+	while (!(buf[eom] == NMEA_END_BYTE2 && (buf[eom - 1] == NMEA_END_BYTE1 || buf[eom - 1] == NMEA_END_BYTE2)) &&
+	       eom < (*hw)) {
 		eom++; // Current byte cannot be start of a message, so advance
 	}
 
 	if ((eom - (*index)) > 82) {
-		// We've not found the end of a message, so mark as invalid and increment index
+		// No end of message found, so mark as invalid and increment index
 		(*index)++;
 		out->rawlen = 1;
 		out->raw[0] = 0xEE;
@@ -152,16 +148,17 @@ bool nmea_readMessage_buf(int handle, nmea_msg_t *out, uint8_t buf[NMEA_SERIAL_B
 		// Not incrementing index or marking invalid, as could still be
 		// a valid message once we read the rest of it in.
 		out->rawlen = 1;
-		out->raw[0] =  0xFF;
-		if (ti == 0) {
-			out->raw[0] =  0xFD;
-		}
+		out->raw[0] = 0xFF;
+		if (ti == 0) { out->raw[0] = 0xFD; }
 		return false;
 	}
 
 	// So we now have a candidate message that starts at (*index) and ends at eom
 	int som = (*index);
-	out->encapsulated = (buf[som++] == NMEA_START_BYTE2); // Can only be one of the start bytes, so no explicit check for BYTE1
+
+	// Can only be one of the start bytes, so no explicit check for BYTE1
+	out->encapsulated = (buf[som++] == NMEA_START_BYTE2);
+
 	out->talker[0] = buf[som++];
 	out->talker[1] = buf[som++];
 	if (out->talker[0] == 'P') {
@@ -174,13 +171,13 @@ bool nmea_readMessage_buf(int handle, nmea_msg_t *out, uint8_t buf[NMEA_SERIAL_B
 
 	if (buf[som++] != ',') {
 		out->rawlen = 1;
-		out->raw[0] =  0xEE; // Invalid message
+		out->raw[0] = 0xEE; // Invalid message
 		(*index)++;
 		return false;
 	}
 
 	out->rawlen = 0;
-	while (buf[som] != NMEA_CSUM_MARK && buf[som] != NMEA_END_BYTE1 && buf[som+1] != NMEA_END_BYTE2) {
+	while (buf[som] != NMEA_CSUM_MARK && buf[som] != NMEA_END_BYTE1 && buf[som + 1] != NMEA_END_BYTE2) {
 		out->raw[out->rawlen++] = buf[som++];
 	}
 
@@ -262,9 +259,7 @@ bool nmea_readMessage_buf(int handle, nmea_msg_t *out, uint8_t buf[NMEA_SERIAL_B
 		out->checksum = cs;
 		cs = 0;
 		nmea_calc_checksum(out, &cs);
-		if (cs != out->checksum) {
-			valid = false;
-		}
+		if (cs != out->checksum) { valid = false; }
 
 		if (!valid) {
 			out->rawlen = 1;
@@ -275,7 +270,7 @@ bool nmea_readMessage_buf(int handle, nmea_msg_t *out, uint8_t buf[NMEA_SERIAL_B
 	}
 
 	if ((eom - som) > 1) {
-		//Urmmm....Oops?
+		// Urmmm....Oops?
 		out->rawlen = 1;
 		out->raw[0] = 0xEE;
 		(*index)++;
@@ -305,5 +300,5 @@ bool nmea_writeMessage(int handle, const nmea_msg_t *out) {
 	size_t size = nmea_flat_array(out, &buf);
 	int ret = write(handle, buf, size);
 	free(buf);
-	return (ret==size);
+	return (ret == size);
 }

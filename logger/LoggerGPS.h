@@ -2,10 +2,10 @@
 #define SL_LOGGER_GPS_H
 
 #include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "SELKIELoggerBase.h"
@@ -26,13 +26,13 @@
 
 //! GPS Device specific parameters
 typedef struct {
-	char *portName; //!< Target port name
-	char *sourceName; //!< User defined name for this GPS
+	char *portName;    //!< Target port name
+	char *sourceName;  //!< User defined name for this GPS
 	uint8_t sourceNum; //!< Source ID for messages
-	int initialBaud; //!< Baud rate for initial configuration
-	int targetBaud; //!< Baud rate for operations (currently unused)
-	int handle; //!< Handle for currently opened device
-	bool dumpAll; //!< Dump all GPS messages to output queue
+	int initialBaud;   //!< Baud rate for initial configuration
+	int targetBaud;    //!< Baud rate for operations (currently unused)
+	int handle;        //!< Handle for currently opened device
+	bool dumpAll;      //!< Dump all GPS messages to output queue
 } gps_params;
 
 //! GPS Setup

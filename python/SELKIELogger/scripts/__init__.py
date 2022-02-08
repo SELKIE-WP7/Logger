@@ -5,6 +5,7 @@ def setupLogging():
     log = logging.getLogger("")
     try:
         from rich.logging import RichHandler
+
         _rh = RichHandler(enable_link_path=False)
         log.addHandler(_rh)
 
@@ -26,6 +27,7 @@ def setupLogging():
     log.CRITICAL = logging.CRITICAL
     log.getLevelName = logging.getLevelName
     return log
+
 
 # Expose a configured logger as "log"
 log = setupLogging()

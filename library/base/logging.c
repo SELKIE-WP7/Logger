@@ -1,7 +1,7 @@
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <errno.h>
 
 #include "logging.h"
 
@@ -25,11 +25,11 @@ void log_error(const program_state *s, const char *format, ...) {
 	va_list args;
 	char *label;
 	if (s->shutdown) {
-		label="[Shutdown]";
+		label = "[Shutdown]";
 	} else if (!s->started) {
-		label="[Startup]";
+		label = "[Startup]";
 	} else {
-		label="[Running]";
+		label = "[Running]";
 	}
 	fprintf(stderr, "%-10s Error: ", label);
 	va_start(args, format);
@@ -61,11 +61,11 @@ void log_warning(const program_state *s, const char *format, ...) {
 	va_list args;
 	char *label;
 	if (s->shutdown) {
-		label="[Shutdown]";
+		label = "[Shutdown]";
 	} else if (!s->started) {
-		label="[Startup]";
+		label = "[Startup]";
 	} else {
-		label="[Running]";
+		label = "[Running]";
 	}
 	fprintf(stderr, "%-10s Warning: ", label);
 	va_start(args, format);
@@ -96,11 +96,11 @@ void log_info(const program_state *s, const int level, const char *format, ...) 
 	va_list args;
 	char *label;
 	if (s->shutdown) {
-		label="[Shutdown]";
+		label = "[Shutdown]";
 	} else if (!s->started) {
-		label="[Startup]";
+		label = "[Startup]";
 	} else {
-		label="[Running]";
+		label = "[Running]";
 	}
 
 	if (s->verbose >= level) {
@@ -147,11 +147,9 @@ FILE *openSerialNumberedFile(const char *prefix, const char *extension, char **n
 	FILE *file = NULL;
 	while (i <= 0xFF) {
 		errno = 0;
-		if (asprintf(&fileName, "%s%s%02x.%s", prefix, date, i, extension) == -1) {
-			return NULL;
-		}
+		if (asprintf(&fileName, "%s%s%02x.%s", prefix, date, i, extension) == -1) { return NULL; }
 		errno = 0;
-		file = fopen(fileName, "w+x"); //w+x = rw + create. Fail if exists
+		file = fopen(fileName, "w+x"); // w+x = rw + create. Fail if exists
 		if (file) {
 			if (name) {
 				char *fStem = strndup(fileName, strlen(fileName) - strlen(extension) - 1);

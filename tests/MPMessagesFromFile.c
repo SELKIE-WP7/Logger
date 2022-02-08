@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <unistd.h>
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "SELKIELoggerMP.h"
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 			types[tmp.type]++;
 			msg_destroy(&tmp);
 		} else {
-			switch ((uint8_t) tmp.data.value) {
+			switch ((uint8_t)tmp.data.value) {
 				case 0xAA:
 					fclose(testFile);
 					return -2;

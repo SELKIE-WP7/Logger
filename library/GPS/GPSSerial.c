@@ -10,10 +10,10 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "GPSTypes.h"
+#include "GPSCommands.h"
 #include "GPSMessages.h"
 #include "GPSSerial.h"
-#include "GPSCommands.h"
+#include "GPSTypes.h"
 
 /*!
  * Uses openSerialConnection() from the base library to open an initial
@@ -49,9 +49,7 @@ int ubx_openConnection(const char *port, const int initialBaud) {
 	cfsetospeed(&options, B115200);
 
 	// Set options using TCSADRAIN in case commands not yet set
-	if(tcsetattr(handle, TCSADRAIN, &options)) {
-		fprintf(stderr, "tcsetattr() failed!\n");
-	}
+	if (tcsetattr(handle, TCSADRAIN, &options)) { fprintf(stderr, "tcsetattr() failed!\n"); }
 
 	// The GPS module will stop listening for 1 second if the wrong baud rate is used
 	// i.e. It was already in high rate mode
@@ -61,7 +59,8 @@ int ubx_openConnection(const char *port, const int initialBaud) {
 		struct termios check;
 		tcgetattr(handle, &check);
 		if (cfgetispeed(&check) != baud_to_flag(115200)) {
-			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", 115200, flag_to_baud(cfgetispeed(&check)));
+			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", 115200,
+			        flag_to_baud(cfgetispeed(&check)));
 			return -1;
 		}
 	}
@@ -93,13 +92,12 @@ void ubx_closeConnection(int handle) {
 	close(handle);
 }
 
-
 /*!
  * For single threaded development and testing, uses static variables rather
  * than requiring state to be tracked by caller.
  *
  * See ubx_readMessage_buf() for full description.
- * 
+ *
  * @param[in] handle File descriptor from ubx_openConnection()
  * @param[out] out Pointer to message structure to fill with data
  * @return True if out now contains a valid message, false otherwise.
@@ -107,10 +105,9 @@ void ubx_closeConnection(int handle) {
 bool ubx_readMessage(int handle, ubx_message *out) {
 	static uint8_t buf[UBX_SERIAL_BUFF];
 	static int index = 0; // Current read position
-	static int hw = 0; // Current array end
+	static int hw = 0;    // Current array end
 	return ubx_readMessage_buf(handle, out, buf, &index, &hw);
 }
-
 
 /*!
  * Pulls data from `handle` and stores it in `buf`, tracking the current search
@@ -126,7 +123,8 @@ bool ubx_readMessage(int handle, ubx_message *out) {
  * field is set to an error value:
  * - 0xFF means no message found yet, and more data is required
  * - 0xFD is a synonym for 0xFF, but indicates that zero bytes were read from source.
- *   This could indicate EOF if reading from file, but can be ignored when streaming from a device.
+ *   This could indicate EOF if reading from file, but can be ignored when streaming from
+ * a device.
  * - 0xAA means that an error occurred reading in data
  * - 0XEE means a valid message header was found, but no valid message
  *
@@ -146,7 +144,8 @@ bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BU
 			(*hw) += ti;
 		} else {
 			if (errno != EAGAIN) {
-				fprintf(stderr, "Unexpected error while reading from serial port (handle ID: 0x%02x)\n", handle);
+				fprintf(stderr, "Unexpected error while reading from serial port (handle ID: 0x%02x)\n",
+				        handle);
 				fprintf(stderr, "read returned \"%s\" in readMessage\n", strerror(errno));
 				out->sync1 = 0xAA;
 				return false;
@@ -165,11 +164,9 @@ bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BU
 			(*hw) -= (*index);
 			(*index) = 0;
 		}
-		//fprintf(stderr, "Buffer empty - returning\n");
+		// fprintf(stderr, "Buffer empty - returning\n");
 		out->sync1 = 0xFF;
-		if (ti == 0) {
-			out->sync1 = 0xFD;
-		}
+		if (ti == 0) { out->sync1 = 0xFD; }
 		return false;
 	}
 
@@ -182,7 +179,7 @@ bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BU
 	// Set length of data required for message
 
 	out->sync1 = buf[(*index)];
-	out->sync2 = buf[(*index)+1];
+	out->sync2 = buf[(*index) + 1];
 	out->msgClass = buf[(*index) + 2];
 	out->msgID = buf[(*index) + 3];
 	out->length = buf[(*index) + 4] + (buf[(*index) + 5] << 8);
@@ -195,12 +192,10 @@ bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BU
 		return false;
 	}
 
-	if (((*hw) - (*index)) < (out->length + 8) ) {
+	if (((*hw) - (*index)) < (out->length + 8)) {
 		// Not enough data for this message yet, so mark output invalid
 		out->sync1 = 0xFF;
-		if (ti == 0) {
-			out->sync1 = 0xFD;
-		}
+		if (ti == 0) { out->sync1 = 0xFD; }
 		// Go back around, but leave index where it is so we will pick up
 		// from the same point in the buffer
 		return false;
@@ -221,12 +216,12 @@ bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BU
 	out->csumA = buf[(*index) + 6 + out->length];
 	out->csumB = buf[(*index) + 7 + out->length];
 
-
 	bool valid = ubx_check_checksum(out);
 	if (valid) {
-		(*index) += 8 + out->length ;
+		(*index) += 8 + out->length;
 	} else {
-		out->sync1 = 0xEE; // Use 0xEE as "Found, but invalid", leaving 0xFF as "No message"
+		out->sync1 = 0xEE; // Use 0xEE as "Found, but invalid", leaving 0xFF as
+		                   // "No message"
 		if (out->extdata) {
 			free(out->extdata);
 			out->extdata = NULL;
@@ -258,14 +253,13 @@ bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BU
  * @param[out] out Pointer to message structure to fill with data
  * @return True if required message found, false otherwise (timeout reached)
  */
-bool ubx_waitForMessage(const int handle, const uint8_t msgClass, const uint8_t msgID, const int maxDelay, ubx_message *out) {
+bool ubx_waitForMessage(const int handle, const uint8_t msgClass, const uint8_t msgID, const int maxDelay,
+                        ubx_message *out) {
 	const time_t deadline = time(NULL) + maxDelay;
 	while (time(NULL) < deadline) {
 		bool rms = ubx_readMessage(handle, out);
 		if (rms) {
-			if ((out->msgClass == msgClass) && (out->msgID == msgID)) {
-				return true;
-			}
+			if ((out->msgClass == msgClass) && (out->msgID == msgID)) { return true; }
 		} else {
 			usleep(50);
 		}
@@ -282,17 +276,17 @@ bool ubx_waitForMessage(const int handle, const uint8_t msgClass, const uint8_t 
  * @return True if data successfullt written to `handle`
  */
 bool ubx_writeMessage(int handle, const ubx_message *out) {
-	/*if (!validType(out->type)) {
-		fprintf(stderr, "Invalid type in send\n");
-		return false;
-	}*/
-
 	if (!ubx_check_checksum(out) || (out->sync1 != 0xB5) || (out->sync2 != 0x62)) {
 		fprintf(stderr, "Attempted to send invalid message\n");
 		return false;
 	}
 
-	uint8_t head[6] = {out->sync1, out->sync2, out->msgClass, out->msgID, (uint8_t) (out->length & 0xFF), (uint8_t) (out->length >>8)};
+	uint8_t head[6] = {out->sync1,
+	                   out->sync2,
+	                   out->msgClass,
+	                   out->msgID,
+	                   (uint8_t)(out->length & 0xFF),
+	                   (uint8_t)(out->length >> 8)};
 	uint8_t tail[2] = {out->csumA, out->csumB};
 	ssize_t ret = write(handle, head, 6);
 	if (ret != 6) {
@@ -305,7 +299,7 @@ bool ubx_writeMessage(int handle, const ubx_message *out) {
 	 * isn't a regular file. Zero length messages are valid, so guard this
 	 * whole section.
 	 */
-	if (out->length >0) {
+	if (out->length > 0) {
 		if (out->length <= 256) {
 			ret = write(handle, out->data, out->length);
 		} else {

@@ -21,7 +21,6 @@
  * @ingroup testing
  */
 int main(int argc, char *argv[]) {
-
 	string *exA = str_new(20, "Testing String Lib.");
 	if (exA == NULL) {
 		fprintf(stderr, "Failed to create example string A\n");
@@ -40,13 +39,12 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-
 	string *exD = str_duplicate(exC);
 	if (exD == NULL) {
 		fprintf(stderr, "Failed to create example string D\n");
 		return EXIT_FAILURE;
 	}
-	if (!str_copy(exD, exA)){
+	if (!str_copy(exD, exA)) {
 		fprintf(stderr, "Failed to copy example string A into example string E\n");
 		return EXIT_FAILURE;
 	}

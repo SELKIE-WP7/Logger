@@ -6,9 +6,9 @@
  * @ingroup SELKIELoggerNMEA
  */
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include <time.h>
 
 #include "NMEATypes.h"
@@ -37,15 +37,15 @@ size_t nmea_message_length(const nmea_msg_t *msg);
 size_t nmea_flat_array(const nmea_msg_t *msg, char **out);
 
 //! Return NMEA message as string
-char * nmea_string_hex(const nmea_msg_t *msg);
+char *nmea_string_hex(const nmea_msg_t *msg);
 
 //! Print NMEA message
 void nmea_print_hex(const nmea_msg_t *msg);
 
 //! Parse raw data into fields
-strarray * nmea_parse_fields(const nmea_msg_t *nmsg);
+strarray *nmea_parse_fields(const nmea_msg_t *nmsg);
 
 //! Get date/time from NMEA ZDA message
-struct tm * nmea_parse_zda(const nmea_msg_t *msg);
+struct tm *nmea_parse_zda(const nmea_msg_t *msg);
 //! @}
 #endif

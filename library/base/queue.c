@@ -1,8 +1,8 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "queue.h"
 #include "messages.h"
+#include "queue.h"
 
 /*!
  * Will not re-initialise a queue if it is still valid or has a head or tail
@@ -14,9 +14,7 @@
  */
 bool queue_init(msgqueue *queue) {
 	// Do not reinitialise valid or partially valid queue
-	if (queue->valid || queue->head || queue->tail) {
-		return false;
-	}
+	if (queue->valid || queue->head || queue->tail) { return false; }
 	pthread_mutexattr_t ma = {0};
 	pthread_mutexattr_init(&ma);
 	pthread_mutexattr_settype(&ma, PTHREAD_MUTEX_ERRORCHECK);
@@ -105,9 +103,7 @@ bool queue_push(msgqueue *queue, msg_t *msg) {
  * @return True if item successfully appended to queue, false otherwise
  */
 bool queue_push_qi(msgqueue *queue, queueitem *item) {
-	if (!queue->valid) {
-		return false;
-	}
+	if (!queue->valid) { return false; }
 
 	queueitem *qi = NULL;
 
@@ -128,7 +124,8 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 	// If head wasn't empty, find the tail
 	qi = queue->tail;
 	if (qi) {
-		// There is a slim chance that tail wasn't up to date, so follow queued items all the way down
+		// There is a slim chance that tail wasn't up to date, so follow queued
+		// items all the way down
 		if (qi->next) {
 			// qi->next is valid, so can re-assign it to qi
 			// The new qi->next is either valid (so loop and
@@ -137,11 +134,13 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 				qi = qi->next;
 			} while (qi->next);
 		}
-		// Once we've run out of valid qi->next pointers, we make our new item the end of the queue
+		// Once we've run out of valid qi->next pointers, we make our new item the
+		// end of the queue
 		qi->next = item;
 	}
 	// Update the tail pointer so the next push should jump direct to the end
-	// Note that item is a pointer, so assigning it to qi->next and queue->tail is valid
+	// Note that item is a pointer, so assigning it to qi->next and queue->tail is
+	// valid
 	queue->tail = item;
 	pthread_mutex_unlock(&(queue->lock));
 	return true;
@@ -159,7 +158,7 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
  * @param[in] queue Pointer to queue
  * @return Pointer to previously queued message
  */
-msg_t * queue_pop(msgqueue *queue) {
+msg_t *queue_pop(msgqueue *queue) {
 	int e = pthread_mutex_lock(&(queue->lock));
 	if (e != 0) {
 		perror("queue_pop");
@@ -172,18 +171,16 @@ msg_t * queue_pop(msgqueue *queue) {
 		return NULL;
 	}
 
-	msg_t * item = head->item;
+	msg_t *item = head->item;
 	queue->head = head->next;
 
 	head->next = NULL;
 	head->item = NULL;
-	if (queue->tail == head) {
-		queue->tail = NULL;
-	}
+	if (queue->tail == head) { queue->tail = NULL; }
 	pthread_mutex_unlock(&(queue->lock));
 	// At this point we should have the only valid pointer to head
-	// ** This is only valid while a single thread is consuming items from the queue **
-	// As with the explanation in queue_pop(), the cast keeps the compiler happy
+	// ** This is only valid while a single thread is consuming items from the queue
+	// ** As with the explanation in queue_pop(), the cast keeps the compiler happy
 	free((struct queueitem *)head);
 	return item;
 }
@@ -193,13 +190,9 @@ msg_t * queue_pop(msgqueue *queue) {
  * @return Number of items in queue, or -1 on error
  */
 int queue_count(const msgqueue *queue) {
-	if (!queue->valid) {
-		return -1;
-	}
+	if (!queue->valid) { return -1; }
 
-	if (queue->head == NULL) {
-		return 0;
-	}
+	if (queue->head == NULL) { return 0; }
 
 	int count = 1;
 	queueitem *item = queue->head;

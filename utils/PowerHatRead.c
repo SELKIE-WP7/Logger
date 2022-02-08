@@ -1,7 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <math.h>
@@ -26,9 +26,9 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	for (int i2cc=0x40; i2cc < 0x44; i2cc++) {
+	for (int i2cc = 0x40; i2cc < 0x44; i2cc++) {
 		i2c_ina219_configure(handle, i2cc);
-		fprintf(stdout, "Input %02x\n", i2cc-0x40+1);
+		fprintf(stdout, "Input %02x\n", i2cc - 0x40 + 1);
 		float shuntVolts = i2c_ina219_read_shuntVoltage(handle, i2cc);
 		float busVolts = i2c_ina219_read_busVoltage(handle, i2cc);
 		float current = i2c_ina219_read_current(handle, i2cc);

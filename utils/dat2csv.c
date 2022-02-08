@@ -1,8 +1,8 @@
 #include <errno.h>
 #include <libgen.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <zlib.h>
@@ -22,13 +22,13 @@
  * wins. Output files are gzip compressed by default.
  */
 
- /*!
+/*!
  * @defgroup dat2csv dat2csv internal functions
  * @ingroup Executables
  * @{
  */
 
- //! qsort() comparison function
+//! qsort() comparison function
 int sort_uint(const void *a, const void *b);
 
 /*!
@@ -62,36 +62,40 @@ typedef char *(*csv_header_fn)(const uint8_t, const uint8_t, const char *, const
  */
 typedef char *(*csv_data_fn)(const msg_t *);
 
-
 //! Generate CSV header for timestamp messages (SLCHAN_TSTAMP)
-char * csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const char *sourceName, const char *channelName);
+char *csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const char *sourceName,
+                                const char *channelName);
 
 //! Convert timestamp (SLCHAN_TSTAMP) to string
-char * csv_all_timestamp_data(const msg_t *msg);
+char *csv_all_timestamp_data(const msg_t *msg);
 
 //! Generate CSV header for GPS position fields
-char * csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+char *csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+                               const char *channelName);
 
 //! Convert GPS position information to CSV string
-char * csv_gps_position_data(const msg_t *msg);
+char *csv_gps_position_data(const msg_t *msg);
 
 //! Generate CSV header for GPS velocity information
-char * csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+char *csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+                               const char *channelName);
 
 //! Convert GPS velocity information to CSV string
-char * csv_gps_velocity_data(const msg_t *msg);
+char *csv_gps_velocity_data(const msg_t *msg);
 
 //! Generate CSV header for GPS date and time information
-char * csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+char *csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+                               const char *channelName);
 
 //! Convert GPS date and time information to appropriate CSV string
-char * csv_gps_datetime_data(const msg_t *msg);
+char *csv_gps_datetime_data(const msg_t *msg);
 
 //! Generate CSV header for any single value floating point channel
-char * csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName);
+char *csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+                            const char *channelName);
 
 //! Convert single value floating point data channel to CSV string
-char * csv_all_float_data(const msg_t *msg);
+char *csv_all_float_data(const msg_t *msg);
 
 /*!
  * Represents the functions required to convert a specified message type to CSV format.
@@ -99,15 +103,15 @@ char * csv_all_float_data(const msg_t *msg);
  * Source and type will be exact matches, not ranges.
  */
 typedef struct {
-	uint8_t source; //!< Message source
-	uint8_t type; //!< Message type
+	uint8_t source;       //!< Message source
+	uint8_t type;         //!< Message type
 	csv_header_fn header; //!< CSV Header generator
-	csv_data_fn data; //!< CSV field generator
+	csv_data_fn data;     //!< CSV field generator
 } csv_msg_handler;
 //! @}
 
 //! Tidy up source and channel name arrays
-void free_sn_cn(char *sn[128], char * cn[128][128]);
+void free_sn_cn(char *sn[128], char *cn[128][128]);
 
 int main(int argc, char *argv[]) {
 	program_state state = {0};
@@ -119,8 +123,9 @@ int main(int argc, char *argv[]) {
 	bool clobberOutput = false;
 	uint8_t primaryClock = 0x02;
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-f] [-c varfile] [-z|-Z] [-T source] [-o outfile] datfile\n"
-                "\t-v\tIncrease verbosity\n"
+	char *usage =
+		"Usage: %1$s [-v] [-q] [-f] [-c varfile] [-z|-Z] [-T source] [-o outfile] datfile\n"
+		"\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
 		"\t-f\tOverwrite existing output files\n"
 		"\t-c\tRead source and channel names from specified file\n"
@@ -128,20 +133,20 @@ int main(int argc, char *argv[]) {
 		"\t-Z\tDisable gzipped output\n"
 		"\t-T\tUse specified source as primary clock\n"
 		"\t-o\tWrite output to named file\n"
-                "\nVersion: " GIT_VERSION_STRING "\n"
+		"\nVersion: " GIT_VERSION_STRING "\n"
 		"Default options equivalent to:\n"
 		"\t%1$s -z -T 0x02 datafile\n"
 		"Output file name will be generated based on input file name and compression flags, unless set by -o option\n"
 		"If no var file is provided using the -c option, the data file will be parsed twice in order to discover active channels\n";
 
-        opterr = 0; // Handle errors ourselves
-        int go = 0;
+	opterr = 0; // Handle errors ourselves
+	int go = 0;
 	bool doUsage = false;
-        while ((go = getopt(argc, argv, "vqfzZc:o:T:")) != -1) {
-                switch(go) {
-                        case 'v':
-                                state.verbose++;
-                                break;
+	while ((go = getopt(argc, argv, "vqfzZc:o:T:")) != -1) {
+		switch (go) {
+			case 'v':
+				state.verbose++;
+				break;
 			case 'q':
 				state.verbose--;
 				break;
@@ -173,13 +178,13 @@ int main(int argc, char *argv[]) {
 				log_error(&state, "Unknown option `-%c'", optopt);
 				doUsage = true;
 		}
-        }
+	}
 
 	// Should be 1 spare arguments: The file to convert
-        if (argc - optind != 1) {
+	if (argc - optind != 1) {
 		log_error(&state, "Invalid arguments");
 		doUsage = true;
-        }
+	}
 
 	if (doUsage) {
 		fprintf(stderr, usage, argv[0]);
@@ -193,10 +198,9 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-
 	char *sourceNames[128] = {0};
 	char *channelNames[128][128] = {0};
-	for (int i=0; i < 128; i++) {
+	for (int i = 0; i < 128; i++) {
 		sourceNames[i] = NULL;
 		for (int j = 0; j < 128; j++) {
 			channelNames[i][j] = NULL;
@@ -213,7 +217,8 @@ int main(int argc, char *argv[]) {
 		log_warning(&state, "Provide .var file using '-c' option to avoid this");
 		varfileName = strdup(inFileName);
 		if (varfileName == NULL) {
-			log_error(&state, "Error processing variable file name: %s", strerror(errno));
+			log_error(&state, "Error processing variable file name: %s",
+			          strerror(errno));
 			return -1;
 		}
 	}
@@ -238,40 +243,44 @@ int main(int argc, char *argv[]) {
 					exitLoop = true;
 					continue;
 				} else {
-					log_error(&state, "Error reading messages from variable file (Code: 0x%52x)\n", (uint8_t) tmp.data.value);
+					log_error(
+						&state,
+						"Error reading messages from variable file (Code: 0x%52x)\n",
+						(uint8_t)tmp.data.value);
 					log_error(&state, "%s", strerror(errno));
 					return -1;
 				}
 			}
 			if (tmp.type == SLCHAN_NAME) {
-				if (tmp.data.string.length == 0) {
-					continue;
-				}
+				if (tmp.data.string.length == 0) { continue; }
 				if (sourceNames[tmp.source]) {
 					// Most recent name wins, so discard any previous entries
 					free(sourceNames[tmp.source]);
 					sourceNames[tmp.source] = NULL;
 					nSources--;
 				}
-				sourceNames[tmp.source] = strndup(tmp.data.string.data, tmp.data.string.length);
+				sourceNames[tmp.source] =
+					strndup(tmp.data.string.data, tmp.data.string.length);
 				usedSources[nSources++] = tmp.source;
 			} else if (tmp.type == SLCHAN_MAP) {
 				for (int i = 0; i < tmp.data.names.entries && i < 128; i++) {
-					if (tmp.data.names.strings[i].length == 0) {
-						continue;
-					}
+					if (tmp.data.names.strings[i].length == 0) { continue; }
 					if (channelNames[tmp.source][i]) {
-						// Most recent name wins, so discard any previous entries
+						// Most recent name wins, so discard any previous
+						// entries
 						free(channelNames[tmp.source][i]);
 						channelNames[tmp.source][i] = NULL;
 					}
-					channelNames[tmp.source][i] = strndup(tmp.data.names.strings[i].data, tmp.data.names.strings[i].length);
+					channelNames[tmp.source][i] =
+						strndup(tmp.data.names.strings[i].data,
+					                tmp.data.names.strings[i].length);
 				}
 			} // And ignore any other message types
 			msg_destroy(&tmp);
 		}
 		fclose(varFile);
-		for (int i=0; i < 128; i++) {
+		// clang-format off
+		for (int i = 0; i < 128; i++) {
 			if (sourceNames[i]) {
 				log_info(&state, 2, "[0x%02x]\t%s", i, sourceNames[i]);
 			}
@@ -281,6 +290,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		}
+		// clang-format on
 		free(varfileName);
 		varfileName = NULL;
 		qsort(&usedSources, nSources, sizeof(uint8_t), &sort_uint);
@@ -289,18 +299,20 @@ int main(int argc, char *argv[]) {
 	int nHandlers = 0;
 	int maxHandlers = 100;
 	csv_msg_handler *handlers = calloc(maxHandlers, sizeof(csv_msg_handler));
-	if (handlers == NULL) {
-		log_error(&state, "Unable to allocate handler map");
-	}
+	if (handlers == NULL) { log_error(&state, "Unable to allocate handler map"); }
 
 	// Set up per source timestamps (master clock handle separately);
 	for (int i = 0; i < nSources; i++) {
-		handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], SLCHAN_TSTAMP, &csv_all_timestamp_headers, &csv_all_timestamp_data};
+		handlers[nHandlers++] =
+			(csv_msg_handler){usedSources[i], SLCHAN_TSTAMP,
+		                          &csv_all_timestamp_headers, &csv_all_timestamp_data};
 
 		if (nHandlers >= maxHandlers) {
-			handlers = reallocarray(handlers, 50+maxHandlers, sizeof(csv_msg_handler));
+			handlers =
+				reallocarray(handlers, 50 + maxHandlers, sizeof(csv_msg_handler));
 			if (handlers == NULL) {
-				log_error(&state, "Unable to expand handler map: %s", strerror(errno));
+				log_error(&state, "Unable to expand handler map: %s",
+				          strerror(errno));
 				return -1;
 			}
 			maxHandlers += 50;
@@ -311,33 +323,41 @@ int main(int argc, char *argv[]) {
 		if (usedSources[i] >= SLSOURCE_GPS && usedSources[i] < (SLSOURCE_GPS + 0x10)) {
 			// Source ID in correct range, assume this is GPS device
 			if (nHandlers >= maxHandlers - 4) {
-				handlers = reallocarray(handlers, 50+maxHandlers, sizeof(csv_msg_handler));
+				handlers = reallocarray(handlers, 50 + maxHandlers,
+				                        sizeof(csv_msg_handler));
 				if (handlers == NULL) {
-					log_error(&state, "Unable to expand handler map: %s", strerror(errno));
+					log_error(&state, "Unable to expand handler map: %s",
+					          strerror(errno));
 					return -1;
 				}
 				maxHandlers += 50;
 			}
-			handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], 4, &csv_gps_position_headers, &csv_gps_position_data};
-			handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], 5, &csv_gps_velocity_headers, &csv_gps_velocity_data};
-			handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], 6, &csv_gps_datetime_headers, &csv_gps_datetime_data};
+			// clang-format off
+			handlers[nHandlers++] = (csv_msg_handler){usedSources[i], 4, &csv_gps_position_headers, &csv_gps_position_data};
+			handlers[nHandlers++] = (csv_msg_handler){usedSources[i], 5, &csv_gps_velocity_headers, &csv_gps_velocity_data};
+			handlers[nHandlers++] = (csv_msg_handler){usedSources[i], 6, &csv_gps_datetime_headers, &csv_gps_datetime_data};
+			// clang-format on
 		}
-		// Although these sources have to be communicated with differently, both output named channels with single floating point values
-		if ( (usedSources[i] >= SLSOURCE_I2C && usedSources[i] < (SLSOURCE_I2C + 0x10)) ||
-			(usedSources[i] >= SLSOURCE_MP  && usedSources[i] < (SLSOURCE_MP  + 0x10)) ||
-			(usedSources[i] >= SLSOURCE_ADC && usedSources[i] < (SLSOURCE_ADC + 0x10)) ) {
+		// Although these sources have to be communicated with differently, both
+		// output named channels with single floating point values
+		if ((usedSources[i] >= SLSOURCE_I2C && usedSources[i] < (SLSOURCE_I2C + 0x10)) ||
+		    (usedSources[i] >= SLSOURCE_MP && usedSources[i] < (SLSOURCE_MP + 0x10)) ||
+		    (usedSources[i] >= SLSOURCE_ADC && usedSources[i] < (SLSOURCE_ADC + 0x10))) {
 			// Start at first valid data channel (3)
 			for (int c = 3; c < 128; c++) {
 				// If the channel name is empty, assume we're not using this one
-				if (channelNames[usedSources[i]][c] == NULL) {
-					continue;
-				}
+				if (channelNames[usedSources[i]][c] == NULL) { continue; }
 				// Generic handler for any single floating point channels
-				handlers[nHandlers++] = (csv_msg_handler) {usedSources[i], c, &csv_all_float_headers, &csv_all_float_data};
+				handlers[nHandlers++] = (csv_msg_handler){usedSources[i], c,
+				                                          &csv_all_float_headers,
+				                                          &csv_all_float_data};
 				if (nHandlers >= maxHandlers) {
-					handlers = reallocarray(handlers, 50+maxHandlers, sizeof(csv_msg_handler));
+					handlers = reallocarray(handlers, 50 + maxHandlers,
+					                        sizeof(csv_msg_handler));
 					if (handlers == NULL) {
-						log_error(&state, "Unable to expand handler map: %s", strerror(errno));
+						log_error(&state,
+						          "Unable to expand handler map: %s",
+						          strerror(errno));
 						return -1;
 					}
 					maxHandlers += 50;
@@ -348,7 +368,8 @@ int main(int argc, char *argv[]) {
 
 	if (outFileName == NULL) {
 		// Work out output file name
-		// Split into base and dirnames so that we're don't accidentally split the path on a .
+		// Split into base and dirnames so that we're don't accidentally split the
+		// path on a .
 		char *inF1 = strdup(inFileName);
 		char *inF2 = strdup(inFileName);
 		char *dn = dirname(inF1);
@@ -365,16 +386,12 @@ int main(int argc, char *argv[]) {
 			bnl = ep - bn;
 		}
 		// New basename is old basename up to . (or end, if absent)
-		char *nbn = calloc(bnl+1, sizeof(char));
+		char *nbn = calloc(bnl + 1, sizeof(char));
 		strncpy(nbn, bn, bnl);
 		if (doGZ) {
-			if (asprintf(&outFileName, "%s/%s.csv.gz", dn, nbn) <= 0) {
-				return -1;
-			}
+			if (asprintf(&outFileName, "%s/%s.csv.gz", dn, nbn) <= 0) { return -1; }
 		} else {
-			if (asprintf(&outFileName, "%s/%s.csv", dn, nbn) <= 0) {
-				return -1;
-			}
+			if (asprintf(&outFileName, "%s/%s.csv", dn, nbn) <= 0) { return -1; }
 		}
 		free(nbn);
 		free(inF1);
@@ -382,7 +399,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	errno = 0;
-	char fmode[5] = {'w','b', 0, 0};
+	char fmode[5] = {'w', 'b', 0, 0};
 
 	if (doGZ) {
 		if (clobberOutput) {
@@ -418,7 +435,8 @@ int main(int argc, char *argv[]) {
 		destroy_program_state(&state);
 		return -1;
 	}
-	log_info(&state, 1, "Writing %s output to %s", doGZ ? "compressed" : "uncompressed", outFileName);
+	log_info(&state, 1, "Writing %s output to %s", doGZ ? "compressed" : "uncompressed",
+	         outFileName);
 	free(outFileName);
 	outFileName = NULL;
 
@@ -459,12 +477,15 @@ int main(int argc, char *argv[]) {
 	char *header = calloc(hsize, 1);
 
 	// The first handler is the master clock timestamp, so special case that header
-	hlen += snprintf(header+hlen, hsize-hlen, "Timestamp");
+	hlen += snprintf(header + hlen, hsize - hlen, "Timestamp");
 	// For all remaining headers:
 	for (int i = 0; i < nHandlers; i++) {
-		char *fieldTitle = handlers[i].header(handlers[i].source, handlers[i].type, sourceNames[handlers[i].source], channelNames[handlers[i].source][handlers[i].type]);
+		char *fieldTitle = handlers[i].header(
+			handlers[i].source, handlers[i].type, sourceNames[handlers[i].source],
+			channelNames[handlers[i].source][handlers[i].type]);
 		if (fieldTitle == NULL) {
-			log_error(&state, "Unable to generate field name string: %s", strerror(errno));
+			log_error(&state, "Unable to generate field name string: %s",
+			          strerror(errno));
 			gzclose(outFile);
 			fclose(inFile);
 			free(header);
@@ -478,14 +499,14 @@ int main(int argc, char *argv[]) {
 			header = realloc(header, hsize + 512);
 			hsize += 512;
 		}
-		hlen += snprintf(header+hlen,hsize-hlen,",%s", fieldTitle);
+		hlen += snprintf(header + hlen, hsize - hlen, ",%s", fieldTitle);
 		free(fieldTitle);
 	}
 
 	const int ctsLimit = 1000;
 	msg_t currentTimestep[ctsLimit];
-	for (int i=0; i < ctsLimit; i++) {
-		currentTimestep[i] = (msg_t) {0};
+	for (int i = 0; i < ctsLimit; i++) {
+		currentTimestep[i] = (msg_t){0};
 	}
 	int currMsg = 0;
 	log_info(&state, 2, "%s", header);
@@ -498,7 +519,9 @@ int main(int argc, char *argv[]) {
 		msg_t *tmp = &(currentTimestep[currMsg++]);
 		if (!mp_readMessage(fileno(inFile), tmp)) {
 			if (tmp->data.value == 0xAA || tmp->data.value == 0xEE) {
-				log_error(&state, "Error reading messages from file (Code: 0x%52x)\n", (uint8_t) tmp->data.value);
+				log_error(&state,
+				          "Error reading messages from file (Code: 0x%52x)\n",
+				          (uint8_t)tmp->data.value);
 			}
 			if (tmp->data.value == 0xFD) {
 				// No more data, exit cleanly
@@ -514,9 +537,12 @@ int main(int argc, char *argv[]) {
 			nextstep = tmp->data.timestamp;
 		}
 
-		// If we accumulate too many messages (bad clock choice?), force a record to be output
+		// If we accumulate too many messages (bad clock choice?), force a record
+		// to be output
 		if (currMsg >= (ctsLimit - 1) && (timestep == nextstep)) {
-			log_warning(&state, "Too many messages processed during %d. Forcing output.", timestep);
+			log_warning(&state,
+			            "Too many messages processed during %d. Forcing output.",
+			            timestep);
 			nextstep++;
 		}
 
@@ -530,10 +556,14 @@ int main(int argc, char *argv[]) {
 				bool error = false;
 				for (int m = 0; m < currMsg; m++) {
 					msg_t *msg = &(currentTimestep[m]);
-					if (msg->type == handlers[i].type && msg->source == handlers[i].source) {
+					if (msg->type == handlers[i].type &&
+					    msg->source == handlers[i].source) {
 						char *out = handlers[i].data(msg);
 						if (out == NULL) {
-							log_error(&state, "Error converting message to output format: %s", strerror(errno));
+							log_error(
+								&state,
+								"Error converting message to output format: %s",
+								strerror(errno));
 							error = true;
 							free(out);
 							break;
@@ -545,9 +575,12 @@ int main(int argc, char *argv[]) {
 					}
 				}
 				if (!error && !handled) {
-					char *out = handlers[i].data(NULL); // Generate empty fields
+					char *out =
+						handlers[i].data(NULL); // Generate empty fields
 					if (out == NULL) {
-						log_error(&state, "Error generating empty field: %s", strerror(errno));
+						log_error(&state,
+						          "Error generating empty field: %s",
+						          strerror(errno));
 						error = true;
 					} else {
 						gzprintf(outFile, ",%s", out);
@@ -555,7 +588,7 @@ int main(int argc, char *argv[]) {
 					free(out);
 				}
 				if (error) {
-					for (int m=0; m < currMsg; m++) {
+					for (int m = 0; m < currMsg; m++) {
 						msg_destroy(&(currentTimestep[m]));
 					}
 					gzclose(outFile);
@@ -568,7 +601,7 @@ int main(int argc, char *argv[]) {
 			}
 			gzprintf(outFile, "\n");
 			// Empty current message list
-			for (int m=0; m < currMsg; m++) {
+			for (int m = 0; m < currMsg; m++) {
 				msg_destroy(&(currentTimestep[m]));
 			}
 			currMsg = 0;
@@ -591,11 +624,9 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-void free_sn_cn(char *sn[128], char * cn[128][128]) {
+void free_sn_cn(char *sn[128], char *cn[128][128]) {
 	for (int i = 0; i < 128; i++) {
-		if (sn[i] != NULL) {
-			free(sn[i]);
-		}
+		if (sn[i] != NULL) { free(sn[i]); }
 	}
 	for (int i = 0; i < 128; i++) {
 		for (int j = 0; j < 128; j++) {
@@ -622,39 +653,35 @@ int sort_uint(const void *a, const void *b) {
 	return 0;
 }
 
-char * csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const char *sourceName, const char *channelName) {
+char *csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const char *sourceName,
+                                const char *channelName) {
 	char *fields = NULL;
-	if (asprintf(&fields, "Timestamp:%02X", source) <= 0) {
-		return NULL;
-	}
+	if (asprintf(&fields, "Timestamp:%02X", source) <= 0) { return NULL; }
 	return fields;
 }
 
-char * csv_all_timestamp_data(const msg_t *msg) {
+char *csv_all_timestamp_data(const msg_t *msg) {
 	char *out = NULL;
-	if (msg == NULL) {
-		return strdup("");
-	}
+	if (msg == NULL) { return strdup(""); }
 
-	if (asprintf(&out, "%d", msg->data.timestamp) <= 0) {
-		return NULL;
-	}
+	if (asprintf(&out, "%d", msg->data.timestamp) <= 0) { return NULL; }
 	return out;
 }
 
-char * csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName) {
+char *csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+                               const char *channelName) {
 	char *fields = NULL;
-	if (asprintf(&fields, "Longitude:%1$02X,Latitude:%1$02X,Height:%1$02X,HAcc:%1$02X,VAcc:%1$02X", source) <= 0) {
+	if (asprintf(&fields,
+	             "Longitude:%1$02X,Latitude:%1$02X,Height:%1$02X,HAcc:%1$02X,VAcc:%1$02X",
+	             source) <= 0) {
 		return NULL;
 	}
 	return fields;
 }
 
-char * csv_gps_position_data(const msg_t *msg) {
+char *csv_gps_position_data(const msg_t *msg) {
 	char *out = NULL;
-	if (msg == NULL) {
-		return strdup(",,,,");
-	}
+	if (msg == NULL) { return strdup(",,,,"); }
 	const float *d = msg->data.farray;
 	if (asprintf(&out, "%.5f,%.5f,%.3f,%.3f,%.3f", d[0], d[1], d[2], d[4], d[5]) <= 0) {
 		return NULL;
@@ -662,27 +689,32 @@ char * csv_gps_position_data(const msg_t *msg) {
 	return out;
 }
 
-char * csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName) {
+char *csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+                               const char *channelName) {
 	char *fields = NULL;
-	if (asprintf(&fields, "Velocity_N:%1$02X,Velocity_E:%1$02X,Velocity_D:%1$02X,SpeedAcc:%1$02X,Heading:%1$02X,HeadAcc:%1$02X", source) <= 0) {
+	if (asprintf(
+		    &fields,
+		    "Velocity_N:%1$02X,Velocity_E:%1$02X,Velocity_D:%1$02X,SpeedAcc:%1$02X,Heading:%1$02X,HeadAcc:%1$02X",
+		    source) <= 0) {
 		return NULL;
 	}
 	return fields;
 }
 
-char * csv_gps_velocity_data(const msg_t *msg) {
+char *csv_gps_velocity_data(const msg_t *msg) {
 	char *out = NULL;
-	if (msg == NULL) {
-		return strdup(",,,,,");
-	}
+	if (msg == NULL) { return strdup(",,,,,"); }
 	const float *d = msg->data.farray;
+	// clang-format off
 	if (asprintf(&out, "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f", d[0], d[1], d[2], d[5], d[4], d[6]) <= 0) {
 		return NULL;
 	}
+	// clang-format on
 	return out;
 }
 
-char * csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName) {
+char *csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+                               const char *channelName) {
 	char *fields = NULL;
 	if (asprintf(&fields, "Date:%1$02X,Time:%1$02X,DTAcc:%1$02X", source) <= 0) {
 		return NULL;
@@ -690,33 +722,27 @@ char * csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const 
 	return fields;
 }
 
-char * csv_gps_datetime_data(const msg_t *msg) {
+char *csv_gps_datetime_data(const msg_t *msg) {
 	char *out = NULL;
-	if (msg == NULL) {
-		return strdup(",,");
-	}
+	if (msg == NULL) { return strdup(",,"); }
 	const float *d = msg->data.farray;
-	if (asprintf(&out, "%04.0f-%02.0f-%02.0f,%02.0f:%02.0f:%02.0f.%06.0f,%09.0f", d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7]) <= 0) {
+	if (asprintf(&out, "%04.0f-%02.0f-%02.0f,%02.0f:%02.0f:%02.0f.%06.0f,%09.0f", d[0], d[1],
+	             d[2], d[3], d[4], d[5], d[6], d[7]) <= 0) {
 		return NULL;
 	}
 	return out;
 }
 
-char * csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourcename, const char *channelName) {
+char *csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+                            const char *channelName) {
 	char *fields = NULL;
-	if (asprintf(&fields, "%s:%02X", channelName, source) <= 0) {
-		return NULL;
-	}
+	if (asprintf(&fields, "%s:%02X", channelName, source) <= 0) { return NULL; }
 	return fields;
 }
 
-char * csv_all_float_data(const msg_t *msg) {
+char *csv_all_float_data(const msg_t *msg) {
 	char *out = NULL;
-	if (msg == NULL) {
-		return strdup("");
-	}
-	if (asprintf(&out, "%.6f", msg->data.value) <= 0) {
-		return NULL;
-	}
+	if (msg == NULL) { return strdup(""); }
+	if (asprintf(&out, "%.6f", msg->data.value) <= 0) { return NULL; }
 	return out;
 }

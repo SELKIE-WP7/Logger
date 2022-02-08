@@ -1,5 +1,5 @@
-#include "Logger.h"
 #include "LoggerI2C.h"
+#include "Logger.h"
 #include "LoggerSignals.h"
 
 /*!
@@ -10,8 +10,8 @@
  * @param ptargs Pointer to log_thread_args_t
  */
 void *i2c_setup(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	i2c_params *i2cInfo = (i2c_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	i2c_params *i2cInfo = (i2c_params *)args->dParams;
 
 	if (!i2c_validate_chanmap(i2cInfo)) {
 		log_error(args->pstate, "[I2C:%s] Invalid channel map", args->tag);
@@ -31,7 +31,8 @@ void *i2c_setup(void *ptargs) {
 }
 
 /*!
- * Iterates over all registered channels, calling the appropriate read function against the registered I2C device ID.
+ * Iterates over all registered channels, calling the appropriate read function against
+ * the registered I2C device ID.
  *
  * After each conversion function has been called, this thread will sleep in an
  * attempt to keep the poll frequency at the rate requested. This is a best
@@ -41,8 +42,8 @@ void *i2c_setup(void *ptargs) {
  */
 void *i2c_logging(void *ptargs) {
 	signalHandlersBlock();
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	i2c_params *i2cInfo = (i2c_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	i2c_params *i2cInfo = (i2c_params *)args->dParams;
 
 	log_info(args->pstate, 1, "[I2C:%s] Logging thread started", args->tag);
 
@@ -52,17 +53,14 @@ void *i2c_logging(void *ptargs) {
 		for (int mm = 0; mm < i2cInfo->en_count; mm++) {
 			i2c_msg_map *map = &(i2cInfo->chanmap[mm]);
 			float value = map->func(i2cInfo->handle, map->deviceAddr);
-			if (map->scale) {
-				value *= map->scale;
-			}
+			if (map->scale) { value *= map->scale; }
 
-			if (map->offset) {
-				value += map->offset;
-			}
+			if (map->offset) { value += map->offset; }
 
 			msg_t *msg = msg_new_float(i2cInfo->sourceNum, map->messageID, value);
 			if (!queue_push(args->logQ, msg)) {
-				log_error(args->pstate, "[I2C:%s] Error pushing message to queue", args->tag);
+				log_error(args->pstate, "[I2C:%s] Error pushing message to queue",
+				          args->tag);
 				msg_destroy(msg);
 				args->returnCode = -1;
 				pthread_exit(&(args->returnCode));
@@ -77,9 +75,11 @@ void *i2c_logging(void *ptargs) {
 		}
 		struct timespec now = {0};
 		clock_gettime(CLOCK_MONOTONIC, &now);
-		msg_t *msg = msg_new_timestamp(i2cInfo->sourceNum, SLCHAN_TSTAMP, (1000 * now.tv_sec + now.tv_nsec / 1000000));
+		msg_t *msg = msg_new_timestamp(i2cInfo->sourceNum, SLCHAN_TSTAMP,
+		                               (1000 * now.tv_sec + now.tv_nsec / 1000000));
 		if (!queue_push(args->logQ, msg)) {
-			log_error(args->pstate, "[I2C:%s] Error pushing message to queue", args->tag);
+			log_error(args->pstate, "[I2C:%s] Error pushing message to queue",
+			          args->tag);
 			msg_destroy(msg);
 			args->returnCode = -1;
 			pthread_exit(&(args->returnCode));
@@ -106,8 +106,9 @@ void *i2c_logging(void *ptargs) {
  * @param ptargs Pointer to log_thread_args_t
  */
 void *i2c_shutdown(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	i2c_params *i2cInfo = (i2c_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	i2c_params *i2cInfo = (i2c_params *)args->dParams;
+
 	if (i2cInfo->handle >= 0) { // Admittedly 0 is unlikely
 		i2c_closeConnection(i2cInfo->handle);
 	}
@@ -133,10 +134,11 @@ void *i2c_shutdown(void *ptargs) {
  * @param ptargs Pointer to log_thread_args_t
  */
 void *i2c_channels(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	i2c_params *i2cInfo = (i2c_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	i2c_params *i2cInfo = (i2c_params *)args->dParams;
 
-	msg_t *m_sn = msg_new_string(i2cInfo->sourceNum, SLCHAN_NAME, strlen(i2cInfo->sourceName), i2cInfo->sourceName);
+	msg_t *m_sn = msg_new_string(i2cInfo->sourceNum, SLCHAN_NAME, strlen(i2cInfo->sourceName),
+	                             i2cInfo->sourceName);
 
 	if (!queue_push(args->logQ, m_sn)) {
 		log_error(args->pstate, "[I2C:%s] Error pushing channel name to queue", args->tag);
@@ -146,18 +148,19 @@ void *i2c_channels(void *ptargs) {
 	}
 
 	uint8_t maxID = 3;
-	for (int i=0; i < i2cInfo->en_count; i++) {
+	for (int i = 0; i < i2cInfo->en_count; i++) {
 		if (i2cInfo->chanmap[i].messageID > maxID) {
 			maxID = i2cInfo->chanmap[i].messageID;
 		}
 	}
-	strarray *channels = sa_new(maxID+1);
+	strarray *channels = sa_new(maxID + 1);
 	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
 	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");
 	sa_create_entry(channels, SLCHAN_TSTAMP, 9, "Timestamp");
 
-	for (int i=0; i < i2cInfo->en_count; i++) {
-		sa_set_entry(channels, i2cInfo->chanmap[i].messageID, &(i2cInfo->chanmap[i].message_name));
+	for (int i = 0; i < i2cInfo->en_count; i++) {
+		sa_set_entry(channels, i2cInfo->chanmap[i].messageID,
+		             &(i2cInfo->chanmap[i].message_name));
 	}
 
 	msg_t *m_cmap = msg_new_string_array(i2cInfo->sourceNum, SLCHAN_MAP, channels);
@@ -177,25 +180,21 @@ void *i2c_channels(void *ptargs) {
 }
 
 device_callbacks i2c_getCallbacks() {
-	device_callbacks cb = {
-		.startup = &i2c_setup,
-		.logging = &i2c_logging,
-		.shutdown = &i2c_shutdown,
-		.channels = &i2c_channels
-	};
+	device_callbacks cb = {.startup = &i2c_setup,
+	                       .logging = &i2c_logging,
+	                       .shutdown = &i2c_shutdown,
+	                       .channels = &i2c_channels};
 	return cb;
 }
 
 i2c_params i2c_getParams() {
-	i2c_params i2c = {
-		.busName = NULL,
-		.sourceName = NULL,
-		.sourceNum = SLSOURCE_I2C,
-		.handle = -1,
-		.frequency = 10,
-		.en_count = 0,
-		.chanmap = NULL
-	};
+	i2c_params i2c = {.busName = NULL,
+	                  .sourceName = NULL,
+	                  .sourceNum = SLSOURCE_I2C,
+	                  .handle = -1,
+	                  .frequency = 10,
+	                  .en_count = 0,
+	                  .chanmap = NULL};
 	return i2c;
 }
 
@@ -208,9 +207,7 @@ i2c_params i2c_getParams() {
 bool i2c_validate_chanmap(i2c_params *ip) {
 	i2c_msg_map *cmap = ip->chanmap;
 	bool seen[128] = {0};
-	if (!cmap) {
-		return false;
-	}
+	if (!cmap) { return false; }
 	// Reserved channels
 	seen[SLCHAN_NAME] = true;
 	seen[SLCHAN_MAP] = true;
@@ -220,17 +217,11 @@ bool i2c_validate_chanmap(i2c_params *ip) {
 	seen[SLCHAN_LOG_WARN] = true;
 	seen[SLCHAN_LOG_ERR] = true;
 
-	for (int i=0; i < ip->en_count; i++) {
-		if (seen[ip->chanmap[i].messageID]) {
-			return false;
-		}
+	for (int i = 0; i < ip->en_count; i++) {
+		if (seen[ip->chanmap[i].messageID]) { return false; }
 		seen[ip->chanmap[i].messageID] = true;
-		if (!ip->chanmap[i].func) {
-			return false;
-		}
-		if (!ip->chanmap[i].deviceAddr) {
-			return false;
-		}
+		if (!ip->chanmap[i].func) { return false; }
+		if (!ip->chanmap[i].deviceAddr) { return false; }
 	}
 	return true;
 }
@@ -248,16 +239,10 @@ bool i2c_validate_chanmap(i2c_params *ip) {
  * @return True on success, false otherwise
  */
 bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID) {
-	if (!ip) {
-		return false;
-	}
-	if (baseID < 4 || baseID > 121) {
-		return false;
-	}
+	if (!ip) { return false; }
+	if (baseID < 4 || baseID > 121) { return false; }
 	i2c_msg_map *tmp = realloc(ip->chanmap, sizeof(i2c_msg_map) * (ip->en_count + 3));
-	if (!tmp) {
-		return false;
-	}
+	if (!tmp) { return false; }
 	ip->chanmap = tmp;
 
 	char tmpS[50] = {0};
@@ -275,7 +260,7 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 	ip->en_count++;
 
 	snprintf(tmpS, 16, "0x%02x:BusVoltage", devAddr);
-	ip->chanmap[ip->en_count].messageID = baseID+1;
+	ip->chanmap[ip->en_count].messageID = baseID + 1;
 	ip->chanmap[ip->en_count].message_name.length = 0;
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 16, tmpS);
@@ -286,7 +271,7 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 	ip->en_count++;
 
 	snprintf(tmpS, 16, "0x%02x:BusCurrent", devAddr);
-	ip->chanmap[ip->en_count].messageID = baseID+2;
+	ip->chanmap[ip->en_count].messageID = baseID + 2;
 	ip->chanmap[ip->en_count].message_name.length = 0;
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 16, tmpS);
@@ -315,17 +300,12 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
  * @param[in] offset Add this amount to received values
  * @return True on success, false otherwise
  */
-bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID, const float scale, const float offset) {
-	if (!ip) {
-		return false;
-	}
-	if (baseID < 4 || baseID > 121) {
-		return false;
-	}
+bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID,
+                             const float scale, const float offset) {
+	if (!ip) { return false; }
+	if (baseID < 4 || baseID > 121) { return false; }
 	i2c_msg_map *tmp = realloc(ip->chanmap, sizeof(i2c_msg_map) * (ip->en_count + 4));
-	if (!tmp) {
-		return false;
-	}
+	if (!tmp) { return false; }
 	ip->chanmap = tmp;
 
 	char tmpS[50] = {0};
@@ -352,7 +332,6 @@ bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_
 	ip->chanmap[ip->en_count].offset = offset;
 	ip->chanmap[ip->en_count].func = &i2c_ads1015_read_ch1;
 	ip->en_count++;
-
 
 	snprintf(tmpS, 8, "0x%02x:A2", devAddr);
 	ip->chanmap[ip->en_count].messageID = baseID + 2;
@@ -387,19 +366,12 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 
 	i2c_params *ip = calloc(1, sizeof(i2c_params));
 	if (!ip) {
-		log_error(lta->pstate, "[I2C:%s] Unable to allocate memory for device parameters", lta->tag);
+		log_error(lta->pstate, "[I2C:%s] Unable to allocate memory for device parameters",
+		          lta->tag);
 		return false;
 	}
 	(*ip) = i2c_getParams();
-/*
- *
-	.busName = NULL,
-	.sourceNum = SLSOURCE_I2C,
-	.handle = -1,
-	.frequency = 10,
-	.en_count = 0,
-	.chanmap = NULL
-*/
+
 	config_kv *t = NULL;
 	if ((t = config_get_key(s, "name"))) {
 		ip->sourceName = config_qstrdup(t->value);
@@ -409,20 +381,22 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 	}
 	t = NULL;
 
-	if ((t = config_get_key(s, "bus"))) {
-		ip->busName = config_qstrdup(t->value);
-	}
+	if ((t = config_get_key(s, "bus"))) { ip->busName = config_qstrdup(t->value); }
 	t = NULL;
 
 	if ((t = config_get_key(s, "frequency"))) {
 		errno = 0;
 		ip->frequency = strtol(t->value, NULL, 0);
 		if (errno) {
-			log_error(lta->pstate, "[I2C:%s] Error parsing sample frequency: %s", lta->tag, strerror(errno));
+			log_error(lta->pstate, "[I2C:%s] Error parsing sample frequency: %s",
+			          lta->tag, strerror(errno));
 			return false;
 		}
 		if (ip->frequency <= 0) {
-			log_error(lta->pstate, "[I2C:%s] Invalid frequency requested (%d) - must be positive and non-zero", lta->tag, ip->frequency);
+			log_error(
+				lta->pstate,
+				"[I2C:%s] Invalid frequency requested (%d) - must be positive and non-zero",
+				lta->tag, ip->frequency);
 			return false;
 		}
 	}
@@ -432,11 +406,13 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 		errno = 0;
 		int sn = strtol(t->value, NULL, 0);
 		if (errno) {
-			log_error(lta->pstate, "[I2C:%s] Error parsing source number: %s", lta->tag, strerror(errno));
+			log_error(lta->pstate, "[I2C:%s] Error parsing source number: %s",
+			          lta->tag, strerror(errno));
 			return false;
 		}
 		if (sn < 0) {
-			log_error(lta->pstate, "[I2C:%s] Invalid source number (%s)", lta->tag, t->value);
+			log_error(lta->pstate, "[I2C:%s] Invalid source number (%s)", lta->tag,
+			          t->value);
 			return false;
 		}
 		if (sn < 10) {
@@ -444,7 +420,10 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 		} else {
 			ip->sourceNum = sn;
 			if (sn < SLSOURCE_I2C || sn > (SLSOURCE_I2C + 0x0F)) {
-				log_warning(lta->pstate, "[I2C:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems", lta->tag, sn);
+				log_warning(
+					lta->pstate,
+					"[I2C:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems",
+					lta->tag, sn);
 			}
 		}
 	}
@@ -455,7 +434,8 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 	// manually specified IDs, which should be caught by i2c_validate_chanmap
 	uint8_t baseMsgID = 4;
 
-	// Loop over all keys present, as the options parsed below this line may be present multiple times
+	// Loop over all keys present, as the options parsed below this line may be
+	// present multiple times
 	for (int i = 0; i < s->numopts; i++) {
 		t = &(s->opts[i]);
 		if (strncasecmp(t->key, "ina219", 7) == 0) {
@@ -466,7 +446,10 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 				int baddr = strtol(t->value, NULL, 16);
 				int msgid = strtol(strtok_r(NULL, ":", &strtsp), NULL, 16);
 				if (!i2c_chanmap_add_ina219(ip, baddr, msgid)) {
-					log_error(lta->pstate, "[I2C:%s] Failed to register INA219 device at address 0x%02x and base message ID 0x%02x", lta->tag, baddr, msgid);
+					log_error(
+						lta->pstate,
+						"[I2C:%s] Failed to register INA219 device at address 0x%02x and base message ID 0x%02x",
+						lta->tag, baddr, msgid);
 					return false;
 				}
 
@@ -475,7 +458,10 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 				errno = 0;
 				int baddr = strtol(t->value, NULL, 16);
 				if (!i2c_chanmap_add_ina219(ip, baddr, baseMsgID)) {
-					log_error(lta->pstate, "[I2C:%s] Failed to register INA219 device at address 0x%02x and base message ID 0x%02x", lta->tag, baddr, baseMsgID);
+					log_error(
+						lta->pstate,
+						"[I2C:%s] Failed to register INA219 device at address 0x%02x and base message ID 0x%02x",
+						lta->tag, baddr, baseMsgID);
 					return false;
 				}
 				baseMsgID += 3;
@@ -484,12 +470,15 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 			char *strtsp = NULL;
 			if (strtok_r(t->value, ":", &strtsp)) {
 				// First part is base address, second is base message ID
-				// Optional third and fourth parts are scale and offset respectively
+				// Optional third and fourth parts are scale and offset
+				// respectively
 				errno = 0;
 				int baddr = strtol(t->value, NULL, 16);
 				int msgid = strtol(strtok_r(NULL, ":", &strtsp), NULL, 16);
 				if (errno) {
-					log_error(lta->pstate, "[I2C:%s] Error parsing values in configuration", lta->tag);
+					log_error(lta->pstate,
+					          "[I2C:%s] Error parsing values in configuration",
+					          lta->tag);
 					return false;
 				}
 
@@ -499,7 +488,10 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 				if (tt) {
 					scale = strtof(tt, NULL);
 					if (errno) {
-						log_error(lta->pstate, "[I2C:%s] Error parsing scale value in configuration", lta->tag);
+						log_error(
+							lta->pstate,
+							"[I2C:%s] Error parsing scale value in configuration",
+							lta->tag);
 						return false;
 					}
 
@@ -508,14 +500,20 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 						errno = 0;
 						offset = strtof(tt, NULL);
 						if (errno) {
-							log_error(lta->pstate, "[I2C:%s] Error parsing offset value in configuration", lta->tag);
+							log_error(
+								lta->pstate,
+								"[I2C:%s] Error parsing offset value in configuration",
+								lta->tag);
 							return false;
 						}
 					}
 				}
 
 				if (!i2c_chanmap_add_ads1015(ip, baddr, msgid, scale, offset)) {
-					log_error(lta->pstate, "[I2C:%s] Failed to register ADS1015 device at address 0x%02x and base message ID 0x%02x", lta->tag, baddr, msgid);
+					log_error(
+						lta->pstate,
+						"[I2C:%s] Failed to register ADS1015 device at address 0x%02x and base message ID 0x%02x",
+						lta->tag, baddr, msgid);
 					return false;
 				}
 
@@ -524,13 +522,15 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 				errno = 0;
 				int baddr = strtol(t->value, NULL, 16);
 				if (!i2c_chanmap_add_ads1015(ip, baddr, baseMsgID, 0, 0)) {
-					log_error(lta->pstate, "[I2C:%s] Failed to register ADS1015 device at address 0x%02x and base message ID 0x%02x", lta->tag, baddr, baseMsgID);
+					log_error(
+						lta->pstate,
+						"[I2C:%s] Failed to register ADS1015 device at address 0x%02x and base message ID 0x%02x",
+						lta->tag, baddr, baseMsgID);
 					return false;
 				}
 				baseMsgID += 4;
 			}
 		}
-
 	}
 	lta->dParams = ip;
 	return i2c_validate_chanmap(ip);

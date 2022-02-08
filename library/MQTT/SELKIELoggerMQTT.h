@@ -11,7 +11,7 @@
  * @ingroup Library
  * @{
  */
-#include "MQTT/MQTTTypes.h"
 #include "MQTT/MQTTConnection.h"
+#include "MQTT/MQTTTypes.h"
 //! @}
 #endif

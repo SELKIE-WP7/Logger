@@ -2,7 +2,7 @@
 #define SELKIELoggerMP_Types
 
 /*!
- * @file MPTypes.h Serial Data types and definitions for communication with compatible MessagePack data sources
+ * @file MPTypes.h Serial Data types and definitions for compatible MessagePack data sources
  * @ingroup SELKIELoggerMP
  */
 

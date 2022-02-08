@@ -2,8 +2,8 @@
 #define SL_LOGGER_DW_H
 
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "SELKIELoggerBase.h"
@@ -19,42 +19,41 @@
 
 //! Configuration is as per simple network sources
 typedef struct {
-	char *sourceName; //!< User defined name for this source
+	char *sourceName;  //!< User defined name for this source
 	uint8_t sourceNum; //!< Source ID for messages
-	char *addr; //!< Target name
-	int handle; //!< Handle for currently opened device
-	int timeout; //!< Reconnect if no data received after this interval [s]
+	char *addr;        //!< Target name
+	int handle;        //!< Handle for currently opened device
+	int timeout;       //!< Reconnect if no data received after this interval [s]
 	bool recordRaw;
 	bool parseSpectrum;
 } dw_params;
 
-#define DWCHAN_NAME SLCHAN_NAME
-#define DWCHAN_MAP SLCHAN_MAP
+#define DWCHAN_NAME   SLCHAN_NAME
+#define DWCHAN_MAP    SLCHAN_MAP
 #define DWCHAN_TSTAMP SLCHAN_TSTAMP
-#define DWCHAN_RAW SLCHAN_RAW
-#define DWCHAN_SIG 4
-#define DWCHAN_DN 5
-#define DWCHAN_DW 6
-#define DWCHAN_DV 7
+#define DWCHAN_RAW    SLCHAN_RAW
+#define DWCHAN_SIG    4
+#define DWCHAN_DN     5
+#define DWCHAN_DW     6
+#define DWCHAN_DV     7
 
-#define DWCHAN_LAT 8
-#define DWCHAN_LON 9
+#define DWCHAN_LAT    8
+#define DWCHAN_LON    9
 #define DWCHAN_ORIENT 10
 #define DWCHAN_INCLIN 11
 #define DWCHAN_GPSFIX 12
-#define DWCHAN_HRMS 13
-#define DWCHAN_TREF 14
-#define DWCHAN_TWTR 15
-#define DWCHAN_WEEKS 16
+#define DWCHAN_HRMS   13
+#define DWCHAN_TREF   14
+#define DWCHAN_TWTR   15
+#define DWCHAN_WEEKS  16
 
-#define DWCHAN_SPF 17
-#define DWCHAN_SPD 18
-#define DWCHAN_SPS 19
-#define DWCHAN_SPM 20
-#define DWCHAN_SPN 21
-#define DWCHAN_SPR 22
-#define DWCHAN_SPK 23
-
+#define DWCHAN_SPF    17
+#define DWCHAN_SPD    18
+#define DWCHAN_SPS    19
+#define DWCHAN_SPM    20
+#define DWCHAN_SPN    21
+#define DWCHAN_SPR    22
+#define DWCHAN_SPK    23
 
 //! Datawell thread setup
 void *dw_setup(void *ptargs);

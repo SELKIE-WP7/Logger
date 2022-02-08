@@ -9,9 +9,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
 //! SN3218 I2C Address
-#define SN3218_ADDR_DEFAULT	0x54
+#define SN3218_ADDR_DEFAULT 0x54
 
 /*!
  * @defgroup SN3218REG SN3218 Register Addresses
@@ -21,7 +20,7 @@
  */
 
 //! Global device enable register
-#define SN3218_REG_ENABLE	0x00
+#define SN3218_REG_ENABLE   0x00
 
 /*!
  * @defgroup SN3218REGPWM SN3218 PWM Registers
@@ -35,58 +34,58 @@
  */
 
 //! LED 1 PWM Intensity (0-255)
-#define SN3218_REG_PWM_01	0x01
+#define SN3218_REG_PWM_01   0x01
 
 //! LED 2 PWM Intensity (0-255)
-#define SN3218_REG_PWM_02	0x02
+#define SN3218_REG_PWM_02   0x02
 
 //! LED 3 PWM Intensity (0-255)
-#define SN3218_REG_PWM_03	0x03
+#define SN3218_REG_PWM_03   0x03
 
 //! LED 4 PWM Intensity (0-255)
-#define SN3218_REG_PWM_04	0x04
+#define SN3218_REG_PWM_04   0x04
 
 //! LED 5 PWM Intensity (0-255)
-#define SN3218_REG_PWM_05	0x05
+#define SN3218_REG_PWM_05   0x05
 
 //! LED 6 PWM Intensity (0-255)
-#define SN3218_REG_PWM_06	0x06
+#define SN3218_REG_PWM_06   0x06
 
 //! LED 7 PWM Intensity (0-255)
-#define SN3218_REG_PWM_07	0x07
+#define SN3218_REG_PWM_07   0x07
 
 //! LED 8 PWM Intensity (0-255)
-#define SN3218_REG_PWM_08	0x08
+#define SN3218_REG_PWM_08   0x08
 
 //! LED 9 PWM Intensity (0-255)
-#define SN3218_REG_PWM_09	0x09
+#define SN3218_REG_PWM_09   0x09
 
 //! LED 10 PWM Intensity (0-255)
-#define SN3218_REG_PWM_10	0x0A
+#define SN3218_REG_PWM_10   0x0A
 
 //! LED 11 PWM Intensity (0-255)
-#define SN3218_REG_PWM_11	0x0B
+#define SN3218_REG_PWM_11   0x0B
 
 //! LED 12 PWM Intensity (0-255)
-#define SN3218_REG_PWM_12	0x0C
+#define SN3218_REG_PWM_12   0x0C
 
 //! LED 13 PWM Intensity (0-255)
-#define SN3218_REG_PWM_13	0x0D
+#define SN3218_REG_PWM_13   0x0D
 
 //! LED 14 PWM Intensity (0-255)
-#define SN3218_REG_PWM_14	0x0E
+#define SN3218_REG_PWM_14   0x0E
 
 //! LED 15 PWM Intensity (0-255)
-#define SN3218_REG_PWM_15	0x0F
+#define SN3218_REG_PWM_15   0x0F
 
 //! LED 16 PWM Intensity (0-255)
-#define SN3218_REG_PWM_16	0x10
+#define SN3218_REG_PWM_16   0x10
 
 //! LED 17 PWM Intensity (0-255)
-#define SN3218_REG_PWM_17	0x11
+#define SN3218_REG_PWM_17   0x11
 
 //! LED 18 PWM Intensity (0-255)
-#define SN3218_REG_PWM_18	0x12
+#define SN3218_REG_PWM_18   0x12
 //! @}
 
 /*!
@@ -101,20 +100,20 @@
  */
 
 //! LEDs 1 - 6 control register
-#define SN3218_REG_LED_01	0x13
+#define SN3218_REG_LED_01   0x13
 
 //! LEDs 7-12 control register
-#define SN3218_REG_LED_02	0x14
+#define SN3218_REG_LED_02   0x14
 
 //! LEDs 13-18 control register
-#define SN3218_REG_LED_03	0x15
+#define SN3218_REG_LED_03   0x15
 //!@}
 
 //! SN3218 Update register - set high to apply changes
-#define SN3218_REG_UPDATE	0x16
+#define SN3218_REG_UPDATE   0x16
 
 //! SN3218 Reset register - set high to reset all control registers
-#define SN3218_REG_RESET	0x17
+#define SN3218_REG_RESET    0x17
 
 //! @}
 
@@ -131,7 +130,7 @@
  * software representation of its state for convenience.
  */
 typedef struct {
-	uint8_t led[18]; //!< Individual LED brightnesses
+	uint8_t led[18];    //!< Individual LED brightnesses
 	bool global_enable; //!< Global on/off switch
 } i2c_sn3218_state;
 

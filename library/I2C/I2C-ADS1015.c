@@ -3,12 +3,12 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <sys/ioctl.h>
-#include <linux/i2c-dev.h>
 #include <i2c/smbus.h>
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
 
-#include "I2CConnection.h"
 #include "I2C-ADS1015.h"
+#include "I2CConnection.h"
 
 /*!
  * Connect to specified device address and read configuration
@@ -18,15 +18,11 @@
  * @return configuration word
  */
 uint16_t i2c_ads1015_read_configuration(const int busHandle, const int devAddr) {
-	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) {
-		return false;
-	}
+	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) { return false; }
 
 	int32_t res = i2c_smbus_read_word_data(busHandle, ADS1015_REG_CONFIG);
-	if (res < 0) {
-		return -1;
-	}
-	return ((uint16_t) i2c_swapbytes(res));
+	if (res < 0) { return -1; }
+	return ((uint16_t)i2c_swapbytes(res));
 }
 
 /*!
@@ -61,7 +57,8 @@ float i2c_ads1015_pga_to_scale_factor(const uint16_t config) {
 }
 
 /*!
- * Perform a single shot conversion on an ADS1015 device using provided mux and pga values.
+ * Perform a single shot conversion on an ADS1015 device using provided mux and pga
+ * values.
  *
  * mux and pga parameters will be masked before use.
  *
@@ -71,27 +68,34 @@ float i2c_ads1015_pga_to_scale_factor(const uint16_t config) {
  * @param[in] pga ADS1015_CONFIG_PGA_ constant to determine measurement range
  */
 float i2c_ads1015_read_mux(const int busHandle, const int devAddr, const uint16_t mux, const uint16_t pga) {
-	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) {
-		return NAN;
-	}
+	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) { return NAN; }
 
-	while (!(i2c_ads1015_read_configuration(busHandle, devAddr) & ADS1015_CONFIG_STATE_CONVERT)) { usleep(100);}
+	while (!(i2c_ads1015_read_configuration(busHandle, devAddr) & ADS1015_CONFIG_STATE_CONVERT)) {
+		usleep(100);
+	}
 
 	uint16_t confClear = (ADS1015_CONFIG_DEFAULT & ADS1015_CONFIG_MUX_CLEAR & ADS1015_CONFIG_PGA_CLEAR);
 	uint16_t muxToSet = (mux & ADS1015_CONFIG_MUX_SELECT);
 	uint16_t pgaToSet = (pga & ADS1015_CONFIG_PGA_SELECT);
-	// Default configuration with MUX and PGA cleared, OR'd with the MUX bits of mux and PGA bits of pga
-	// Finally, the top bit is set (using ADS1015_CONFIG_STATE_CONVERT) to trigger the measurement
-	if (i2c_smbus_write_word_data(busHandle, ADS1015_REG_CONFIG, 
-			(uint16_t)i2c_swapbytes( confClear | muxToSet | pgaToSet | ADS1015_CONFIG_STATE_CONVERT) ) < 0) {
+
+	/*
+	 * Default configuration with MUX and PGA cleared, OR'd with the MUX
+	 * bits of mux and PGA bits of pga
+	 *
+	 * Finally, the top bit is set (using ADS1015_CONFIG_STATE_CONVERT) to
+	 * trigger the measurement
+	 */
+	if (i2c_smbus_write_word_data(
+		    busHandle, ADS1015_REG_CONFIG,
+		    (uint16_t)i2c_swapbytes(confClear | muxToSet | pgaToSet | ADS1015_CONFIG_STATE_CONVERT)) < 0) {
 		return NAN;
 	}
-	while (i2c_ads1015_read_configuration(busHandle, devAddr) & ADS1015_CONFIG_STATE_CONVERT) { usleep(100);}
+	while (i2c_ads1015_read_configuration(busHandle, devAddr) & ADS1015_CONFIG_STATE_CONVERT) {
+		usleep(100);
+	}
 
 	int32_t res = i2c_smbus_read_word_data(busHandle, ADS1015_REG_RESULT);
-	if (res < 0) {
-		return NAN;
-	}
+	if (res < 0) { return NAN; }
 
 	uint16_t sres = i2c_swapbytes(res);
 	sres = (sres & 0xFFF0) >> 4;

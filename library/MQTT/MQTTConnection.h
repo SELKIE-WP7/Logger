@@ -3,8 +3,8 @@
 
 #include <stdbool.h>
 
-#include "SELKIELoggerBase.h"
 #include "MQTTTypes.h"
+#include "SELKIELoggerBase.h"
 
 mqtt_conn *mqtt_openConnection(const char *host, const int port, mqtt_queue_map *qm);
 void mqtt_closeConnection(mqtt_conn *conn);

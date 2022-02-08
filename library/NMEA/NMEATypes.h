@@ -4,7 +4,7 @@
 /*!
  * @file NMEATypes.h Serial Data types and definitions for communication with NMEA devices
  * @ingroup SELKIELoggerNMEA
- * 
+ *
  * It should be noted that this library has not been written based on the
  * official NMEA specifications, but based on the information available from
  * the gpsd project at https://gpsd.gitlab.io/gpsd/NMEA.html
@@ -27,13 +27,13 @@
 #define NMEA_START_BYTE2 0x21
 
 //! NMEA Checksum Delimiter
-#define NMEA_CSUM_MARK 0x2a
+#define NMEA_CSUM_MARK   0x2a
 
 //! NMEA End Byte 1: Carriage Return
-#define NMEA_END_BYTE1 0x0d
+#define NMEA_END_BYTE1   0x0d
 
 //! NMEA End Byte 1: Line Feed
-#define NMEA_END_BYTE2 0x0a
+#define NMEA_END_BYTE2   0x0a
 
 /*!
  * Messages start with either START byte, up to 79 bytes of ASCII data, and are
@@ -57,12 +57,13 @@
  */
 typedef struct {
 	bool encapsulated; //!< Encapsulated message (all data in raw)
-	char talker[4]; //!< Talker ID (2-4 characters)
-	char message[3]; //!< Message ID
-	uint8_t rawlen; //!< Length of data stored in raw
-	uint8_t raw[80]; //!< Raw data. Up to 79 chars if encapsulated, otherwise will be shorter
-	strarray fields; //!< If parsed, array of fields
-	uint8_t checksum; //!< Message Checksum
+	char talker[4];    //!< Talker ID (2-4 characters)
+	char message[3];   //!< Message ID
+	uint8_t rawlen;    //!< Length of data stored in raw
+	uint8_t raw[80];   //!< Raw data. Up to 79 chars if encapsulated, otherwise will be
+	                   //!< shorter
+	strarray fields;   //!< If parsed, array of fields
+	uint8_t checksum;  //!< Message Checksum
 } nmea_msg_t;
 
 //! @}

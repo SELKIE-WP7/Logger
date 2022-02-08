@@ -5,6 +5,7 @@ from flask_bootstrap import Bootstrap
 
 from .pages import pages
 
+
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     # ensure the instance folder exists
@@ -13,18 +14,18 @@ def create_app(test_config=None):
     except OSError:
         pass
     app.config.from_mapping(
-            DATA_PATH='/media/data/live/',
-            SECRET_KEY='21u3o1i2hlbjkl1h3i1uo31y283oi213h12li3',
-            SERVICE_NAME='datalogger',
-            BOOTSTRAP_SERVE_LOCAL=True,
-            DEVICE_NAME="Unnamed Device",
-            STATE_NAME='SLogger.state'
-            )
-    app.config.from_pyfile(os.path.join(app.instance_path, 'config.py'), silent=True)
+        DATA_PATH="/media/data/live/",
+        SECRET_KEY="21u3o1i2hlbjkl1h3i1uo31y283oi213h12li3",
+        SERVICE_NAME="datalogger",
+        BOOTSTRAP_SERVE_LOCAL=True,
+        DEVICE_NAME="Unnamed Device",
+        STATE_NAME="SLogger.state",
+    )
+    app.config.from_pyfile(os.path.join(app.instance_path, "config.py"), silent=True)
 
     Bootstrap(app)
     app.register_blueprint(pages)
- 
+
     def handle_unknown_component(*args, **kwargs):
         return False
 
@@ -33,7 +34,8 @@ def create_app(test_config=None):
     try:
         import autohatctl
         from .autohat import ahc
-        app.register_blueprint(ahc, url_prefix='/autohat')
+
+        app.register_blueprint(ahc, url_prefix="/autohat")
     except ModuleNotFoundError:
         app.logger.warning("Automation HAT support disabled")
 

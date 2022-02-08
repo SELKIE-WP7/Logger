@@ -11,8 +11,8 @@
  * @ingroup Library
  * @{
  */
-#include "NMEA/NMEATypes.h"
 #include "NMEA/NMEAMessages.h"
 #include "NMEA/NMEASerial.h"
+#include "NMEA/NMEATypes.h"
 //! @}
 #endif

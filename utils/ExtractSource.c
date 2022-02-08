@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <libgen.h>
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <zlib.h>
@@ -20,7 +20,6 @@
  * @ingroup Executables
  */
 
-
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
@@ -31,27 +30,28 @@ int main(int argc, char *argv[]) {
 	bool type[255] = {0};
 	bool raw = false;
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-f] [-r] [-o outfile] -S source [-T type [-T type ...]] datfile\n"
-                "\t-v\tIncrease verbosity\n"
+	char *usage =
+		"Usage: %1$s [-v] [-q] [-f] [-r] [-o outfile] -S source [-T type [-T type ...]] datfile\n"
+		"\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
 		"\t-f\tOverwrite existing output files\n"
 		"\t-r\tWrite raw data (No message formatting)\n"
 		"\t-S\tSource number to extract\n"
 		"\t-T\tMessage type(s) to extract\n"
 		"\t-o\tWrite output to named file\n"
-                "\nVersion: " GIT_VERSION_STRING "\n"
+		"\nVersion: " GIT_VERSION_STRING "\n"
 		"\nOutput file name will be generated based on input file name, unless set by -o option\n";
 
-        opterr = 0; // Handle errors ourselves
-        int go = 0;
+	opterr = 0; // Handle errors ourselves
+	int go = 0;
 	bool doUsage = false;
 	uint8_t tmp = 0;
 	uint8_t typeCount = 0;
-        while ((go = getopt(argc, argv, "vqfro:S:T:")) != -1) {
-                switch(go) {
-                        case 'v':
-                                state.verbose++;
-                                break;
+	while ((go = getopt(argc, argv, "vqfro:S:T:")) != -1) {
+		switch (go) {
+			case 'v':
+				state.verbose++;
+				break;
 			case 'q':
 				state.verbose--;
 				break;
@@ -71,7 +71,8 @@ int main(int argc, char *argv[]) {
 			case 'T':
 				tmp = strtol(optarg, NULL, 0);
 				if (tmp < 1 || tmp >= 128) {
-					log_error(&state, "Invalid message type requested (%s)", optarg);
+					log_error(&state, "Invalid message type requested (%s)",
+					          optarg);
 					doUsage = true;
 				}
 				type[tmp] = true;
@@ -85,13 +86,13 @@ int main(int argc, char *argv[]) {
 				log_error(&state, "Unknown option `-%c'", optopt);
 				doUsage = true;
 		}
-        }
+	}
 
 	// Should be 1 spare arguments: The file to convert
-        if (argc - optind != 1) {
+	if (argc - optind != 1) {
 		log_error(&state, "Invalid arguments");
 		doUsage = true;
-        }
+	}
 
 	if (doUsage) {
 		fprintf(stderr, usage, argv[0]);
@@ -112,12 +113,14 @@ int main(int argc, char *argv[]) {
 
 	if (raw && typeCount != 1) {
 		log_warning(&state, "Raw mode requested without a message type filter");
-		log_warning(&state, "Different message types will not be distinguished in output file");
+		log_warning(&state,
+		            "Different message types will not be distinguished in output file");
 	}
 
 	if (outFileName == NULL) {
 		// Work out output file name
-		// Split into base and dirnames so that we're don't accidentally split the path on a .
+		// Split into base and dirnames so that we're don't accidentally split the
+		// path on a .
 		char *inF1 = strdup(inFileName);
 		char *inF2 = strdup(inFileName);
 		char *dn = dirname(inF1);
@@ -134,18 +137,16 @@ int main(int argc, char *argv[]) {
 			bnl = ep - bn;
 		}
 		// New basename is old basename up to . (or end, if absent)
-		char *nbn = calloc(bnl+1, sizeof(char));
+		char *nbn = calloc(bnl + 1, sizeof(char));
 		strncpy(nbn, bn, bnl);
-		if (asprintf(&outFileName, "%s/%s.s%02x.dat", dn, nbn, source) <= 0) {
-			return -1;
-		}
+		if (asprintf(&outFileName, "%s/%s.s%02x.dat", dn, nbn, source) <= 0) { return -1; }
 		free(nbn);
 		free(inF1);
 		free(inF2);
 	}
 
 	errno = 0;
-	char fmode[4] = {'w','b', 0};
+	char fmode[4] = {'w', 'b', 0};
 
 	if (!clobberOutput) {
 		// wbx7: Create, binary, comp. level 7
@@ -167,9 +168,7 @@ int main(int argc, char *argv[]) {
 	if (typeCount > 0) {
 		log_info(&state, 2, "Filtering for %d message types", typeCount);
 		for (int i = 0; i < 128; i++) {
-			if (type[i]) {
-				log_info(&state, 3, "Message type 0x%02x enabled", i);
-			}
+			if (type[i]) { log_info(&state, 3, "Message type 0x%02x enabled", i); }
 		}
 	}
 	free(outFileName);
@@ -206,7 +205,9 @@ int main(int argc, char *argv[]) {
 		msg_t tmp = {0};
 		if (!mp_readMessage(fileno(inFile), &tmp)) {
 			if (tmp.data.value == 0xAA || tmp.data.value == 0xEE) {
-				log_error(&state, "Error reading messages from file (Code: 0x%52x)\n", (uint8_t) tmp.data.value);
+				log_error(&state,
+				          "Error reading messages from file (Code: 0x%52x)\n",
+				          (uint8_t)tmp.data.value);
 			}
 			if (tmp.data.value == 0xFD) {
 				// No more data, exit cleanly
@@ -216,14 +217,13 @@ int main(int argc, char *argv[]) {
 		}
 		if (tmp.source == source) {
 			bool writeMsg = true;
-			if (typeCount > 0) {
-				writeMsg = type[tmp.type];
-			}
+			if (typeCount > 0) { writeMsg = type[tmp.type]; }
 
 			if (writeMsg) {
 				if (raw) {
 					if (!mp_writeData(fileno(outFile), &tmp)) {
-						log_error(&state, "Unable to write output: %s", strerror(errno));
+						log_error(&state, "Unable to write output: %s",
+						          strerror(errno));
 						fclose(inFile);
 						fclose(outFile);
 						destroy_program_state(&state);
@@ -231,7 +231,8 @@ int main(int argc, char *argv[]) {
 					}
 				} else {
 					if (!mp_writeMessage(fileno(outFile), &tmp)) {
-						log_error(&state, "Unable to write output: %s", strerror(errno));
+						log_error(&state, "Unable to write output: %s",
+						          strerror(errno));
 						fclose(inFile);
 						fclose(outFile);
 						destroy_program_state(&state);

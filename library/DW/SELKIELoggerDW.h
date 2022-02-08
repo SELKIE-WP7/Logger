@@ -13,6 +13,6 @@
  * Support for Datawell data formats and device communications.
  */
 
-#include "DW/DWTypes.h"
 #include "DW/DWMessages.h"
+#include "DW/DWTypes.h"
 #endif

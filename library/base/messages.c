@@ -1,20 +1,21 @@
 #include <errno.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "messages.h"
 
 /*!
- * Allocates a new msg_t, copies in the source, type and value and sets the data type to MSG_FLOAT.
+ * Allocates a new msg_t, copies in the source, type and value and sets the data type to
+ * MSG_FLOAT.
  *
  * @param[in] source Message source
  * @param[in] type   Message type
  * @param[in] val    General numeric value, represented as single precision float
  * @return Pointer to new message
  */
-msg_t * msg_new_float(const uint8_t source, const uint8_t type, const float val) {
+msg_t *msg_new_float(const uint8_t source, const uint8_t type, const float val) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
 	newmsg->type = type;
@@ -25,14 +26,15 @@ msg_t * msg_new_float(const uint8_t source, const uint8_t type, const float val)
 }
 
 /*!
- * Allocates a new msg_t, copies in the source, type and value and sets the data type to MSG_TIMESTAMP.
+ * Allocates a new msg_t, copies in the source, type and value and sets the data type to
+ * MSG_TIMESTAMP.
  *
  * @param[in] source Message source
  * @param[in] type   Message type
- * @param[in] ts     Timestamp, assumed to be a value in milliseconds since an arbitrary epoch
+ * @param[in] ts     Timestamp, assumed to be milliseconds from an arbitrary epoch
  * @return Pointer to new message
  */
-msg_t * msg_new_timestamp(const uint8_t source, const uint8_t type, const uint32_t ts) {
+msg_t *msg_new_timestamp(const uint8_t source, const uint8_t type, const uint32_t ts) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
 	newmsg->type = type;
@@ -43,13 +45,15 @@ msg_t * msg_new_timestamp(const uint8_t source, const uint8_t type, const uint32
 }
 
 /*!
- * Allocates a new msg_t, copies in the source, type and value and sets the data type to MSG_STRING
+ * Allocates a new msg_t, copies in the source, type and value and sets the data type to
+ * MSG_STRING
  *
  * Intended for sending/receiving source/device names.
  *
  * String is created with str_update()
  *
- * The length value for a string message is redundant, and duplicates the value embedded in the string itself.
+ * The length value for a string message is redundant, and duplicates the value embedded
+ * in the string itself.
  *
  * @param[in] source Message source
  * @param[in] type   Message type
@@ -57,7 +61,7 @@ msg_t * msg_new_timestamp(const uint8_t source, const uint8_t type, const uint32
  * @param[in] str    Pointer to character array
  * @return Pointer to new message, NULL on failure
  */
-msg_t * msg_new_string(const uint8_t source, const uint8_t type, const size_t len, const char *str) {
+msg_t *msg_new_string(const uint8_t source, const uint8_t type, const size_t len, const char *str) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
 	newmsg->type = type;
@@ -71,21 +75,23 @@ msg_t * msg_new_string(const uint8_t source, const uint8_t type, const size_t le
 }
 
 /*!
- * Allocates a new msg_t, copies in the source, type and values and sets the data type to MSG_STRARRAY
+ * Allocates a new msg_t, copies in the source, type and values and sets the data type to
+ * MSG_STRARRAY
  *
  * Intended for sending/receiving channel names
  *
  * String is copied with sa_copy()
  *
  * The length value embedded in the message is set to the number of entries in the array.
- * The length of the individual strings has to be extracted from the information in the array itself.
+ * The length of the individual strings has to be extracted from the information in the
+ * array itself.
  *
  * @param[in] source Message source
  * @param[in] type   Message type
  * @param[in] array  Pointer to existing string array
  * @return Pointer to new message, NULL on failure
  */
-msg_t * msg_new_string_array(const uint8_t source, const uint8_t type, const strarray *array) {
+msg_t *msg_new_string_array(const uint8_t source, const uint8_t type, const strarray *array) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
 	newmsg->type = type;
@@ -99,7 +105,8 @@ msg_t * msg_new_string_array(const uint8_t source, const uint8_t type, const str
 }
 
 /*!
- * Allocates a new msg_t, copies in the source, type and values and sets the data type to MSG_BYTES
+ * Allocates a new msg_t, copies in the source, type and values and sets the data type to
+ * MSG_BYTES
  *
  * Intended for sending/receiving arbitrary binary data.
  *
@@ -113,7 +120,7 @@ msg_t * msg_new_string_array(const uint8_t source, const uint8_t type, const str
  * @return Pointer to new message, NULL on failure
  */
 
-msg_t * msg_new_bytes(const uint8_t source, const uint8_t type, const size_t len, const uint8_t *bytes) {
+msg_t *msg_new_bytes(const uint8_t source, const uint8_t type, const size_t len, const uint8_t *bytes) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
 	newmsg->type = type;
@@ -131,7 +138,8 @@ msg_t * msg_new_bytes(const uint8_t source, const uint8_t type, const size_t len
 }
 
 /*!
- * Allocates a new msg_t, copies in the source, type and array and sets the data type to MSG_NUMARRAY
+ * Allocates a new msg_t, copies in the source, type and array and sets the data type to
+ * MSG_NUMARRAY
  *
  * The original array can be freed by the caller after creating the message.
  *
@@ -141,7 +149,7 @@ msg_t * msg_new_bytes(const uint8_t source, const uint8_t type, const size_t len
  * @param[in] array   Pointer to array of floats
  * @return Pointer to new message
  */
-msg_t * msg_new_float_array(const uint8_t source, const uint8_t type, const size_t entries, const float *array) {
+msg_t *msg_new_float_array(const uint8_t source, const uint8_t type, const size_t entries, const float *array) {
 	msg_t *newmsg = calloc(1, sizeof(msg_t));
 	newmsg->source = source;
 	newmsg->type = type;
@@ -149,7 +157,7 @@ msg_t * msg_new_float_array(const uint8_t source, const uint8_t type, const size
 	newmsg->length = entries;
 	newmsg->data.farray = calloc(entries, sizeof(float));
 	errno = 0;
-	memcpy(newmsg->data.farray, array, entries*sizeof(float));
+	memcpy(newmsg->data.farray, array, entries * sizeof(float));
 	if (errno) {
 		free(newmsg->data.farray);
 		free(newmsg);
@@ -166,7 +174,7 @@ msg_t * msg_new_float_array(const uint8_t source, const uint8_t type, const size
  *
  * @param[in] msg Message to be destroyed
  */
-void msg_destroy(msg_t* msg) {
+void msg_destroy(msg_t *msg) {
 	switch (msg->dtype) {
 		case MSG_ERROR:
 		case MSG_FLOAT:

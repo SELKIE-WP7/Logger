@@ -1,7 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "SELKIELoggerI2C.h"
@@ -11,7 +11,8 @@
  * @brief Read values from a Pimoronoi Automation Hat
  * @ingroup Executables
  *
- * Will read the ADC values from the automation hat, assuming it to be connected to /dev/i2c-1
+ * Will read the ADC values from the automation hat, assuming it to be connected to
+ * /dev/i2c-1
  *
  */
 int main(int argc, char *argv[]) {
@@ -23,10 +24,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	const float cfact = 7.88842;
+	// clang-format off
 	float ch0 = i2c_ads1015_read_mux(handle, ADS1015_ADDR_DEFAULT, ADS1015_CONFIG_MUX_SINGLE_0, ADS1015_CONFIG_PGA_4096MV);
 	float ch1 = i2c_ads1015_read_mux(handle, ADS1015_ADDR_DEFAULT, ADS1015_CONFIG_MUX_SINGLE_1, ADS1015_CONFIG_PGA_4096MV) * cfact;
 	float ch2 = i2c_ads1015_read_mux(handle, ADS1015_ADDR_DEFAULT, ADS1015_CONFIG_MUX_SINGLE_2, ADS1015_CONFIG_PGA_4096MV) * cfact;
 	float ch3 = i2c_ads1015_read_mux(handle, ADS1015_ADDR_DEFAULT, ADS1015_CONFIG_MUX_SINGLE_3, ADS1015_CONFIG_PGA_4096MV) * cfact;
+	// clang-format on
 
 	float delta_1_3 = i2c_ads1015_read_diff_ch1_ch3(handle, ADS1015_ADDR_DEFAULT);
 	float delta_2_3 = i2c_ads1015_read_diff_ch2_ch3(handle, ADS1015_ADDR_DEFAULT);

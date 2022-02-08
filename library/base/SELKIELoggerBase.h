@@ -12,9 +12,9 @@
  */
 
 #include "base/logging.h"
-#include "base/queue.h"
 #include "base/messages.h"
-#include "base/sources.h"
+#include "base/queue.h"
 #include "base/serial.h"
+#include "base/sources.h"
 
 #endif

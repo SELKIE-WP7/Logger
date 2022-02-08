@@ -1,6 +1,6 @@
 #include "LoggerConfig.h"
 
-int config_handler(void* user, const char* section, const char* name, const char* value) {
+int config_handler(void *user, const char *section, const char *name, const char *value) {
 	ini_config *c = (ini_config *)user;
 
 	// For each new key/value:
@@ -22,7 +22,8 @@ int config_handler(void* user, const char* section, const char* name, const char
 			cs->name = strdup(section);
 		} else {
 			c->sectsize += 5;
-			config_section *a = realloc(c->sects,c->sectsize * sizeof(config_section));
+			config_section *a =
+				realloc(c->sects, c->sectsize * sizeof(config_section));
 			if (a == NULL) {
 				perror("config_handler");
 				return 0;
@@ -43,7 +44,7 @@ int config_handler(void* user, const char* section, const char* name, const char
 		cs->optsize += 5;
 		config_kv *a = NULL;
 		if (cs->opts) {
-			a = realloc(cs->opts,cs->optsize * sizeof(config_kv));
+			a = realloc(cs->opts, cs->optsize * sizeof(config_kv));
 		} else {
 			a = calloc(cs->optsize, sizeof(config_kv));
 		}
@@ -63,9 +64,7 @@ int config_handler(void* user, const char* section, const char* name, const char
 }
 
 bool new_config(ini_config *c) {
-	if (c == NULL) {
-		return false;
-	}
+	if (c == NULL) { return false; }
 	c->sectsize = 10;
 	c->sects = calloc(c->sectsize, sizeof(config_section));
 	if (c->sects == NULL) {
@@ -94,9 +93,7 @@ bool new_config(ini_config *c) {
 }
 
 void destroy_config(ini_config *c) {
-	if (c == NULL) {
-		return;
-	}
+	if (c == NULL) { return; }
 
 	for (int i = 0; i < c->numsects; ++i) {
 		config_section *cs = &(c->sects[i]);
@@ -111,15 +108,11 @@ void destroy_config(ini_config *c) {
 }
 
 void print_config(ini_config *c) {
-	if (c == NULL) {
-		return;
-	}
+	if (c == NULL) { return; }
 
 	for (int i = 0; i < c->numsects; ++i) {
 		config_section *cs = &(c->sects[i]);
-		if (strcmp("", cs->name) != 0) {
-			fprintf(stdout, "[%s]\n", cs->name);
-		}
+		if (strcmp("", cs->name) != 0) { fprintf(stdout, "[%s]\n", cs->name); }
 		for (int j = 0; j < cs->numopts; ++j) {
 			fprintf(stdout, "%s = %s\n", cs->opts[j].key, cs->opts[j].value);
 		}
@@ -130,9 +123,7 @@ void print_config(ini_config *c) {
 config_section *config_get_section(const ini_config *in, const char *sn) {
 	for (int i = 0; i < in->numsects; i++) {
 		config_section *cs = &(in->sects[i]);
-		if (strcasecmp(sn, cs->name) == 0) {
-			return cs;
-		}
+		if (strcasecmp(sn, cs->name) == 0) { return cs; }
 	}
 	return NULL;
 }
@@ -140,25 +131,19 @@ config_section *config_get_section(const ini_config *in, const char *sn) {
 config_kv *config_get_key(const config_section *cs, const char *kn) {
 	for (int i = 0; i < cs->numopts; i++) {
 		config_kv *k = &(cs->opts[i]);
-		if (strcasecmp(kn, k->key) == 0) {
-			return k;
-		}
+		if (strcasecmp(kn, k->key) == 0) { return k; }
 	}
 	return NULL;
 }
 
 config_kv *config_get_option(const ini_config *in, const char *sn, const char *kn) {
 	config_section *cs = config_get_section(in, sn);
-	if (cs == NULL) {
-		return NULL;
-	}
+	if (cs == NULL) { return NULL; }
 	return config_get_key(cs, kn);
 }
 
 int config_parse_bool(const char *b) {
-	if (b == NULL || (strcmp(b, "") == 0)) {
-		return -1;
-	}
+	if (b == NULL || (strcmp(b, "") == 0)) { return -1; }
 
 	switch (b[0]) {
 		case 'Y':
@@ -177,11 +162,11 @@ int config_parse_bool(const char *b) {
 	return -1;
 }
 
-char *config_qstrdup(const char * c) {
+char *config_qstrdup(const char *c) {
 	size_t sl = strlen(c);
-	if (((c[0] == '"') && (c[sl-1] == '"')) || ((c[0] == '\'') && (c[sl-1] == '\''))) {
+	if (((c[0] == '"') && (c[sl - 1] == '"')) || ((c[0] == '\'') && (c[sl - 1] == '\''))) {
 		// Length minus the two quote chars
-		return strndup(&(c[1]), sl-2);
+		return strndup(&(c[1]), sl - 2);
 	}
 
 	// No matched quotes? Dup what we were given

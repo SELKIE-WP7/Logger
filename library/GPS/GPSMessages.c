@@ -1,8 +1,8 @@
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "GPSMessages.h"
 
@@ -41,7 +41,6 @@ void ubx_calc_checksum(const ubx_message *msg, uint8_t *csA, uint8_t *csB) {
 	return;
 }
 
-
 /*!
  * Simple wrapper around ubx_calc_checksum() to update the checksum bytes
  * within the structure.
@@ -55,7 +54,7 @@ void ubx_set_checksum(ubx_message *msg) {
 /*!
  * Calculates checksum with ubx_calc_checksum() and compares to bytes stored in
  * the provided message.
- * 
+ *
  * @param[in] msg Input message
  * @return Checksum validity (true/false)
  */
@@ -63,14 +62,13 @@ bool ubx_check_checksum(const ubx_message *msg) {
 	uint8_t a = 0;
 	uint8_t b = 0;
 	ubx_calc_checksum(msg, &a, &b);
-	if ((msg->csumA == a) && (msg->csumB == b)) {
-		return true;
-	}
+	if ((msg->csumA == a) && (msg->csumB == b)) { return true; }
 	return false;
 }
 
 /*!
- * Allocates a new array of bytes and copies message into array in transmission order (e.g. out[0] to be sent first).
+ * Allocates a new array of bytes and copies message into array in transmission order
+ * (e.g. out[0] to be sent first).
  *
  * Will handle large data arrays if required. Output array must be freed by caller.
  *
@@ -86,8 +84,8 @@ size_t ubx_flat_array(const ubx_message *msg, uint8_t **out) {
 	outarray[ix++] = msg->sync2;
 	outarray[ix++] = msg->msgClass;
 	outarray[ix++] = msg->msgID;
-	outarray[ix++] = (uint8_t) (msg->length & 0xFF);
-	outarray[ix++] = (uint8_t) (msg->length >> 8);
+	outarray[ix++] = (uint8_t)(msg->length & 0xFF);
+	outarray[ix++] = (uint8_t)(msg->length >> 8);
 
 	if (msg->length <= 256) {
 		memcpy(outarray + ix, msg->data, msg->length);
@@ -112,21 +110,21 @@ size_t ubx_flat_array(const ubx_message *msg, uint8_t **out) {
  * @param[in] msg Input message
  * @return Pointer to character array
  */
-char * ubx_string_hex(const ubx_message *msg) {
+char *ubx_string_hex(const ubx_message *msg) {
 	int strlength = 24 + 3 * msg->length;
 	char *str = calloc(strlength, 1);
 	sprintf(str, "%02x %02x %02x %02x ", msg->sync1, msg->sync2, msg->msgClass, msg->msgID);
-	sprintf(str+12, "%02x %02x ", (uint8_t) (msg->length & 0xFF), (uint8_t) (msg->length >> 8));
+	sprintf(str + 12, "%02x %02x ", (uint8_t)(msg->length & 0xFF), (uint8_t)(msg->length >> 8));
 	if (msg->length <= 256) {
 		for (uint8_t ix = 0; ix < msg->length; ix++) {
-			sprintf(str+18+3*ix, "%02x ", msg->data[ix]);
+			sprintf(str + 18 + 3 * ix, "%02x ", msg->data[ix]);
 		}
 	} else {
 		for (uint16_t ix = 0; ix < msg->length; ix++) {
-			sprintf(str+18+3*ix,"%02x ", msg->extdata[ix]);
+			sprintf(str + 18 + 3 * ix, "%02x ", msg->extdata[ix]);
 		}
 	}
-	sprintf(str+18+3*msg->length, "%02x %02x", msg->csumA, msg->csumB);
+	sprintf(str + 18 + 3 * msg->length, "%02x %02x", msg->csumA, msg->csumB);
 	return str;
 }
 
@@ -153,13 +151,9 @@ void ubx_print_hex(const ubx_message *msg) {
  * @param[out] out Pointer to output message (allocated by caller)
  */
 bool ubx_decode_nav_pvt(const ubx_message *msg, ubx_nav_pvt *out) {
-	if (out == NULL || msg == NULL) {
-		return false;
-	}
+	if (out == NULL || msg == NULL) { return false; }
 
-	if (msg->msgClass != UBXNAV || msg->msgID != 0x07 || msg->length != 92) {
-		return false;
-	}
+	if (msg->msgClass != UBXNAV || msg->msgID != 0x07 || msg->length != 92) { return false; }
 
 	const uint8_t *d = msg->data;
 	out->tow = d[0] + (d[1] << 8) + (d[2] << 16) + (d[3] << 24);
@@ -173,17 +167,17 @@ bool ubx_decode_nav_pvt(const ubx_message *msg, ubx_nav_pvt *out) {
 	out->validTime = d[11] & 0x02;
 	out->validMagDec = d[11] & 0x08;
 	out->accuracy = d[12] + (d[13] << 8) + (d[14] << 16) + (d[15] << 24);
-	out->nanosecond = (int32_t) (d[16] + (d[17] << 8) + (d[18] << 16) + (d[19] << 24));
+	out->nanosecond = (int32_t)(d[16] + (d[17] << 8) + (d[18] << 16) + (d[19] << 24));
 	out->fixType = d[20];
 	out->fixFlags = d[21];
 	out->fixFlags2 = d[22];
 	out->numSV = d[23];
-	out->longitude = ((int32_t) (d[24] + (d[25] << 8) + (d[26] << 16) + (d[27] << 24))) * 1E-7;
-	out->latitude = ((int32_t) (d[28] + (d[29] << 8) + (d[30] << 16) + (d[31] << 24))) * 1E-7;
+	out->longitude = ((int32_t)(d[24] + (d[25] << 8) + (d[26] << 16) + (d[27] << 24))) * 1E-7;
+	out->latitude = ((int32_t)(d[28] + (d[29] << 8) + (d[30] << 16) + (d[31] << 24))) * 1E-7;
 	out->height = (int32_t)(d[32] + (d[33] << 8) + (d[34] << 16) + (d[35] << 24));
 	out->ASL = (int32_t)(d[36] + (d[37] << 8) + (d[38] << 16) + (d[39] << 24));
 	out->horizAcc = d[40] + (d[41] << 8) + (d[42] << 16) + (d[43] << 24);
-	out->vertAcc = d[44] + (d[45] << 8) + (d[46] << 16) + (d[47] <<24);
+	out->vertAcc = d[44] + (d[45] << 8) + (d[46] << 16) + (d[47] << 24);
 	out->northV = (int32_t)(d[48] + (d[49] << 8) + (d[50] << 16) + (d[51] << 24));
 	out->eastV = (int32_t)(d[52] + (d[53] << 8) + (d[54] << 16) + (d[55] << 24));
 	out->downV = (int32_t)(d[56] + (d[57] << 8) + (d[58] << 16) + (d[59] << 24));

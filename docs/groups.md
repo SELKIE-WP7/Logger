@@ -52,4 +52,3 @@ Coverage for message processing functions is reasonable, but could still be expa
 @defgroup Executables User facing software tools
 
 @defgroup testing Library test scripts/programs
-

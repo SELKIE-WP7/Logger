@@ -10,10 +10,11 @@
  * @defgroup SELKIELoggerMP Internal message format support
  * @ingroup Library
  *
- * Support for internal message pack based data format, including support for serial devices and data files
+ * Support for internal message pack based data format, including support for serial
+ * devices and data files
  */
 
-#include "MP/MPTypes.h"
 #include "MP/MPSerial.h"
+#include "MP/MPTypes.h"
 
 #endif

@@ -1,8 +1,8 @@
 #ifndef SELKIELoggerBase_Queue
 #define SELKIELoggerBase_Queue
 
-#include <stdbool.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 #include "messages.h"
 
@@ -27,7 +27,8 @@ struct msgqueue {
 	queueitem *tail;
 	//! Queue lock
 	pthread_mutex_t lock;
-	//! Set in queue_init(), entries will only be added and removed while this remains true
+	//! Set in queue_init(), entries will only be added and removed while this remains
+	//! true
 	bool valid;
 };
 
@@ -53,7 +54,7 @@ bool queue_push(msgqueue *queue, msg_t *item);
 bool queue_push_qi(msgqueue *queue, queueitem *item);
 
 //! Remove topmost item from the queue and return it, if queue is not empty
-msg_t * queue_pop(msgqueue *queue);
+msg_t *queue_pop(msgqueue *queue);
 
 //! Iterate over queue and return current number of items
 int queue_count(const msgqueue *queue);

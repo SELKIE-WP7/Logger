@@ -7,11 +7,10 @@
  *
  * @brief Generates main data logging executable
  *
- * Reads data from connected sensors, generates timestamps and writes the resulting messages to file for later conversion and analysis.
+ * Reads data from connected sensors, generates timestamps and writes the resulting
+ * messages to file for later conversion and analysis.
  * @}
  */
-
-
 
 int main(int argc, char *argv[]) {
 	struct global_opts go = {0};
@@ -24,22 +23,24 @@ int main(int argc, char *argv[]) {
 
 	int verbosityModifier = 0;
 
-        char *usage =  "Usage: %1$s [-v] [-q] <config file>\n"
-                "\t-v\tIncrease verbosity\n"
-		"\t-q\tDecrease verbosity\n"
-		"\nSee documentation for configuration file format details\n"
-                "\nVersion: " GIT_VERSION_STRING "\n";
+	char *usage = "Usage: %1$s [-v] [-q] <config file>\n"
+		      "\t-v\tIncrease verbosity\n"
+		      "\t-q\tDecrease verbosity\n"
+		      "\nSee documentation for configuration file format details\n"
+		      "\nVersion: " GIT_VERSION_STRING "\n";
 
-/*****************************************************************************
-	Program Startup
-*****************************************************************************/
-	setvbuf(stdout, NULL, _IONBF, 0); // Unbuffered stdout = more accurate journalling/reporting
+	/*****************************************************************************
+	        Program Startup
+	*****************************************************************************/
 
-        opterr = 0; // Handle errors ourselves
-        int gov = 0;
+	// Unbuffered stdout = more accurate journalling/reporting
+	setvbuf(stdout, NULL, _IONBF, 0);
+
+	opterr = 0; // Handle errors ourselves
+	int gov = 0;
 	bool doUsage = false;
-        while ((gov = getopt (argc, argv, "vq")) != -1) {
-                switch(gov) {
+	while ((gov = getopt(argc, argv, "vq")) != -1) {
+		switch (gov) {
 			case 'v':
 				verbosityModifier++;
 				break;
@@ -50,13 +51,13 @@ int main(int argc, char *argv[]) {
 				log_error(&state, "Unknown option `-%c'", optopt);
 				doUsage = true;
 		}
-        }
+	}
 
 	// Should be 1 spare arguments - the configuration file name
-        if (argc - optind != 1) {
+	if (argc - optind != 1) {
 		log_error(&state, "Invalid arguments");
 		doUsage = true;
-        }
+	}
 
 	if (doUsage) {
 		fprintf(stderr, usage, argv[0]);
@@ -66,9 +67,9 @@ int main(int argc, char *argv[]) {
 
 	go.configFileName = strdup(argv[optind]);
 
-/***************************
-	Extract global config options from "" section
-****************************/
+	/***************************
+	        Extract global config options from "" section
+	****************************/
 
 	ini_config conf = {0};
 	if (!new_config(&conf)) {
@@ -86,7 +87,8 @@ int main(int argc, char *argv[]) {
 
 	config_section *def = config_get_section(&conf, "");
 	if (def == NULL) {
-		log_warning(&state, "No global configuration section found in file. Using defaults");
+		log_warning(&state,
+		            "No global configuration section found in file. Using defaults");
 	} else {
 		config_kv *kv = NULL;
 		if ((kv = config_get_key(def, "verbose"))) {
@@ -103,26 +105,24 @@ int main(int argc, char *argv[]) {
 			errno = 0;
 			go.coreFreq = strtol(kv->value, NULL, 0);
 			if (errno) {
-				log_error(&state, "Error parsing core sample frequency: %s", strerror(errno));
+				log_error(&state, "Error parsing core sample frequency: %s",
+				          strerror(errno));
 				doUsage = true;
 			}
 		}
 
 		kv = NULL;
-		if ((kv = config_get_key(def, "prefix"))) {
-			go.dataPrefix = strdup(kv->value);
-		}
+		if ((kv = config_get_key(def, "prefix"))) { go.dataPrefix = strdup(kv->value); }
 
 		kv = NULL;
-		if ((kv = config_get_key(def, "statefile"))) {
-			go.stateName = strdup(kv->value);
-		}
+		if ((kv = config_get_key(def, "statefile"))) { go.stateName = strdup(kv->value); }
 
 		kv = NULL;
 		if ((kv = config_get_key(def, "savestate"))) {
 			int st = config_parse_bool(kv->value);
 			if (st < 0) {
-				log_error(&state, "Error parsing option savestate: %s", strerror(errno));
+				log_error(&state, "Error parsing option savestate: %s",
+				          strerror(errno));
 				doUsage = true;
 			}
 			go.saveState = st;
@@ -132,7 +132,8 @@ int main(int argc, char *argv[]) {
 		if ((kv = config_get_key(def, "rotate"))) {
 			int rm = config_parse_bool(kv->value);
 			if (rm < 0) {
-				log_error(&state, "Error parsing option rotate: %s", strerror(errno));
+				log_error(&state, "Error parsing option rotate: %s",
+				          strerror(errno));
 				doUsage = true;
 			}
 			go.rotateMonitor = rm;
@@ -148,7 +149,9 @@ int main(int argc, char *argv[]) {
 	// Check for conflicting options
 	// Downgraded to a warning as part of the move to configuration files
 	if (go.stateName && !go.saveState) {
-		log_warning(&state, "State file name configured, but state file use disabled by configuration");
+		log_warning(
+			&state,
+			"State file name configured, but state file use disabled by configuration");
 	}
 
 	if (doUsage) {
@@ -159,30 +162,24 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Set defaults if no argument provided
-	// Defining the defaults as compiled in constants at the top of main() causes issues
-	// with overwriting them later
-	if (!go.dataPrefix) {
-		go.dataPrefix = strdup(DEFAULT_MON_PREFIX);
-	}
+	// Defining the defaults as compiled in constants at the top of main() causes
+	// issues with overwriting them later
+	if (!go.dataPrefix) { go.dataPrefix = strdup(DEFAULT_MON_PREFIX); }
 
 	// Default state file name is derived from the port name
-	if (!go.stateName) {
-		go.stateName = strdup(DEFAULT_STATE_NAME);
-	}
+	if (!go.stateName) { go.stateName = strdup(DEFAULT_STATE_NAME); }
 
 	// Set default frequency if not already set
-	if (!go.coreFreq) {
-		go.coreFreq = DEFAULT_MARK_FREQUENCY;
-	}
+	if (!go.coreFreq) { go.coreFreq = DEFAULT_MARK_FREQUENCY; }
 
-	// Per thread / individual source configuration happens after this global setup section
+	// Per thread/individual source configuration happens after this global section
 	log_info(&state, 3, "Core configuration completed");
 
-/**********************************************************************************************
- * Set up various log files and mechanisms
- *********************************************************************************************/
+	/**********************************************************************************************
+	 * Set up various log files and mechanisms
+	 *********************************************************************************************/
 
-	int mon_yday = -1; //!< Log rotation markers: Day for currently opened files
+	int mon_yday = -1;     //!< Log rotation markers: Day for currently opened files
 	int mon_nextyday = -2; //!< Log rotation markers: Day for next files
 
 	{
@@ -206,7 +203,9 @@ int main(int argc, char *argv[]) {
 
 	if (go.monitorFile == NULL) {
 		if (errno == EEXIST) {
-			log_error(&state, "Unable to open data file - too many files created with this prefix today?");
+			log_error(
+				&state,
+				"Unable to open data file - too many files created with this prefix today?");
 		} else {
 			log_error(&state, "Unable to open data file: %s", strerror(errno));
 		}
@@ -219,7 +218,8 @@ int main(int argc, char *argv[]) {
 	{
 		char *logFileName = NULL;
 		if (asprintf(&logFileName, "%s.%s", go.monFileStem, "log") < 0) {
-			log_error(&state, "Failed to allocate memory for log file name: %s", strerror(errno));
+			log_error(&state, "Failed to allocate memory for log file name: %s",
+			          strerror(errno));
 		}
 		state.log = fopen(logFileName, "w+x");
 		free(logFileName);
@@ -227,7 +227,9 @@ int main(int argc, char *argv[]) {
 
 	if (!state.log) {
 		if (errno == EEXIST) {
-			log_error(&state, "Unable to open log file. Log file and data file names out of sync?");
+			log_error(
+				&state,
+				"Unable to open log file. Log file and data file names out of sync?");
 		} else {
 			log_error(&state, "Unable to open log file: %s", strerror(errno));
 		}
@@ -243,14 +245,17 @@ int main(int argc, char *argv[]) {
 	{
 		char *varFileName = NULL;
 		if (asprintf(&varFileName, "%s.%s", go.monFileStem, "var") < 0) {
-			log_error(&state, "Failed to allocate memory for variable file name: %s", strerror(errno));
+			log_error(&state, "Failed to allocate memory for variable file name: %s",
+			          strerror(errno));
 		}
 		go.varFile = fopen(varFileName, "w+x");
 		free(varFileName);
 	}
 	if (!go.varFile) {
 		if (errno == EEXIST) {
-			log_error(&state, "Unable to open variable file. Variable file and data file names out of sync?");
+			log_error(
+				&state,
+				"Unable to open variable file. Variable file and data file names out of sync?");
 		} else {
 			log_error(&state, "Unable to open variable file: %s", strerror(errno));
 		}
@@ -261,10 +266,10 @@ int main(int argc, char *argv[]) {
 	}
 	log_info(&state, 2, "Using variable file %s.var", go.monFileStem);
 
-	log_info(&state, 1, "Version: " GIT_VERSION_STRING); // Preprocessor concatenation, not a format string!
-	if (go.saveState) {
-		log_info(&state, 1, "Using state file %s", go.stateName);
-	}
+	// Preprocessor concatenation, not a format string!
+	log_info(&state, 1, "Version: " GIT_VERSION_STRING);
+
+	if (go.saveState) { log_info(&state, 1, "Using state file %s", go.stateName); }
 
 	// Block signal handling until we're up and running
 	signalHandlersBlock();
@@ -278,18 +283,18 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-/********************************************************************************************
- * Configure individual data sources, based on the configuration file sections
- * 	For each section:
- *		Allocate log_thread_args_t structure (lta)
- *		Set lta->tag to section name
- *		Set lta->logQ to queue
- *		Set lta->pstate to &state
- *		Identify device type
- *		Get callback functions and set lta->funcs
- *		If set, call lta->funcs->parse() with config section to populate lta->dparams
- *			parse() must allocate memory for dparams
-********************************************************************************************/
+	/********************************************************************************************
+	 * Configure individual data sources, based on the configuration file sections
+	 * 	For each section:
+	 *		Allocate log_thread_args_t structure (lta)
+	 *		Set lta->tag to section name
+	 *		Set lta->logQ to queue
+	 *		Set lta->pstate to &state
+	 *		Identify device type
+	 *		Get callback functions and set lta->funcs
+	 *		If set, call lta->funcs->parse() with config section to populate
+	 *		lta->dparams parse() must allocate memory for dparams
+	 ********************************************************************************************/
 
 	log_info(&state, 2, "Configuring data sources");
 
@@ -339,7 +344,9 @@ int main(int argc, char *argv[]) {
 		// TODO: Device specific init
 		config_kv *type = config_get_key(&(conf.sects[i]), "type");
 		if (type == NULL) {
-			log_error(&state, "Configuration - data source type not defined for \"%s\"", conf.sects[i].name);
+			log_error(&state,
+			          "Configuration - data source type not defined for \"%s\"",
+			          conf.sects[i].name);
 			free(ltargs[nThreads].tag);
 			ltargs[nThreads].tag = NULL;
 			nextExit = true;
@@ -349,7 +356,8 @@ int main(int argc, char *argv[]) {
 		ltargs[nThreads].funcs = dmap_getCallbacks(type->value);
 		dc_parser dcp = dmap_getParser(type->value);
 		if (dcp == NULL) {
-			log_error(&state, "Configuration - no parser available for \"%s\" (%s)", conf.sects[i].name, type->value);
+			log_error(&state, "Configuration - no parser available for \"%s\" (%s)",
+			          conf.sects[i].name, type->value);
 			free(ltargs[nThreads].tag);
 			free(ltargs[nThreads].type);
 			ltargs[nThreads].tag = NULL;
@@ -358,7 +366,8 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		if (!dcp(&(ltargs[nThreads]), &(conf.sects[i]))) {
-			log_error(&state, "Configuration - parser failed for \"%s\" (%s)", conf.sects[i].name, type->value);
+			log_error(&state, "Configuration - parser failed for \"%s\" (%s)",
+			          conf.sects[i].name, type->value);
 			free(ltargs[nThreads].tag);
 			free(ltargs[nThreads].type);
 			free(ltargs[nThreads].dParams);
@@ -370,9 +379,11 @@ int main(int argc, char *argv[]) {
 		}
 		nThreads++;
 		if (nThreads >= ltaSize) {
-			log_thread_args_t *ltt = realloc(ltargs, (ltaSize+10)*sizeof(log_thread_args_t));
+			log_thread_args_t *ltt =
+				realloc(ltargs, (ltaSize + 10) * sizeof(log_thread_args_t));
 			if (!ltt) {
-				log_error(&state, "Unable to reallocate ltargs structure: %s", strerror(errno));
+				log_error(&state, "Unable to reallocate ltargs structure: %s",
+				          strerror(errno));
 				return EXIT_FAILURE;
 			}
 			ltaSize += 10;
@@ -384,9 +395,9 @@ int main(int argc, char *argv[]) {
 
 	if (nextExit) {
 		for (int i = 0; i < nThreads; i++) {
-			if (ltargs[i].tag) {free(ltargs[i].tag);}
-			if (ltargs[i].type) {free(ltargs[i].type);}
-			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
+			if (ltargs[i].tag) { free(ltargs[i].tag); }
+			if (ltargs[i].type) { free(ltargs[i].type); }
+			if (ltargs[i].dParams) { free(ltargs[i].dParams); }
 		}
 		free(ltargs);
 		state.shutdown = true;
@@ -404,7 +415,7 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	for (int tix=0; tix < nThreads; tix++) {
+	for (int tix = 0; tix < nThreads; tix++) {
 		ltargs[tix].funcs.startup(&(ltargs[tix]));
 		if (ltargs[tix].returnCode < 0) {
 			log_error(&state, "Unable to set up \"%s\"", ltargs[tix].tag);
@@ -415,9 +426,9 @@ int main(int argc, char *argv[]) {
 
 	if (nextExit) {
 		for (int i = 0; i < nThreads; i++) {
-			if (ltargs[i].tag) {free(ltargs[i].tag);}
-			if (ltargs[i].type) {free(ltargs[i].type);}
-			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
+			if (ltargs[i].tag) { free(ltargs[i].tag); }
+			if (ltargs[i].type) { free(ltargs[i].type); }
+			if (ltargs[i].dParams) { free(ltargs[i].dParams); }
 		}
 		free(ltargs);
 		state.shutdown = true;
@@ -430,29 +441,34 @@ int main(int argc, char *argv[]) {
 
 	log_info(&state, 1, "Initialisation complete, starting log threads");
 
-	for (int tix=0; tix < nThreads; tix++) {
+	for (int tix = 0; tix < nThreads; tix++) {
 		if (!ltargs[tix].funcs.logging) {
-			log_error(&state, "Unable to launch thread %s - no logging function provided", ltargs[tix].tag);
+			log_error(&state,
+			          "Unable to launch thread %s - no logging function provided",
+			          ltargs[tix].tag);
 			nextExit = true;
 			shutdownFlag = true; // Ensure threads aware
 			for (int it = tix - 1; it >= 0; --it) {
-				if (it < 0) { break;}
+				if (it < 0) { break; }
 				pthread_join(threads[it], NULL);
 				if (ltargs[it].returnCode != 0) {
-					log_error(&state, "Thread %d has signalled an error: %d", it, ltargs[it].returnCode);
+					log_error(&state, "Thread %d has signalled an error: %d",
+					          it, ltargs[it].returnCode);
 				}
 			}
 			break;
 		}
-		if (pthread_create(&(threads[tix]), NULL, ltargs[tix].funcs.logging, &(ltargs[tix])) != 0){
+		if (pthread_create(&(threads[tix]), NULL, ltargs[tix].funcs.logging,
+		                   &(ltargs[tix])) != 0) {
 			log_error(&state, "Unable to launch %s thread", ltargs[tix].tag);
 			nextExit = true;
 			shutdownFlag = true; // Ensure threads aware
 			for (int it = tix - 1; it >= 0; --it) {
-				if (it < 0) { break;}
+				if (it < 0) { break; }
 				pthread_join(threads[it], NULL);
 				if (ltargs[it].returnCode != 0) {
-					log_error(&state, "Thread %d has signalled an error: %d", it, ltargs[it].returnCode);
+					log_error(&state, "Thread %d has signalled an error: %d",
+					          it, ltargs[it].returnCode);
 				}
 			}
 			break;
@@ -463,16 +479,14 @@ int main(int argc, char *argv[]) {
 		snprintf(threadname, 16, "Logger: %s", ltargs[tix].tag);
 		pthread_setname_np(threads[tix], threadname);
 #endif
-		if (ltargs[tix].funcs.channels) {
-			ltargs[tix].funcs.channels(&ltargs[tix]);
-		}
+		if (ltargs[tix].funcs.channels) { ltargs[tix].funcs.channels(&ltargs[tix]); }
 	}
 
 	if (nextExit) {
 		for (int i = 0; i < nThreads; i++) {
-			if (ltargs[i].tag) {free(ltargs[i].tag);}
-			if (ltargs[i].type) {free(ltargs[i].type);}
-			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
+			if (ltargs[i].tag) { free(ltargs[i].tag); }
+			if (ltargs[i].type) { free(ltargs[i].type); }
+			if (ltargs[i].dParams) { free(ltargs[i].dParams); }
 		}
 		free(ltargs);
 		state.shutdown = true;
@@ -490,9 +504,9 @@ int main(int argc, char *argv[]) {
 	if (!log_softwareVersion(&log_queue)) {
 		log_error(&state, "Error pushing version message to queue");
 		for (int i = 0; i < nThreads; i++) {
-			if (ltargs[i].tag) {free(ltargs[i].tag);}
-			if (ltargs[i].type) {free(ltargs[i].type);}
-			if (ltargs[i].dParams) {free(ltargs[i].dParams);}
+			if (ltargs[i].tag) { free(ltargs[i].tag); }
+			if (ltargs[i].type) { free(ltargs[i].type); }
+			if (ltargs[i].dParams) { free(ltargs[i].dParams); }
 		}
 		free(ltargs);
 		destroy_global_opts(&go);
@@ -534,11 +548,12 @@ int main(int argc, char *argv[]) {
 		/*
 		 * Main application loop
 		 *
-		 * This loop deals with popping messages off the stack and writing them to file (if required),
-		 * as well as responding to events - either from signals or from e.g. the time of day.
+		 * This loop deals with popping messages off the stack and writing them to
+		 * file (if required), as well as responding to events - either from
+		 * signals or from e.g. the time of day.
 		 *
-		 * The different subsections of this loop interact with each other, which makes the order in
-		 * which they appear significant!
+		 * The different subsections of this loop interact with each other, which
+		 * makes the order in which they appear significant!
 		 *
 		 */
 
@@ -546,12 +561,15 @@ int main(int argc, char *argv[]) {
 		loopCount++;
 
 		// Check if any of the monitoring threads have exited with an error
-		for (int it=0; it < nThreads; it++) {
+		for (int it = 0; it < nThreads; it++) {
 			if (ltargs[it].returnCode != 0) {
-				log_error(&state, "Thread %d has signalled an error: %d", it, ltargs[it].returnCode);
+				log_error(&state, "Thread %d has signalled an error: %d", it,
+				          ltargs[it].returnCode);
 				// Begin app shutdown
-				// We allow this loop (over threads) to continue in order to report on remaining threads
-				// After that, we allow the main while loop to continue (easier) and it will terminate afterwards
+				// We allow this loop (over threads) to continue in order
+				// to report on remaining threads After that, we allow the
+				// main while loop to continue (easier) and it will
+				// terminate afterwards
 				shutdownFlag = true;
 			}
 		}
@@ -573,12 +591,14 @@ int main(int argc, char *argv[]) {
 		if ((loopCount % 200 == 0)) {
 			if (go.rotateMonitor) {
 				/*
-				 * During testing of software on the previous project, the time/localtime combination could
-				 * take up a surprising amount of CPU time, so we avoid calling it if we can.
+				 * During testing of software on the previous project, the
+				 * time/localtime combination could take up a surprising
+				 * amount of CPU time, so we avoid calling it if we can.
 				 *
-				 * This is also why mon_nextyday is used - it saves us a second call during file rotation.
-				 * Note that this does mean that this check needs to appear after the pauseLog block, but
-				 * before the rotateNow block.
+				 * This is also why mon_nextyday is used - it saves us a
+				 * second call during file rotation. Note that this does
+				 * mean that this check needs to appear after the pauseLog
+				 * block, but before the rotateNow block.
 				 */
 				time_t timeNow = time(NULL);
 				struct tm *now = localtime(&timeNow);
@@ -590,8 +610,9 @@ int main(int argc, char *argv[]) {
 
 			if ((loopCount % 1000) == 0) {
 				/*
-				 * Our longest interval check (for now), so we can reset the counter here.
-				 * Note that the interval here (1000) must be a multiple of the outer interval (200),
+				 * Our longest interval check (for now), so we can reset
+				 * the counter here. Note that the interval here (1000)
+				 * must be a multiple of the outer interval (200),
 				 * otherwise this check needs to be moved out a level
 				 */
 				fflush(NULL);
@@ -599,8 +620,12 @@ int main(int argc, char *argv[]) {
 					time_t now = time(NULL);
 					if ((now - lastSave) > 60) {
 						errno = 0;
-						if (!write_state_file(go.stateName, stats, lastTimestamp)) {
-							log_error(&state, "Unable to write out state file: %s", strerror(errno));
+						if (!write_state_file(go.stateName, stats,
+						                      lastTimestamp)) {
+							log_error(
+								&state,
+								"Unable to write out state file: %s",
+								strerror(errno));
 							return -1;
 						}
 						lastSave = now;
@@ -616,8 +641,9 @@ int main(int argc, char *argv[]) {
 			/*
 			 * Note that we don't check the go.rotateMonitor flag here
 			 *
-			 * If automatic rotation is disabled at the command line then the rotateNow flag will only be
-			 * set if triggered by a signal, so this allows rotating logs on an external trigger even if
+			 * If automatic rotation is disabled at the command line then the
+			 * rotateNow flag will only be set if triggered by a signal, so
+			 * this allows rotating logs on an external trigger even if
 			 * automatic rotation is disabled.
 			 */
 
@@ -628,22 +654,26 @@ int main(int argc, char *argv[]) {
 
 			FILE *newMonitor = NULL;
 			char *newMonFileStem = NULL;
-			newMonitor  = openSerialNumberedFile(go.dataPrefix, "dat", &newMonFileStem);
+			newMonitor = openSerialNumberedFile(go.dataPrefix, "dat", &newMonFileStem);
 
 			if (newMonitor == NULL) {
-				// If the error is likely to be too many data files, continue with the old handle.
-				// For all other errors, we exit.
+				// If the error is likely to be too many data files,
+				// continue with the old handle. For all other errors, we
+				// exit.
 				if (errno == EEXIST) {
-					log_error(&state, "Unable to open data file - too many files created with this prefix today?");
+					log_error(
+						&state,
+						"Unable to open data file - too many files created with this prefix today?");
 				} else {
-					log_error(&state, "Unable to open data file: %s", strerror(errno));
+					log_error(&state, "Unable to open data file: %s",
+					          strerror(errno));
 					return -1;
 				}
 			} else {
 				fclose(go.monitorFile);
 				go.monitorFile = newMonitor;
 				free(go.monFileStem);
-				go.monFileStem= newMonFileStem;
+				go.monFileStem = newMonFileStem;
 				log_info(&state, 2, "Using data file %s.dat", go.monFileStem);
 			}
 
@@ -653,21 +683,28 @@ int main(int argc, char *argv[]) {
 			{
 				char *logFileName = NULL;
 				if (asprintf(&logFileName, "%s.%s", go.monFileStem, "log") < 0) {
-					log_error(&state, "Failed to allocate memory for log file name: %s", strerror(errno));
+					log_error(
+						&state,
+						"Failed to allocate memory for log file name: %s",
+						strerror(errno));
 				}
 				newLog = fopen(logFileName, "w+x");
 				free(logFileName);
 			}
 			if (newLog == NULL) {
-				// As above, if the issue is log file names then we continue with the existing file
+				// As above, if the issue is log file names then we
+				// continue with the existing file
 				if (errno == EEXIST) {
-					log_error(&state, "Unable to open log file - mismatch between log files and data file names?");
+					log_error(
+						&state,
+						"Unable to open log file - mismatch between log files and data file names?");
 				} else {
-					log_error(&state, "Unable to open log file: %s", strerror(errno));
+					log_error(&state, "Unable to open log file: %s",
+					          strerror(errno));
 					return -1;
 				}
 			} else {
-				FILE * oldLog = state.log;
+				FILE *oldLog = state.log;
 				state.log = newLog;
 				fclose(oldLog);
 				log_info(&state, 2, "Using log file %s.log", go.monFileStem);
@@ -678,39 +715,49 @@ int main(int argc, char *argv[]) {
 			{
 				char *varFileName = NULL;
 				if (asprintf(&varFileName, "%s.%s", go.monFileStem, "var") < 0) {
-					log_error(&state, "Failed to allocate memory for variable file name: %s", strerror(errno));
+					log_error(
+						&state,
+						"Failed to allocate memory for variable file name: %s",
+						strerror(errno));
 				}
 				newVar = fopen(varFileName, "w+x");
 				free(varFileName);
 			}
 			if (newVar == NULL) {
-				// As above, if the issue is log file names then we continue with the existing file
+				// As above, if the issue is log file names then we
+				// continue with the existing file
 				if (errno == EEXIST) {
-					log_error(&state, "Unable to open variable file - mismatch between variable file and data file names?");
+					log_error(
+						&state,
+						"Unable to open variable file - mismatch between variable file and data file names?");
 				} else {
-					log_error(&state, "Unable to open variable file: %s", strerror(errno));
+					log_error(&state, "Unable to open variable file: %s",
+					          strerror(errno));
 					return -1;
 				}
 			} else {
-				// We're the only thread writing to the .var file, so fewer shenanigans required.
+				// We're the only thread writing to the .var file, so
+				// fewer shenanigans required.
 				fclose(go.varFile);
 				log_info(&state, 2, "Using variable file %s.var", go.monFileStem);
 				go.varFile = newVar;
 			}
 
 			// Re-request channel names for the new files
-			for (int tix=0; tix < nThreads; tix++) {
+			for (int tix = 0; tix < nThreads; tix++) {
 				if (ltargs[tix].funcs.channels) {
 					ltargs[tix].funcs.channels(&ltargs[tix]);
 				}
 			}
 
 			if (!log_softwareVersion(&log_queue)) {
-				log_error(&state, "Unable to push software version message to queue");
+				log_error(&state,
+				          "Unable to push software version message to queue");
 				return -1;
 			}
 
-			log_info(&state, 0, "%d messages read successfully - resetting count", msgCount);
+			log_info(&state, 0, "%d messages read successfully - resetting count",
+			         msgCount);
 			msgCount = 0;
 			mon_yday = mon_nextyday;
 			rotateNow = false;
@@ -725,7 +772,8 @@ int main(int argc, char *argv[]) {
 		}
 		msgCount++;
 		if (!mp_writeMessage(fileno(go.monitorFile), res)) {
-			log_error(&state, "Unable to write out data to log file: %s", strerror(errno));
+			log_error(&state, "Unable to write out data to log file: %s",
+			          strerror(errno));
 			return -1;
 		}
 		if (res->type == SLCHAN_MAP || res->type == SLCHAN_NAME) {
@@ -745,22 +793,22 @@ int main(int argc, char *argv[]) {
 	state.shutdown = true;
 	shutdownFlag = true; // Ensure threads aware
 	log_info(&state, 1, "Shutting down");
-	for (int it=0; it < nThreads; it++) {
+	for (int it = 0; it < nThreads; it++) {
 		pthread_join(threads[it], NULL);
 		if (ltargs[it].returnCode != 0) {
-			log_error(&state, "Thread %d (%s) has signalled an error: %d", it, ltargs[it].tag, ltargs[it].returnCode);
+			log_error(&state, "Thread %d (%s) has signalled an error: %d", it,
+			          ltargs[it].tag, ltargs[it].returnCode);
 		}
 	}
 
-
-	for (int tix=0; tix < nThreads; tix++) {
+	for (int tix = 0; tix < nThreads; tix++) {
 		ltargs[tix].funcs.shutdown(&(ltargs[tix]));
 	}
 
 	for (int i = 0; i < nThreads; i++) {
-		if (ltargs[i].tag) {free(ltargs[i].tag);}
-		if (ltargs[i].type) {free(ltargs[i].type);}
-		if (ltargs[i].dParams) {free(ltargs[i].dParams);}
+		if (ltargs[i].tag) { free(ltargs[i].tag); }
+		if (ltargs[i].type) { free(ltargs[i].type); }
+		if (ltargs[i].dParams) { free(ltargs[i].dParams); }
 	}
 	free(ltargs);
 	free(threads);
@@ -836,7 +884,7 @@ bool timespec_subtract(struct timespec *result, struct timespec *x, struct times
 
 /*!
  * @brief Push software version into message queue
- * 
+ *
  * @param[in] q Log queue
  * @return True on success
  */
@@ -872,12 +920,13 @@ void destroy_global_opts(struct global_opts *go) {
 
 bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS) {
 	FILE *stateFile = fopen(sFName, "w");
-	if (stateFile == NULL) { return false;}
+	if (stateFile == NULL) { return false; }
 	fprintf(stateFile, "%u\n", lTS);
 	for (int s = 0; s < 128; s++) {
 		for (int c = 0; c < 128; c++) {
 			if (stats[s][c].count > 0) {
-				fprintf(stateFile, "0x%02x,0x%02x,%u,%u\n", s, c, stats[s][c].count, stats[s][c].lastTimestamp);
+				fprintf(stateFile, "0x%02x,0x%02x,%u,%u\n", s, c,
+				        stats[s][c].count, stats[s][c].lastTimestamp);
 			}
 		}
 	}

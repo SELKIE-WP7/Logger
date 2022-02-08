@@ -11,7 +11,8 @@
  *
  * @brief Test message creation and destruction
  *
- * This script creates a variety of msg_t objects with different types and values, dumps them to file and then recreates them.
+ * This script creates a variety of msg_t objects with different types and values, dumps
+ * them to file and then recreates them.
  *
  * Return codes:
  *
@@ -22,7 +23,6 @@
  * @ingroup testing
  */
 int main(int argc, char *argv[]) {
-
 	msg_t *msn = msg_new_string(SLSOURCE_TEST1, SLCHAN_NAME, 22, "Software Test Source 1");
 	assert(msn);
 
@@ -30,9 +30,9 @@ int main(int argc, char *argv[]) {
 	strarray *SA = sa_new(6);
 
 	assert(SA);
-	assert(sa_create_entry(SA, 0,  4, "Name"));
-	assert(sa_create_entry(SA, 1,  8, "Channels"));
-	assert(sa_create_entry(SA, 2,  9, "Timestamp"));
+	assert(sa_create_entry(SA, 0, 4, "Name"));
+	assert(sa_create_entry(SA, 1, 8, "Channels"));
+	assert(sa_create_entry(SA, 2, 9, "Timestamp"));
 	assert(sa_create_entry(SA, 3, 16, "SA Entry 1 - One"));
 	assert(sa_create_entry(SA, 4, 16, "SA Entry 2 - Two"));
 	assert(sa_create_entry(SA, 5, 18, "SA Entry 3 - Three"));
@@ -49,10 +49,8 @@ int main(int argc, char *argv[]) {
 	msg_t *mdf = msg_new_float(SLSOURCE_TEST1, 3, 3.14159);
 	assert(mdf);
 
-	uint8_t bytes[20] = {0x01, 0x05, 0xFD, 0xFC, 0x03,
-		0x02, 0x06, 0xFE, 0xFD, 0x04,
-		0x03, 0x06, 0xFF, 0xFE, 0x05, 
-		0x00, 0x04, 0xFC, 0xFB, 0x02};
+	uint8_t bytes[20] = {0x01, 0x05, 0xFD, 0xFC, 0x03, 0x02, 0x06, 0xFE, 0xFD, 0x04,
+	                     0x03, 0x06, 0xFF, 0xFE, 0x05, 0x00, 0x04, 0xFC, 0xFB, 0x02};
 	msg_t *mdb = msg_new_bytes(SLSOURCE_TEST1, 4, 20, bytes);
 	assert(mdb);
 
@@ -103,7 +101,7 @@ int main(int argc, char *argv[]) {
 			count++;
 		} else {
 			assert(tMessage.dtype == MSG_ERROR);
-			switch ((uint8_t) tMessage.data.value) {
+			switch ((uint8_t)tMessage.data.value) {
 				case 0xAA:
 					msg_destroy(&tMessage);
 					fclose(tmp);

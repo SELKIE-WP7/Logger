@@ -1,8 +1,8 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerNMEA.h"
@@ -45,9 +45,7 @@ int main(int argc, char *argv[]) {
 			// Successfully read message
 			count++;
 			strarray *f = nmea_parse_fields(&tmp);
-			if (f == NULL) {
-				return -1;
-			}
+			if (f == NULL) { return -1; }
 			if (strncmp(tmp.message, "ZDA", 3) == 0) {
 				struct tm *t = nmea_parse_zda(&tmp);
 				if (t == NULL) {

@@ -2,12 +2,13 @@
 #define SELKIELoggerGPS_Serial
 
 /*!
- * @file GPSSerial.h Serial Input/Output functions for communication with u-blox GPS modules
+ * @file GPSSerial.h Serial Input/Output functions for communication with u-blox GPS
+ * modules
  * @ingroup SELKIELoggerGPS
  */
 
-#include "SELKIELoggerBase.h"
 #include "GPSTypes.h"
+#include "SELKIELoggerBase.h"
 
 /*!
  * @addtogroup SELKIELoggerGPS
@@ -23,7 +24,6 @@ int ubx_openConnection(const char *port, const int initialBaud);
 //! Close a connection opened with ubx_openConnection()
 void ubx_closeConnection(int handle);
 
-
 //! Static wrapper around ubx_readMessage_buf()
 bool ubx_readMessage(int handle, ubx_message *out);
 
@@ -31,7 +31,8 @@ bool ubx_readMessage(int handle, ubx_message *out);
 bool ubx_readMessage_buf(int handle, ubx_message *out, uint8_t buf[UBX_SERIAL_BUFF], int *index, int *hw);
 
 //! Read (and discard) messages until required message seen or timeout reached
-bool ubx_waitForMessage(const int handle, const uint8_t msgClass, const uint8_t msgID, const int maxDelay, ubx_message *out);
+bool ubx_waitForMessage(const int handle, const uint8_t msgClass, const uint8_t msgID, const int maxDelay,
+                        ubx_message *out);
 
 //! Send message to attached device
 bool ubx_writeMessage(int handle, const ubx_message *out);

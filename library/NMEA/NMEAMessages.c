@@ -1,8 +1,8 @@
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <errno.h>
 
@@ -45,7 +45,6 @@ void nmea_calc_checksum(const nmea_msg_t *msg, uint8_t *cs) {
 	return;
 }
 
-
 /*!
  * Simple wrapper around nmea_calc_checksum() to update the checksum bytes
  * within the structure.
@@ -66,9 +65,7 @@ void nmea_set_checksum(nmea_msg_t *msg) {
 bool nmea_check_checksum(const nmea_msg_t *msg) {
 	uint8_t a = 0;
 	nmea_calc_checksum(msg, &a);
-	if (msg->checksum == a) {
-		return true;
-	}
+	if (msg->checksum == a) { return true; }
 	return false;
 }
 
@@ -81,13 +78,13 @@ bool nmea_check_checksum(const nmea_msg_t *msg) {
  */
 size_t nmea_message_length(const nmea_msg_t *msg) {
 	size_t asize = 3; // Minimum - start byte + CRLF
-	asize += 2; // Minimum talker size
+	asize += 2;       // Minimum talker size
 	if (msg->talker[0] == 'P') {
 		asize += 2; // Bring up to 4 for proprietary messages
 	}
 	asize += 3; // Message type
 	if (msg->fields.entries > 0) {
-		for (int fi=0; fi < msg->fields.entries; fi++) {
+		for (int fi = 0; fi < msg->fields.entries; fi++) {
 			asize += msg->fields.strings[fi].length + 1; // +1 for field delimiter
 		}
 	} else {
@@ -98,8 +95,8 @@ size_t nmea_message_length(const nmea_msg_t *msg) {
 }
 
 /*!
- * Allocates a new array of bytes and copies message into array in transmission order (e.g. out[0] to be sent first).
- * Note that this will include a trailing CRLF pair!
+ * Allocates a new array of bytes and copies message into array in transmission order
+ * (e.g. out[0] to be sent first). Note that this will include a trailing CRLF pair!
  *
  * Output array must be freed by caller.
  *
@@ -135,7 +132,7 @@ size_t nmea_flat_array(const nmea_msg_t *msg, char **out) {
 	}
 	outarray[ix++] = NMEA_CSUM_MARK;
 
-	const char* hd = "0123456789ABCDEF";
+	const char *hd = "0123456789ABCDEF";
 	outarray[ix++] = hd[(msg->checksum >> 8) & 0xF];
 	outarray[ix++] = hd[msg->checksum & 0xF];
 	(*out) = outarray;
@@ -154,10 +151,10 @@ size_t nmea_flat_array(const nmea_msg_t *msg, char **out) {
  * @param[in] msg Input message
  * @return Pointer to character array
  */
-char * nmea_string_hex(const nmea_msg_t *msg) {
+char *nmea_string_hex(const nmea_msg_t *msg) {
 	char *str = NULL;
 	size_t s = nmea_flat_array(msg, &str);
-	str = realloc(str, s+1);
+	str = realloc(str, s + 1);
 	str[s] = 0x00; // Null terminate string representation!
 	return str;
 }
@@ -193,7 +190,7 @@ strarray *nmea_parse_fields(const nmea_msg_t *nmsg) {
 			fields[fc] = sp;
 			lengths[fc] = &(nmsg->raw[fp]) - sp;
 			fc++;
-			sp = &(nmsg->raw[fp+1]);
+			sp = &(nmsg->raw[fp + 1]);
 		}
 	}
 	fields[fc] = sp;
@@ -201,9 +198,7 @@ strarray *nmea_parse_fields(const nmea_msg_t *nmsg) {
 	fc++;
 
 	strarray *sa = sa_new(fc);
-	if (sa == NULL) {
-		return false;
-	}
+	if (sa == NULL) { return false; }
 	for (int fn = 0; fn < fc; fn++) {
 		if (!sa_create_entry(sa, fn, lengths[fn], (const char *)fields[fn])) {
 			sa_destroy(sa);
@@ -222,16 +217,12 @@ strarray *nmea_parse_fields(const nmea_msg_t *nmsg) {
  * @param[in] msg Input message
  * @returns Pointer to struct tm, or NULL on failure
  */
-struct tm * nmea_parse_zda(const nmea_msg_t *msg) {
+struct tm *nmea_parse_zda(const nmea_msg_t *msg) {
 	const char *tk = "II";
 	const char *mt = "ZDA";
-	if ((strncmp(msg->talker, tk, 2) != 0)  || (strncmp(msg->message, mt, 3) != 0)) {
-		return NULL;
-	}
+	if ((strncmp(msg->talker, tk, 2) != 0) || (strncmp(msg->message, mt, 3) != 0)) { return NULL; }
 	strarray *sa = nmea_parse_fields(msg);
-	if (sa == NULL) {
-		return NULL;
-	}
+	if (sa == NULL) { return NULL; }
 	if (sa->entries != 6) {
 		sa_destroy(sa);
 		free(sa);
@@ -250,7 +241,8 @@ struct tm * nmea_parse_zda(const nmea_msg_t *msg) {
 	 */
 
 	// Check lengths of required fields
-	if (sa->strings[0].length < 6 || sa->strings[1].length < 1 || sa->strings[2].length < 1 || sa->strings[3].length != 4 ) {
+	if (sa->strings[0].length < 6 || sa->strings[1].length < 1 || sa->strings[2].length < 1 ||
+	    sa->strings[3].length != 4) {
 		sa_destroy(sa);
 		free(sa);
 		return NULL;
@@ -283,15 +275,14 @@ struct tm * nmea_parse_zda(const nmea_msg_t *msg) {
 			free(sa);
 			return NULL;
 		}
-		tout->tm_mon = mon - 1; //Months since January 1, not month number
+		tout->tm_mon = mon - 1; // Months since January 1, not month number
 	}
 	{
 		errno = 0;
 		int year = strtol(sa->strings[3].data, NULL, 10);
-		// Year boundaries are arbitrary, but allows for some historical and future usage
-		// If anyone is using this software in the year 2100 then:
-		// a) I'm surprised!
-		// b) Update the upper bound below
+		// Year boundaries are arbitrary, but allows for some historical and
+		// future usage If anyone is using this software in the year 2100 then: a)
+		// I'm surprised! b) Update the upper bound below
 		if (errno || year < 1970 || year > 2100) {
 			free(tout);
 			sa_destroy(sa);
@@ -336,12 +327,8 @@ struct tm * nmea_parse_zda(const nmea_msg_t *msg) {
 		int tzmins = 0;
 
 		// Assume no offset if strings not present
-		if (sa->strings[4].length > 0) {
-			strtol(sa->strings[4].data, NULL, 10);
-		}
-		if (sa->strings[5].length > 0) {
-			strtol(sa->strings[5].data, NULL, 10);
-		}
+		if (sa->strings[4].length > 0) { strtol(sa->strings[4].data, NULL, 10); }
+		if (sa->strings[5].length > 0) { strtol(sa->strings[5].data, NULL, 10); }
 		if (errno || tzhours < -13 || tzhours > 13 || tzmins < -60 || tzmins > 60) {
 			free(tout);
 			sa_destroy(sa);

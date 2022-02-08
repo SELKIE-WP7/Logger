@@ -2,8 +2,8 @@
 #define SL_LOGGER_TIME_H
 
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -13,7 +13,8 @@
  * @addtogroup loggerTime Logger: Timer functions
  * @ingroup logger
  *
- * Generate timestamps at as close to a regular frequency as possible, which can be used to synchronise the output.
+ * Generate timestamps at as close to a regular frequency as possible, which can be used
+ * to synchronise the output.
  *
  * @{
  */

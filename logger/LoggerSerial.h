@@ -2,8 +2,8 @@
 #define SL_LOGGER_SERIAL_H
 
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "SELKIELoggerBase.h"
@@ -19,14 +19,14 @@
  */
 //! Serial device specific parameters
 typedef struct {
-	char *sourceName; //!< User defined name for this source
+	char *sourceName;  //!< User defined name for this source
 	uint8_t sourceNum; //!< Source ID for messages
-	char *portName; //!< Target port name
-	int baudRate; //!< Baud rate for operations (currently unused)
-	int handle; //!< Handle for currently opened device
-	int minBytes; //!< Minimum number of bytes to group into a message
-	int maxBytes; //!< Maximum number of bytes to group into a message
-	int pollFreq; //!< Minimum number of times per second to check for data
+	char *portName;    //!< Target port name
+	int baudRate;      //!< Baud rate for operations (currently unused)
+	int handle;        //!< Handle for currently opened device
+	int minBytes;      //!< Minimum number of bytes to group into a message
+	int maxBytes;      //!< Maximum number of bytes to group into a message
+	int pollFreq;      //!< Minimum number of times per second to check for data
 } rx_params;
 
 //! Generic serial connection setup

@@ -1,8 +1,8 @@
-// Version Information from git 
+// Version Information from git
 /*!
  * @file
  * Make library version information available to programs at compile time
- * 
+ *
  * Values provided by CMake during configuration
  * @ingroup Library
  */

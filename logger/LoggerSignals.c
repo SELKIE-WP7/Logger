@@ -11,7 +11,8 @@ atomic_bool rotateNow = false;
 
 //! Pause logging
 /*!
- * Will not rotate or close log files, but will stop reading from inputs while this variable is set.
+ * Will not rotate or close log files, but will stop reading from inputs while this
+ * variable is set.
  */
 atomic_bool pauseLog = false;
 
@@ -47,12 +48,17 @@ void signalHandlersInstall() {
 	sigdelset(hMask, SIGINT);
 	sigdelset(hMask, SIGQUIT);
 
-	const struct sigaction saShutdown = {.sa_handler = signalShutdown, .sa_mask = *hMask, .sa_flags = SA_RESTART};
-	const struct sigaction saRotate = {.sa_handler = signalRotate, .sa_mask = *hMask, .sa_flags = SA_RESTART};
-	const struct sigaction saPause = {.sa_handler = signalPause, .sa_mask = *hMask, .sa_flags = SA_RESTART};
-	const struct sigaction saUnpause = {.sa_handler = signalUnpause, .sa_mask = *hMask, .sa_flags = SA_RESTART};
+	const struct sigaction saShutdown = {
+		.sa_handler = signalShutdown, .sa_mask = *hMask, .sa_flags = SA_RESTART};
+	const struct sigaction saRotate = {
+		.sa_handler = signalRotate, .sa_mask = *hMask, .sa_flags = SA_RESTART};
+	const struct sigaction saPause = {
+		.sa_handler = signalPause, .sa_mask = *hMask, .sa_flags = SA_RESTART};
+	const struct sigaction saUnpause = {
+		.sa_handler = signalUnpause, .sa_mask = *hMask, .sa_flags = SA_RESTART};
 
-	//! As well as the "standard" signals, we use SIGRTMIN+n to make each handler available directly
+	//! As well as the "standard" signals, we use SIGRTMIN+n to make each handler
+	//! available directly
 
 	//! Shutdown signalled on SIGINT and SIGQUIT (standard) and SIGRTMIN+1
 	sigaction(SIGINT, &saShutdown, NULL);
@@ -65,8 +71,9 @@ void signalHandlersInstall() {
 	sigaction(SIGRTMIN + 2, &saRotate, NULL);
 
 	/*!
-	 * There isn't really a standard pause/resume signals except SIGSTOP/CONT which the system handles (and is somewhat more forceful).
-	 * We use SIGRTMIN+3 and +4 for pause and unpause respectively
+	 * There isn't really a standard pause/resume signals except SIGSTOP/CONT which
+	 * the system handles (and is somewhat more forceful). We use SIGRTMIN+3 and +4
+	 * for pause and unpause respectively
 	 */
 	sigaction(SIGRTMIN + 3, &saPause, NULL);
 	sigaction(SIGRTMIN + 4, &saUnpause, NULL);

@@ -6,9 +6,9 @@
  * @ingroup SELKIELoggerGPS
  */
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 #include "GPSTypes.h"
 
@@ -33,7 +33,7 @@ bool ubx_check_checksum(const ubx_message *msg);
 size_t ubx_flat_array(const ubx_message *msg, uint8_t **out);
 
 //! Return UBX message as string of hexadecimal pairs
-char * ubx_string_hex(const ubx_message *msg);
+char *ubx_string_hex(const ubx_message *msg);
 
 //! Print UBX message in hexadecimal form
 void ubx_print_hex(const ubx_message *msg);

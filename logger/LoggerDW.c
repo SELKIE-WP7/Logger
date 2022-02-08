@@ -1,6 +1,6 @@
+#include "LoggerDW.h"
 #include "Logger.h"
 #include "LoggerNet.h"
-#include "LoggerDW.h"
 #include "LoggerSignals.h"
 
 #include <fcntl.h>
@@ -19,7 +19,7 @@
  * @param ptargs Pointer to log_thread_args_t
  */
 void *dw_setup(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
 
 	// Delegate connection logic to net_ functions
 	if (!dw_net_connect(ptargs)) {
@@ -34,15 +34,15 @@ void *dw_setup(void *ptargs) {
 }
 
 /*!
- * Reads messages from the connection established by dw_setup(), and pushes them to the queue.
- * As messages are already in the right format, no further processing is done here.
+ * Reads messages from the connection established by dw_setup(), and pushes them to the
+ * queue. As messages are already in the right format, no further processing is done here.
  *
  * @param ptargs Pointer to log_thread_args_t
  */
 void *dw_logging(void *ptargs) {
 	signalHandlersBlock();
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	dw_params *dwInfo = (dw_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	dw_params *dwInfo = (dw_params *)args->dParams;
 
 	log_info(args->pstate, 1, "[DW:%s] Logging thread started", args->tag);
 
@@ -53,21 +53,23 @@ void *dw_logging(void *ptargs) {
 	time_t lastGoodSignal = time(NULL);
 
 	uint16_t cycdata[20] = {0};
-	uint8_t cycCount = 0;
+	uint8_t cCount = 0;
 
 	bool sdset[16] = {0};
 	uint16_t sysdata[16] = {0};
 	while (!shutdownFlag) {
 		time_t now = time(NULL);
 		if ((lastRead + dwInfo->timeout) < now) {
-			log_warning(args->pstate, "[DW:%s] Network timeout, reconnecting", args->tag);
+			log_warning(args->pstate, "[DW:%s] Network timeout, reconnecting",
+			            args->tag);
 			close(dwInfo->handle);
 			dwInfo->handle = -1;
 			errno = 0;
 			if (net_connect(args)) {
 				log_info(args->pstate, 1, "[DW:%s] Reconnected", args->tag);
 			} else {
-				log_error(args->pstate, "[DW:%s] Unable to reconnect: %s", args->tag, strerror(errno));
+				log_error(args->pstate, "[DW:%s] Unable to reconnect: %s",
+				          args->tag, strerror(errno));
 				args->returnCode = -2;
 				pthread_exit(&(args->returnCode));
 				return NULL;
@@ -81,12 +83,16 @@ void *dw_logging(void *ptargs) {
 			if (ti >= 0) {
 				dw_hw += ti;
 				if (ti > 0) {
-					// 0 may not be an error, but could be a dropped connection if it persists
+					// 0 may not be an error, but could be a dropped
+					// connection if it persists
 					lastRead = now;
 				}
 			} else {
 				if (errno != EAGAIN) {
-					log_error(args->pstate, "[DW:%s] Unexpected error while reading from network (%s)", args->tag, strerror(errno));
+					// clang-format off
+					log_error(args->pstate, "[DW:%s] Unexpected error while reading from network (%s)",
+					          args->tag, strerror(errno));
+					// clang-format on
 					args->returnCode = -1;
 					pthread_exit(&(args->returnCode));
 				}
@@ -94,11 +100,12 @@ void *dw_logging(void *ptargs) {
 		}
 
 		if (dw_hw < 25) {
-			// Sleep briefly, then loop until we have more than the minimum number of bytes available
+			// Sleep briefly, then loop until we have more than the minimum
+			// number of bytes available
 			usleep(5E4);
 			continue;
 		}
-/////////// Message parsing
+		/////////// Message parsing
 		size_t end = dw_hw;
 		dw_hxv tmp = {0};
 		if (dw_string_hxv((char *)buf, &end, &tmp)) {
@@ -107,49 +114,54 @@ void *dw_logging(void *ptargs) {
 			dw_push_message(args, dwInfo->sourceNum, DWCHAN_SIG, tmp.status);
 			if (tmp.status < 2) {
 				lastGoodSignal = now;
-				dw_push_message(args, dwInfo->sourceNum, DWCHAN_DN, dw_hxv_north(&tmp));
-				dw_push_message(args, dwInfo->sourceNum, DWCHAN_DW, dw_hxv_west(&tmp));
-				dw_push_message(args, dwInfo->sourceNum, DWCHAN_DV, dw_hxv_vertical(&tmp));
-				cycdata[cycCount++] = cd;
+				dw_push_message(args, dwInfo->sourceNum, DWCHAN_DN,
+				                dw_hxv_north(&tmp));
+				dw_push_message(args, dwInfo->sourceNum, DWCHAN_DW,
+				                dw_hxv_west(&tmp));
+				dw_push_message(args, dwInfo->sourceNum, DWCHAN_DV,
+				                dw_hxv_vertical(&tmp));
+				cycdata[cCount++] = cd;
 			}
-
 		}
 
 		if ((now - lastGoodSignal) > 300) {
-			log_warning(args->pstate, "[DW:%s] No valid data received from buoy", args->tag);
+			log_warning(args->pstate, "[DW:%s] No valid data received from buoy",
+			            args->tag);
 			// Reset timer for another 5 minutes
 			lastGoodSignal = now;
 		}
 
-		if (cycCount > 18) {
+		if (cCount > 18) {
 			bool syncFound = false;
-			for (int i = 0; i < cycCount; ++i) {
+			for (int i = 0; i < cCount; ++i) {
 				if (cycdata[i] == 0x7FFF) {
 					syncFound = true;
 					if (i > 0) {
-						for (int j = 0; j < cycCount && (j+i) < 20; ++j) {
-							cycdata[j] = cycdata[j+i];
+						for (int j = 0; j < cCount && (j + i) < 20; ++j) {
+							cycdata[j] = cycdata[j + i];
 						}
-						cycCount = cycCount - i;
+						cCount = cCount - i;
 					}
 					break; // End search
 				}
 			}
 			if (!syncFound) {
-				cycCount = 0;
+				cCount = 0;
 				memset(cycdata, 0, 20 * sizeof(cycdata[0]));
 				continue; // Continue main processing loop
 			}
 
 			dw_spectrum ds = {0};
 			if (!dw_spectrum_from_array(cycdata, &ds)) {
-				log_info(args->pstate, 2, "[DW:%s] Invalid spectrum data\n", args->tag);
+				log_info(args->pstate, 2, "[DW:%s] Invalid spectrum data\n",
+				         args->tag);
 			} else {
 				sysdata[ds.sysseq] = ds.sysword;
 				sdset[ds.sysseq] = true;
 				// Parse and queue frequency data?
 				if (dwInfo->parseSpectrum) {
-					for (int n=0; n < 4; ++n) {
+					for (int n = 0; n < 4; ++n) {
+						// clang-format off
 						dw_push_message(args, dwInfo->sourceNum, DWCHAN_SPF, ds.frequencyBin[n]);
 						dw_push_message(args, dwInfo->sourceNum, DWCHAN_SPD, ds.direction[n]);
 						dw_push_message(args, dwInfo->sourceNum, DWCHAN_SPS, ds.spread[n]);
@@ -157,6 +169,7 @@ void *dw_logging(void *ptargs) {
 						dw_push_message(args, dwInfo->sourceNum, DWCHAN_SPN, ds.n2[n]);
 						dw_push_message(args, dwInfo->sourceNum, DWCHAN_SPR, ds.rpsd[n]);
 						dw_push_message(args, dwInfo->sourceNum, DWCHAN_SPK, ds.K[n]);
+						// clang-format on
 					}
 				}
 			}
@@ -174,9 +187,11 @@ void *dw_logging(void *ptargs) {
 			if (count == 16) {
 				dw_system dsys = {0};
 				if (!dw_system_from_array(sysdata, &dsys)) {
-					log_info(args->pstate, 2, "[DW:%s] Invalid system data\n", args->tag);
+					log_info(args->pstate, 2, "[DW:%s] Invalid system data\n",
+					         args->tag);
 				} else {
 					// Parse system data and queue
+					// clang-format off
 					dw_push_message(args, dwInfo->sourceNum, DWCHAN_LAT, dsys.lat);
 					dw_push_message(args, dwInfo->sourceNum, DWCHAN_LON, dsys.lon);
 					dw_push_message(args, dwInfo->sourceNum, DWCHAN_ORIENT, dsys.orient);
@@ -186,23 +201,22 @@ void *dw_logging(void *ptargs) {
 					dw_push_message(args, dwInfo->sourceNum, DWCHAN_TREF, dsys.refTemp);
 					dw_push_message(args, dwInfo->sourceNum, DWCHAN_TWTR, dsys.waterTemp);
 					dw_push_message(args, dwInfo->sourceNum, DWCHAN_WEEKS, dsys.opTime);
+					// clang-format on
 				}
-				memset(&sysdata, 0, 16*sizeof(uint16_t));
-				memset(&sdset, 0, 16*sizeof(bool));
+				memset(&sysdata, 0, 16 * sizeof(uint16_t));
+				memset(&sdset, 0, 16 * sizeof(bool));
 			}
-
 
 			cycdata[0] = cycdata[18];
 			cycdata[1] = cycdata[19];
-			memset(&(cycdata[2]), 0, 18*sizeof(uint16_t));
-			cycCount = 2;
-
+			memset(&(cycdata[2]), 0, 18 * sizeof(uint16_t));
+			cCount = 2;
 		}
 
-///////////
 		msg_t *sm = msg_new_bytes(dwInfo->sourceNum, 3, dw_hw, buf);
 		if (!queue_push(args->logQ, sm)) {
-			log_error(args->pstate, "[DW:%s] Error pushing message to queue", args->tag);
+			log_error(args->pstate, "[DW:%s] Error pushing message to queue",
+			          args->tag);
 			msg_destroy(sm);
 			args->returnCode = -1;
 			pthread_exit(&(args->returnCode));
@@ -239,8 +253,8 @@ void dw_push_message(log_thread_args_t *args, uint8_t sNum, uint8_t cNum, float 
  * @param ptargs Pointer to log_thread_args_t
  */
 void *dw_shutdown(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	dw_params *dwInfo = (dw_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	dw_params *dwInfo = (dw_params *)args->dParams;
 	if (dwInfo->handle >= 0) { // Admittedly 0 is unlikely
 		shutdown(dwInfo->handle, SHUT_RDWR);
 		close(dwInfo->handle);
@@ -258,10 +272,10 @@ void *dw_shutdown(void *ptargs) {
 }
 
 bool dw_net_connect(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	dw_params *dwInfo = (dw_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	dw_params *dwInfo = (dw_params *)args->dParams;
 
-	if (dwInfo->addr == NULL ) {
+	if (dwInfo->addr == NULL) {
 		log_error(args->pstate, "[DW:%s] Bad connection details provided", args->tag);
 		return false;
 	}
@@ -289,47 +303,44 @@ bool dw_net_connect(void *ptargs) {
 		perror("dw_net_connect(hostinfo)");
 		return false;
 	}
-	targetSA.sin_addr = *(struct in_addr *) hostinfo->h_addr;
+	targetSA.sin_addr = *(struct in_addr *)hostinfo->h_addr;
 
 	errno = 0;
-	int rs = connect(dwInfo->handle, (struct sockaddr *) &targetSA, sizeof(targetSA));
-	if ((rs < 0) && (errno != EINPROGRESS) ) {
-		perror ("dw_net_connect(connect)");
+	int rs = connect(dwInfo->handle, (struct sockaddr *)&targetSA, sizeof(targetSA));
+	if ((rs < 0) && (errno != EINPROGRESS)) {
+		perror("dw_net_connect(connect)");
 		return false;
 	}
 
+	// clang-format off
 	if (fcntl(dwInfo->handle, F_SETFL, fcntl(dwInfo->handle, F_GETFL, NULL) | O_NONBLOCK) < 0) {
 		perror("dw_net_connect(fcntl)");
 		return false;
 	}
 	int enable = 1;
-	if (setsockopt(dwInfo->handle, IPPROTO_TCP, TCP_NODELAY, (void *) &enable, sizeof(enable))) {
+	if (setsockopt(dwInfo->handle, IPPROTO_TCP, TCP_NODELAY, (void *)&enable, sizeof(enable))) {
 		perror("dw_net_connect(NODELAY)");
 		return false;
 	}
-
+	// clang-format on
 	return true;
 }
 
 device_callbacks dw_getCallbacks() {
-	device_callbacks cb = {
-		.startup = &dw_setup,
-		.logging = &dw_logging,
-		.shutdown = &dw_shutdown,
-		.channels = &dw_channels
-	};
+	device_callbacks cb = {.startup = &dw_setup,
+	                       .logging = &dw_logging,
+	                       .shutdown = &dw_shutdown,
+	                       .channels = &dw_channels};
 	return cb;
 }
 
 dw_params dw_getParams() {
-	dw_params dw = {
-		.addr = NULL,
-		// .port = 1180,
-		.handle = -1,
-		.timeout = 60,
-		.recordRaw = true,
-		.parseSpectrum = false
-	};
+	dw_params dw = {.addr = NULL,
+	                // .port = 1180,
+	                .handle = -1,
+	                .timeout = 60,
+	                .recordRaw = true,
+	                .parseSpectrum = false};
 	return dw;
 }
 
@@ -337,10 +348,11 @@ dw_params dw_getParams() {
  * Populate list of channels and push to queue as a map message
  */
 void *dw_channels(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	dw_params *dwInfo = (dw_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	dw_params *dwInfo = (dw_params *)args->dParams;
 
-	msg_t *m_sn = msg_new_string(dwInfo->sourceNum, SLCHAN_NAME, strlen(dwInfo->sourceName), dwInfo->sourceName);
+	msg_t *m_sn = msg_new_string(dwInfo->sourceNum, SLCHAN_NAME, strlen(dwInfo->sourceName),
+	                             dwInfo->sourceName);
 
 	if (!queue_push(args->logQ, m_sn)) {
 		log_error(args->pstate, "[DW:%s] Error pushing channel name to queue", args->tag);
@@ -350,9 +362,7 @@ void *dw_channels(void *ptargs) {
 	}
 
 	int nChans = 16;
-	if (dwInfo->parseSpectrum) {
-		nChans = 24;
-	}
+	if (dwInfo->parseSpectrum) { nChans = 24; }
 
 	strarray *channels = sa_new(nChans);
 	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
@@ -414,15 +424,14 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 
 	dw_params *dw = calloc(1, sizeof(dw_params));
 	if (!dw) {
-		log_error(lta->pstate, "[DW:%s] Unable to allocate memory for device parameters", lta->tag);
+		log_error(lta->pstate, "[DW:%s] Unable to allocate memory for device parameters",
+		          lta->tag);
 		return false;
 	}
 	(*dw) = dw_getParams();
 
 	config_kv *t = NULL;
-	if ((t = config_get_key(s, "host"))) {
-		dw->addr = config_qstrdup(t->value);
-	}
+	if ((t = config_get_key(s, "host"))) { dw->addr = config_qstrdup(t->value); }
 	t = NULL;
 
 	if ((t = config_get_key(s, "name"))) {
@@ -437,11 +446,13 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 		errno = 0;
 		int sn = strtol(t->value, NULL, 0);
 		if (errno) {
-			log_error(lta->pstate, "[DW:%s] Error parsing source number: %s", lta->tag, strerror(errno));
+			log_error(lta->pstate, "[DW:%s] Error parsing source number: %s", lta->tag,
+			          strerror(errno));
 			return false;
 		}
 		if (sn < 0) {
-			log_error(lta->pstate, "[DW:%s] Invalid source number (%s)", lta->tag, t->value);
+			log_error(lta->pstate, "[DW:%s] Invalid source number (%s)", lta->tag,
+			          t->value);
 			return false;
 		}
 		if (sn < 10) {
@@ -449,7 +460,10 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 		} else {
 			dw->sourceNum = sn;
 			if (sn < SLSOURCE_EXT || sn > (SLSOURCE_EXT + 0x0F)) {
-				log_warning(lta->pstate, "[DW:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems", lta->tag, sn);
+				log_warning(
+					lta->pstate,
+					"[DW:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems",
+					lta->tag, sn);
 			}
 		}
 	}
@@ -458,12 +472,15 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 		errno = 0;
 		dw->timeout = strtol(t->value, NULL, 0);
 		if (errno) {
-			log_error(lta->pstate, "[DW:%s] Error parsing timeout: %s", lta->tag, strerror(errno));
+			log_error(lta->pstate, "[DW:%s] Error parsing timeout: %s", lta->tag,
+			          strerror(errno));
 			return false;
 		}
 
-		if (dw->timeout<= 0) {
-			log_error(lta->pstate, "[DW:%s] Invalid timeout value (%d is not greater than zero)", lta->tag, dw->timeout);
+		if (dw->timeout <= 0) {
+			log_error(lta->pstate,
+			          "[DW:%s] Invalid timeout value (%d is not greater than zero)",
+			          lta->tag, dw->timeout);
 			return false;
 		}
 	}
@@ -473,7 +490,8 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 		errno = 0;
 		int tmp = config_parse_bool(t->value);
 		if (tmp < 0) {
-			log_error(lta->pstate, "[DW:%s] Invalid value provided for 'raw': %s", lta->tag, t->value);
+			log_error(lta->pstate, "[DW:%s] Invalid value provided for 'raw': %s",
+			          lta->tag, t->value);
 			return false;
 		}
 		dw->recordRaw = (tmp == 1);
@@ -484,7 +502,8 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 		errno = 0;
 		int tmp = config_parse_bool(t->value);
 		if (tmp < 0) {
-			log_error(lta->pstate, "[DW:%s] Invalid value provided for 'spectrum': %s", lta->tag, t->value);
+			log_error(lta->pstate, "[DW:%s] Invalid value provided for 'spectrum': %s",
+			          lta->tag, t->value);
 			return false;
 		}
 		dw->parseSpectrum = (tmp == 1);

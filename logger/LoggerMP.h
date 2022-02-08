@@ -2,8 +2,8 @@
 #define SL_LOGGER_MP_H
 
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "SELKIELoggerBase.h"
@@ -22,12 +22,12 @@
  */
 //! MP Source device specific parameters
 typedef struct {
-	char *portName; //!< Target port name
-	int baudRate; //!< Baud rate for operations (currently unused)
-	int handle; //!< Handle for currently opened device
+	char *portName;  //!< Target port name
+	int baudRate;    //!< Baud rate for operations (currently unused)
+	int handle;      //!< Handle for currently opened device
 	uint8_t csource; //!< Cache source ID
-	char *cname; //!< Cache latest device name
-	strarray cmap; //!< Cache latest channel map
+	char *cname;     //!< Cache latest device name
+	strarray cmap;   //!< Cache latest channel map
 } mp_params;
 
 //! MP connection setup

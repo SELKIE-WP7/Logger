@@ -6,9 +6,9 @@
  * @ingroup SELKIELoggerDW
  */
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /*!
  * @addtogroup SELKIELoggerDW
@@ -24,13 +24,13 @@
  */
 
 //! Channel OK
-#define DW_CHAN_OK '-'
+#define DW_CHAN_OK       '-'
 
 //! Channel Repaired
 #define DW_CHAN_REPAIRED '='
 
 //! Channel Unrecoverable
-#define DW_CHAN_BAD '!'
+#define DW_CHAN_BAD      '!'
 
 //! @}
 
@@ -49,9 +49,9 @@ typedef enum dw_types {
  * with two characters representing each byte stored.
  */
 typedef struct dw_hva {
-	uint8_t seq; //!< Sequence number, transmitted as two hex characters
-	char rtStatus; //!< Real time channel status information. @sa DWChanStatus
-	uint8_t rt[9]; //!< Real time data
+	uint8_t seq;     //!< Sequence number, transmitted as two hex characters
+	char rtStatus;   //!< Real time channel status information. @sa DWChanStatus
+	uint8_t rt[9];   //!< Real time data
 	char packStatus; //!< Packet data status information. @sa DWChanStatus
 	uint8_t pack[3]; //!< Packet data
 } dw_hva;
@@ -63,7 +63,7 @@ typedef struct dw_hva {
  * status or sequencing information.
  */
 typedef struct dw_bva {
-	uint8_t rt[9]; //!< Real time data
+	uint8_t rt[9];   //!< Real time data
 	uint8_t pack[3]; //!< Packet data
 } dw_bva;
 
@@ -76,13 +76,13 @@ typedef struct dw_bva {
  * representing each byte stored.
  */
 typedef struct dw_hxv {
-	uint8_t status; //!< Error count. 0 or 1 OK, 2+ error
-	uint8_t lines; //!< Transmitted line number
+	uint8_t status;  //!< Error count. 0 or 1 OK, 2+ error
+	uint8_t lines;   //!< Transmitted line number
 	uint8_t data[8]; //!< 8 bytes of data
 } dw_hxv;
 
 typedef struct {
-	uint8_t sysseq; //!< System data sequence number
+	uint8_t sysseq;   //!< System data sequence number
 	uint16_t sysword; //!< 12 bits of system data
 	uint8_t frequencyBin[4];
 	float frequency[4];

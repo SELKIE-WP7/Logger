@@ -6,9 +6,9 @@
  * @ingroup SELKIELoggerMQTT
  */
 
-#include <stdbool.h>
-#include <mosquitto.h>
 #include "SELKIELoggerBase.h"
+#include <mosquitto.h>
+#include <stdbool.h>
 
 /*!
  * @addtogroup SELKIELoggerMQTT

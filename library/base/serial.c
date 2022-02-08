@@ -1,8 +1,8 @@
 #include <errno.h>
 #include <fcntl.h>
-#include <termios.h>
 #include <stdio.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "serial.h"
@@ -22,7 +22,6 @@
  * @return -1 on error, file descriptor number on success
  */
 int openSerialConnection(const char *port, const int baudRate) {
-
 	errno = 0;
 	int handle = open(port, O_RDWR | O_NOCTTY | O_DSYNC | O_NDELAY);
 	if (handle < 0) {
@@ -34,28 +33,28 @@ int openSerialConnection(const char *port, const int baudRate) {
 	fcntl(handle, F_SETFL, FNDELAY); // Make read() return 0 if no data
 
 	struct termios options;
-	// Get options, adjust baud and enable local control (cf. NoCTTY) and push to interface
+	// Get options, adjust baud and enable local control (cf. NoCTTY) and push to
+	// interface
 	tcgetattr(handle, &options);
 
 	cfsetispeed(&options, baud_to_flag(baudRate));
 	cfsetospeed(&options, baud_to_flag(baudRate));
 	options.c_oflag &= ~OPOST; // Disable any post processing
-	options.c_cflag &= ~(PARENB|CSTOPB|CSIZE);
+	options.c_cflag &= ~(PARENB | CSTOPB | CSIZE);
 	options.c_cflag |= (CLOCAL | CREAD);
 	options.c_cflag |= CS8;
-	options.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
-	options.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+	options.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+	options.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
 	options.c_cc[VTIME] = 1;
 	options.c_cc[VMIN] = 0;
-	if(tcsetattr(handle, TCSANOW, &options)) {
-		fprintf(stderr, "tcsetattr() failed!\n");
-	}
+	if (tcsetattr(handle, TCSANOW, &options)) { fprintf(stderr, "tcsetattr() failed!\n"); }
 
 	{
 		struct termios check;
 		tcgetattr(handle, &check);
 		if (cfgetispeed(&check) != baud_to_flag(baudRate)) {
-			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", baudRate, flag_to_baud(cfgetispeed(&check)));
+			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", baudRate,
+			        flag_to_baud(cfgetispeed(&check)));
 			close(handle); // Don't leave file descriptor dangling
 			return -1;
 		}

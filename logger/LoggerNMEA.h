@@ -2,9 +2,9 @@
 #define SL_LOGGER_NMEA_H
 
 #include <errno.h>
-#include <string.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "SELKIELoggerBase.h"
@@ -23,12 +23,12 @@
 
 //! NMEA Device specific parameters
 typedef struct {
-	char *portName; //!< Target port name
-	char *sourceName; //!< User defined name for this source
+	char *portName;    //!< Target port name
+	char *sourceName;  //!< User defined name for this source
 	uint8_t sourceNum; //!< Source ID for messages
-	int baudRate; //!< Baud rate for operations
-	int handle; //!< Handle for currently opened device
-	// Future expansion: Talker/Message -> Source/Message map?
+	int baudRate;      //!< Baud rate for operations
+	int handle;        //!< Handle for currently opened device
+	                   // Future expansion: Talker/Message -> Source/Message map?
 } nmea_params;
 
 //! NMEA Setup

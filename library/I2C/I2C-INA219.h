@@ -20,19 +20,19 @@
  * @{
  */
 //! INA219 configuration register
-#define INA219_REG_CONFIG 0x00
+#define INA219_REG_CONFIG      0x00
 
 //! INA219 shunt voltage register
-#define INA219_REG_SHUNT 0x01
+#define INA219_REG_SHUNT       0x01
 
 //! INA219 bus voltage register
-#define INA219_REG_BUS 0x02
+#define INA219_REG_BUS         0x02
 
 //! INA219 calculated power register
-#define INA219_REG_POWER  0x03
+#define INA219_REG_POWER       0x03
 
 //! INA219 current register
-#define INA219_REG_CURRENT 0x04
+#define INA219_REG_CURRENT     0x04
 
 //! INA219 calibration registor
 #define INA219_REG_CALIBRATION 0x05
@@ -55,12 +55,12 @@
  *  - Average over 8 samples
  *  - Sample continuously
  */
-#define INA219_CONFIG_DEF 0x3DDF
+#define INA219_CONFIG_DEF      0x3DDF
 
 /*!
  * Set the device reset bit in the configuration register
  */
-#define INA219_CONFIG_RESET 0x8000
+#define INA219_CONFIG_RESET    0x8000
 
 //! @}
 

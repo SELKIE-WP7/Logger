@@ -15,20 +15,20 @@ int main(int argc, char *argv[]) {
 
 	dw_types inputType = DW_TYPE_UNKNOWN;
 
-        char *usage =  "Usage: %1$s [-v] [-q] [-x] datfile\n"
-                "\t-v\tIncrease verbosity\n"
-		"\t-q\tDecrease verbosity\n"
-		"\t-x\tInput file is in HVX format\n"
-                "\nVersion: " GIT_VERSION_STRING "\n";
+	char *usage = "Usage: %1$s [-v] [-q] [-x] datfile\n"
+		      "\t-v\tIncrease verbosity\n"
+		      "\t-q\tDecrease verbosity\n"
+		      "\t-x\tInput file is in HVX format\n"
+		      "\nVersion: " GIT_VERSION_STRING "\n";
 
-        opterr = 0; // Handle errors ourselves
-        int go = 0;
+	opterr = 0; // Handle errors ourselves
+	int go = 0;
 	bool doUsage = false;
-        while ((go = getopt(argc, argv, "vqx")) != -1) {
-                switch(go) {
-                        case 'v':
-                                state.verbose++;
-                                break;
+	while ((go = getopt(argc, argv, "vqx")) != -1) {
+		switch (go) {
+			case 'v':
+				state.verbose++;
+				break;
 			case 'q':
 				state.verbose--;
 				break;
@@ -39,13 +39,13 @@ int main(int argc, char *argv[]) {
 				log_error(&state, "Unknown option `-%c'", optopt);
 				doUsage = true;
 		}
-        }
+	}
 
 	// Should be 1 spare arguments: The file to convert
-        if (argc - optind != 1) {
+	if (argc - optind != 1) {
 		log_error(&state, "Invalid arguments");
 		doUsage = true;
-        }
+	}
 
 	if (doUsage) {
 		fprintf(stderr, usage, argv[0]);
@@ -86,24 +86,29 @@ int main(int argc, char *argv[]) {
 
 		size_t end = hw;
 		dw_hxv tmp = {0};
-		switch(inputType) {
+		switch (inputType) {
 			case DW_TYPE_HVX:
 				// Read HXV
 				if (dw_string_hxv(buf, &end, &tmp)) {
 					cycdata[cycCount++] = dw_hxv_cycdat(&tmp);
-					fprintf(stdout, "[cyc] Signal: %d, Displacements - N: %+.2f\tW: %+.2f\tV: %+.2f\n", tmp.status, dw_hxv_north(&tmp)/100.0, dw_hxv_west(&tmp)/100.0, dw_hxv_vertical(&tmp)/100.0);
+					fprintf(stdout,
+					        "[cyc] Signal: %d, Displacements - N: %+.2f\tW: %+.2f\tV: %+.2f\n",
+					        tmp.status, dw_hxv_north(&tmp) / 100.0,
+					        dw_hxv_west(&tmp) / 100.0,
+					        dw_hxv_vertical(&tmp) / 100.0);
 				}
 				if (cycCount > 18) {
 					bool syncFound = false;
 					for (int i = 0; i < cycCount; ++i) {
 						if (cycdata[i] == 0x7FFF) {
 							syncFound = true;
-							// fprintf(stderr, "Sync word found at %d/%d\n",  i, cycCount);
 							if (i > 0) {
-								for (int j = 0; j < cycCount && (j+i) < 20; ++j) {
-									cycdata[j] = cycdata[j+i];
+								// clang-format off
+								for (int j = 0; j < cycCount && (j + i) < 20; ++j) {
+									cycdata[j] = cycdata[j + i];
 								}
 								cycCount = cycCount - i;
+								// clang-format on
 							}
 							break;
 						}
@@ -116,14 +121,22 @@ int main(int argc, char *argv[]) {
 
 					dw_spectrum ds = {0};
 					if (!dw_spectrum_from_array(cycdata, &ds)) {
-						fprintf(stderr, "Failed to extract spectrum data\n");
+						fprintf(stderr,
+						        "Failed to extract spectrum data\n");
 					} else {
 						sysdata[ds.sysseq] = ds.sysword;
 						sdset[ds.sysseq] = true;
-						fprintf(stdout, "[spe] System data word %d\n", ds.sysseq);
-						fprintf(stdout, "[spe] #\tBin\tFreq\tDir.\tSpread\tM2\tN2\tRPSD\tK\n");
+						fprintf(stdout, "[spe] System data word %d\n",
+						        ds.sysseq);
+						fprintf(stdout,
+						        "[spe] #\tBin\tFreq\tDir.\tSpread\tM2\tN2\tRPSD\tK\n");
 						for (int n = 0; n < 4; ++n) {
-							fprintf(stdout, "[spe] %1d\t%02d\t%.3f\t%.2f\t%.2f\t%.3f\t%.3f\t%.3f\t%.3f\n", n, ds.frequencyBin[n], ds.frequency[n], ds.direction[n], ds.spread[n], ds.m2[n], ds.n2[n], ds.rpsd[n], ds.K[n]);
+							fprintf(stdout,
+							        "[spe] %1d\t%02d\t%.3f\t%.2f\t%.2f\t%.3f\t%.3f\t%.3f\t%.3f\n",
+							        n, ds.frequencyBin[n],
+							        ds.frequency[n], ds.direction[n],
+							        ds.spread[n], ds.m2[n], ds.n2[n],
+							        ds.rpsd[n], ds.K[n]);
 						}
 						fprintf(stdout, "\n");
 					}
@@ -133,13 +146,14 @@ int main(int argc, char *argv[]) {
 						if (sdset[i]) {
 							++count;
 						} else {
-							// First gap found, no point continuing to count
+							// First gap found
 							break;
 						}
 					}
 
 					if (count == 16) {
 						dw_system dsys = {0};
+						// clang-format off
 						if (!dw_system_from_array(sysdata, &dsys)) {
 							fprintf(stderr, "Failed to extract system data\n");
 						} else {
@@ -152,7 +166,7 @@ int main(int argc, char *argv[]) {
 							{
 								int latm = 1;
 								char latc = 'N';
-								int lonm =1;
+								int lonm = 1;
 								char lonc = 'E';
 								if (dsys.lat < 0) {
 									latm = -1;
@@ -162,27 +176,30 @@ int main(int argc, char *argv[]) {
 									lonm = -1;
 									lonc = 'W';
 								}
-								fprintf(stdout, "[sys] Position: %.6f%c %.6f%c, Orientation: %.3f, Inclination: %.3f\n", latm * dsys.lat, latc, lonm * dsys.lon, lonc, dsys.orient, dsys.incl);
+								fprintf(stdout,
+								        "[sys] Position: %.6f%c %.6f%c, Orientation: %.3f, Inclination: %.3f\n",
+								        latm * dsys.lat, latc,
+								        lonm * dsys.lon, lonc,
+								        dsys.orient, dsys.incl);
 								fprintf(stdout, "\n");
 							}
+							// clang-format on
 						}
-						memset(&sysdata, 0, 16*sizeof(uint16_t));
-						memset(&sdset, 0, 16*sizeof(bool));
+						memset(&sysdata, 0, 16 * sizeof(uint16_t));
+						memset(&sdset, 0, 16 * sizeof(bool));
 					}
-
 
 					cycdata[0] = cycdata[18];
 					cycdata[1] = cycdata[19];
-					memset(&(cycdata[2]), 0, 18*sizeof(uint16_t));
+					memset(&(cycdata[2]), 0, 18 * sizeof(uint16_t));
 					cycCount = 2;
-
 				}
 				break;
 			default:
 				// Error!
 				return -2;
 		}
-		memmove(buf, &(buf[end]), hw-end);
+		memmove(buf, &(buf[end]), hw - end);
 		hw -= end;
 	}
 	fclose(inFile);

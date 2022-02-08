@@ -2,7 +2,7 @@
 #define SELKIELoggerMP_Serial
 
 /*!
- * @file MPSerial.h Serial Input/Output functions for communication with compatible MessagePack data sources
+ * @file MPSerial.h Serial Input/Output functions for compatible MessagePack data sources
  * @ingroup SELKIELoggerMP
  */
 

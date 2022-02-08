@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "strarray.h"
@@ -14,11 +14,9 @@
  * @param[in] entries Number of entries in array
  * @return Pointer to allocated array. NULL on failure.
  */
-strarray * sa_new(int entries) {
-	strarray * newarray = calloc(1, sizeof(strarray));
-	if (newarray == NULL) {
-		return NULL;
-	}
+strarray *sa_new(int entries) {
+	strarray *newarray = calloc(1, sizeof(strarray));
+	if (newarray == NULL) { return NULL; }
 	if (!sa_init(newarray, entries)) {
 		free(newarray);
 		return NULL;
@@ -37,17 +35,12 @@ strarray * sa_new(int entries) {
  * @returns True on success, false on error
  */
 bool sa_init(strarray *dst, const int entries) {
-	if (dst->entries) {
-		sa_destroy(dst);
-	}
+	if (dst->entries) { sa_destroy(dst); }
 	dst->entries = entries;
 	dst->strings = calloc(entries, sizeof(string));
-	if (dst->strings == NULL) {
-		return false;
-	}
+	if (dst->strings == NULL) { return false; }
 	return true;
 }
-
 
 /*!
  * Destroys the existing contents of the destination array, which cannot be
@@ -59,9 +52,7 @@ bool sa_init(strarray *dst, const int entries) {
  * @return True on success, false on error
  */
 bool sa_copy(strarray *dst, const strarray *src) {
-	if (dst == NULL || src == NULL) {
-		return false;
-	}
+	if (dst == NULL || src == NULL) { return false; }
 	sa_destroy(dst);
 	dst->entries = src->entries;
 	dst->strings = calloc(dst->entries, sizeof(string));
@@ -70,7 +61,7 @@ bool sa_copy(strarray *dst, const strarray *src) {
 		return false;
 	}
 	bool success = true;
-	for (int ix=0; ix < dst->entries; ix++) {
+	for (int ix = 0; ix < dst->entries; ix++) {
 		success &= str_copy(&(dst->strings[ix]), &(src->strings[ix]));
 	}
 	if (!success) {
@@ -79,7 +70,6 @@ bool sa_copy(strarray *dst, const strarray *src) {
 	}
 	return true;
 }
-
 
 /*!
  * Moves strings from one array to anther by copying the internal pointer of
@@ -94,9 +84,7 @@ bool sa_copy(strarray *dst, const strarray *src) {
  * @return True on success, false on error.
  */
 bool sa_move(strarray *dst, strarray *src) {
-	if (dst == NULL || src == NULL) {
-		return false;
-	}
+	if (dst == NULL || src == NULL) { return false; }
 	sa_destroy(dst);
 	dst->entries = src->entries;
 	dst->strings = src->strings;
@@ -115,13 +103,9 @@ bool sa_move(strarray *dst, strarray *src) {
  * @return Result of str_copy(), or false if parameters are invalid
  */
 bool sa_set_entry(strarray *array, const int index, string *str) {
-	if (array == NULL) {
-		return false;
-	}
+	if (array == NULL) { return false; }
 
-	if (index >= array->entries) {
-		return false;
-	}
+	if (index >= array->entries) { return false; }
 
 	return str_copy(&(array->strings[index]), str);
 }
@@ -137,12 +121,8 @@ bool sa_set_entry(strarray *array, const int index, string *str) {
  * @return Result of str_upate(), or false if parameters are invalid
  */
 bool sa_create_entry(strarray *array, const int index, const size_t len, const char *src) {
-	if (array == NULL) {
-		return false;
-	}
-	if (index >= array->entries) {
-		return false;
-	}
+	if (array == NULL) { return false; }
+	if (index >= array->entries) { return false; }
 
 	return str_update(&(array->strings[index]), len, src);
 }
@@ -155,12 +135,8 @@ bool sa_create_entry(strarray *array, const int index, const size_t len, const c
  * @param[in] index Position in array to clear
  */
 void sa_clear_entry(strarray *array, const int index) {
-	if (array == NULL) {
-		return;
-	}
-	if (index >= array->entries) {
-		return;
-	}
+	if (array == NULL) { return; }
+	if (index >= array->entries) { return; }
 
 	str_destroy(&(array->strings[index]));
 }
@@ -178,9 +154,7 @@ void sa_clear_entry(strarray *array, const int index) {
  * @param[in] sa Pointer to array to be destroyed.
  */
 void sa_destroy(strarray *sa) {
-	if (sa == NULL) {
-		return;
-	}
+	if (sa == NULL) { return; }
 	if (sa->entries == 0) {
 		// Why did we allocate a zero length array?
 		if (sa->strings) {
@@ -195,7 +169,7 @@ void sa_destroy(strarray *sa) {
 		return;
 	}
 
-	for (int ix=0; ix < sa->entries; ix++) {
+	for (int ix = 0; ix < sa->entries; ix++) {
 		str_destroy(&(sa->strings[ix]));
 	}
 	free(sa->strings);
@@ -214,11 +188,9 @@ void sa_destroy(strarray *sa) {
  * @param[in] ca  Pointer to character array
  * @return Pointer to newly allocated string, or NULL on failure
  */
-string * str_new(const size_t len, const char *ca) {
+string *str_new(const size_t len, const char *ca) {
 	string *ns = calloc(1, sizeof(string));
-	if (ns == NULL) {
-		return NULL;
-	}
+	if (ns == NULL) { return NULL; }
 
 	if (len == 0) {
 		ns->length = 0;
@@ -228,9 +200,7 @@ string * str_new(const size_t len, const char *ca) {
 
 	ns->length = len;
 	int alen = len;
-	if (ca[len -1] != 0) {
-		alen++;
-	}
+	if (ca[len - 1] != 0) { alen++; }
 	ns->data = malloc(alen);
 	if (ns->data == NULL) {
 		free(ns);
@@ -238,7 +208,7 @@ string * str_new(const size_t len, const char *ca) {
 	}
 
 	strncpy(ns->data, ca, len);
-	ns->data[alen-1] = 0; // Force last byte to zero
+	ns->data[alen - 1] = 0; // Force last byte to zero
 	return ns;
 }
 
@@ -278,7 +248,7 @@ bool str_copy(string *dst, const string *src) {
  * @param[in] src Pointer to source string
  * @return Return value of str_new()
  */
-string * str_duplicate(const string *src) {
+string *str_duplicate(const string *src) {
 	return str_new(src->length, src->data);
 }
 
@@ -298,14 +268,14 @@ bool str_update(string *str, const size_t len, const char *src) {
 		str->length = 0;
 		return true;
 	}
-	str->length = len+1;
+	str->length = len + 1;
 	str->data = malloc(str->length);
 	if (str->data == NULL) {
 		str->length = 0;
 		return false;
 	}
 	strncpy(str->data, src, str->length);
-	str->data[str->length-1] = 0;
+	str->data[str->length - 1] = 0;
 	str->length = strlen(str->data);
 	return true;
 }
@@ -318,12 +288,8 @@ bool str_update(string *str, const size_t len, const char *src) {
  * @param[in] str Pointer to string to be destroyed
  */
 void str_destroy(string *str) {
-	if (str == NULL) {
-		return;
-	}
+	if (str == NULL) { return; }
 	str->length = 0;
-	if (str->data) {
-		free(str->data);
-	}
+	if (str->data) { free(str->data); }
 	str->data = NULL;
 }

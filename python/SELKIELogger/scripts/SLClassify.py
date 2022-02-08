@@ -3,23 +3,38 @@ import msgpack
 from . import log
 from ..SLMessages import SLMessageSink
 
+
 def process_arguments():
     import argparse
-    options = argparse.ArgumentParser(description="Read messages from SELKIE Logger data file and classify unknown/raw UBX and NMEA messages found", epilog="Created as part of the SELKIE project")
-    options.add_argument("file",  help="Input file name")
-    options.add_argument("-v","--verbose", dest="verbose", action="store_true", default=False, help="Include timing and source/channel information messages")
+
+    options = argparse.ArgumentParser(
+        description="Read messages from SELKIE Logger data file and classify unknown/raw UBX and NMEA messages found",
+        epilog="Created as part of the SELKIE project",
+    )
+    options.add_argument("file", help="Input file name")
+    options.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Include timing and source/channel information messages",
+    )
     return options.parse_args()
 
-class ProcessedRecords():
-    __slots__ = ['classes', 'processed', 'SourceMap']
+
+class ProcessedRecords:
+    __slots__ = ["classes", "processed", "SourceMap"]
+
     def __init__(self):
         SourceTypes = ["GPS", "NMEA", "MP"]
         self.classes = {x: {} for x in SourceTypes}
         self.processed = {x: 0 for x in SourceTypes}
         self.SourceMap = None
 
+
 def classify_messages(file):
-    unpacker = msgpack.Unpacker(file, unicode_errors='ignore')
+    unpacker = msgpack.Unpacker(file, unicode_errors="ignore")
     out = SLMessageSink(msglogger=log)
 
     tots = ProcessedRecords()
@@ -43,17 +58,19 @@ def classify_messages(file):
             # Assume GPS
             if msg.ChannelID != 0x03:
                 # We're only looking at raw messages on Ch 3
-                if not msg.ChannelID in [0,1,2]:
+                if not msg.ChannelID in [0, 1, 2]:
                     # But we will count messages that have been converted to other types
                     tots.processed["GPS"] = tots.processed["GPS"] + 1
                 continue
-            header = int.from_bytes(msg.Data[0:2], byteorder='big', signed=False)
+            header = int.from_bytes(msg.Data[0:2], byteorder="big", signed=False)
             ubxClass = msg.Data[2]
             ubxMsg = msg.Data[3]
 
             if ubxClass in tots.classes["GPS"]:
                 if ubxMsg in tots.classes["GPS"][ubxClass]:
-                    tots.classes["GPS"][ubxClass][ubxMsg] = tots.classes["GPS"][ubxClass][ubxMsg] + 1
+                    tots.classes["GPS"][ubxClass][ubxMsg] = (
+                        tots.classes["GPS"][ubxClass][ubxMsg] + 1
+                    )
                 else:
                     tots.classes["GPS"][ubxClass][ubxMsg] = 1
             else:
@@ -63,10 +80,10 @@ def classify_messages(file):
         elif msg.SourceID >= 0x30 and msg.SourceID < 0x40:
             # Assume NMEA
             if msg.ChannelID != 0x03:
-                if not msg.ChannelID in [0,1,2]:
+                if not msg.ChannelID in [0, 1, 2]:
                     tots.processed["NMEA"] = tots.processed["NMEA"] + 1
                 continue
-            nmeaHead = msg.Data[0:10].decode('ascii', 'replace')
+            nmeaHead = msg.Data[0:10].decode("ascii", "replace")
             if nmeaHead[1] == "P":
                 talker = nmeaHead[1:5]
                 message = nmeaHead[5:8]
@@ -76,7 +93,9 @@ def classify_messages(file):
 
             if talker in tots.classes["NMEA"]:
                 if message in tots.classes["NMEA"][talker]:
-                    tots.classes["NMEA"][talker][message] = tots.classes["NMEA"][talker][message] + 1
+                    tots.classes["NMEA"][talker][message] = (
+                        tots.classes["NMEA"][talker][message] + 1
+                    )
                 else:
                     tots.classes["NMEA"][talker][message] = 1
             else:
@@ -108,6 +127,7 @@ def print_classifications(res):
         for m in res.classes["NMEA"][t]:
             print(f"\t{t:3s}\t{m:3s}\t{res.classes['NMEA'][t][m]:d}")
 
+
 def SLClassify():
     args = process_arguments()
     inFile = open(args.file, "rb")
@@ -115,7 +135,7 @@ def SLClassify():
     inFile.close()
     print_classifications(res)
 
-    if (args.verbose):
+    if args.verbose:
         print("\n\n==== Sources and channels ===")
         for x in res.SourceMap:
             print(f"\t0x{x:02x}: {res.SourceMap[x].name}")
@@ -124,6 +144,7 @@ def SLClassify():
             for y in res.SourceMap[x]:
                 print(f"\t\t0x{ix:02x}: {y}")
                 ix += 1
+
 
 if __name__ == "__main__":
     SLClassify()

@@ -2,30 +2,30 @@ import msgpack
 import logging
 from warnings import warn
 
+
 class IDs:
-    SLSOURCE_LOCAL=0x00
-    SLSOURCE_CONV=0x01
-    SLSOURCE_TIMER=0x02
-    SLSOURCE_TEST1=0x05
-    SLSOURCE_TEST2=0x06
-    SLSOURCE_TEST3=0x07
-    SLSOURCE_GPS=0x10
-    SLSOURCE_ADC=0x20
-    SLSOURCE_NMEA=0x30
-    SLSOURCE_I2C=0x40
-    SLSOURCE_EXT=0x60
-    SLSOURCE_MQTT=0x68
-    SLSOURCE_MP=0x70
+    SLSOURCE_LOCAL = 0x00
+    SLSOURCE_CONV = 0x01
+    SLSOURCE_TIMER = 0x02
+    SLSOURCE_TEST1 = 0x05
+    SLSOURCE_TEST2 = 0x06
+    SLSOURCE_TEST3 = 0x07
+    SLSOURCE_GPS = 0x10
+    SLSOURCE_ADC = 0x20
+    SLSOURCE_NMEA = 0x30
+    SLSOURCE_I2C = 0x40
+    SLSOURCE_EXT = 0x60
+    SLSOURCE_MQTT = 0x68
+    SLSOURCE_MP = 0x70
     SLSOURCE_IMU = SLSOURCE_MP
 
-    SLCHAN_NAME=0x00
-    SLCHAN_MAP=0x01
-    SLCHAN_TSTAMP=0x02
-    SLCHAN_RAW=0x03
-    SLCHAN_LOG_INFO=0x7
-    SLCHAN_LOG_WARN=0x7
-    SLCHAN_LOG_ERR=0x7
-
+    SLCHAN_NAME = 0x00
+    SLCHAN_MAP = 0x01
+    SLCHAN_TSTAMP = 0x02
+    SLCHAN_RAW = 0x03
+    SLCHAN_LOG_INFO = 0x7
+    SLCHAN_LOG_WARN = 0x7
+    SLCHAN_LOG_ERR = 0x7
 
 
 ## @brief Python representation of a logged message
@@ -52,10 +52,12 @@ class SLMessage:
         @sa library/base/sources.h
         """
         try:
-            assert (0 <= sourceID  and sourceID < 128)
-            assert (0 <= channelID and channelID < 128)
+            assert 0 <= sourceID and sourceID < 128
+            assert 0 <= channelID and channelID < 128
         except:
-            log.error(f"Invalid source/channel values: Source: {sourceID}, Channel: {channelID}, Data: {data}")
+            log.error(
+                f"Invalid source/channel values: Source: {sourceID}, Channel: {channelID}, Data: {data}"
+            )
             raise ValueError("Invalid source/channel values")
 
         self.SourceID = sourceID
@@ -69,7 +71,7 @@ class SLMessage:
             data = msgpack.unpackb(data)
         if not isinstance(data, list) or len(data) != 4:
             raise ValueError("Bad message")
-        assert (data[0] == 0x55)
+        assert data[0] == 0x55
         return cl(data[1], data[2], data[3])
 
     def pack(self):
@@ -84,6 +86,7 @@ class SLMessage:
         """Return printable representation of message"""
         return f"{self.SourceID:02x}\t{self.ChannelID:02x}\t{str(self.Data)}"
 
+
 class SLMessageSource:
     """!
     Software message source
@@ -96,7 +99,10 @@ class SLMessageSource:
 
     @sa library/base/sources.h
     """
-    def __init__(self, sourceID, name="PythonDL", dataChannels=1, dataChannelNames=None):
+
+    def __init__(
+        self, sourceID, name="PythonDL", dataChannels=1, dataChannelNames=None
+    ):
         """Any valid source must have a source ID, name and a list of named data channels"""
         self.SourceID = int(sourceID)
         self.Name = str(name)
@@ -109,7 +115,9 @@ class SLMessageSource:
             dataChannelNames = [f"Data{x+1}" for x in range(dataChannels)]
 
         if len(dataChannelNames) != dataChannels:
-            raise ValueError(f"Inconsistent number of channels specified: Expected {dataChannels}, got {len(dataChannels)}")
+            raise ValueError(
+                f"Inconsistent number of channels specified: Expected {dataChannels}, got {len(dataChannels)}"
+            )
 
         if len(dataChannelNames) > 0:
             self.ChannelMap.extend(dataChannelNames)
@@ -150,16 +158,17 @@ class SLMessageSource:
         assert channelID < len(self.ChannelMap)
         return SLMessage(self.SourceID, channelID, data)
 
+
 class SLChannelMap:
     __slots__ = ["_s", "_log"]
 
     class Source:
-        __slots__ = ['id', 'name', 'channels', 'lastTimestamp']
+        __slots__ = ["id", "name", "channels", "lastTimestamp"]
 
-        def __init__(self, number, name = None, channels=None, lastTimestamp=None):
+        def __init__(self, number, name=None, channels=None, lastTimestamp=None):
             self.id = number
             if name:
-                self.name = f'[{number:02x}]'
+                self.name = f"[{number:02x}]"
             self.name = name
             if channels:
                 self.channels = channels
@@ -185,9 +194,8 @@ class SLChannelMap:
         def __str__(self):
             return self.name
 
-
     class Channel:
-        __slots__ = ['name']
+        __slots__ = ["name"]
 
         def __init__(self, name):
             self.name = name
@@ -237,7 +245,9 @@ class SLChannelMap:
 
     def NewSource(self, source, name=None):
         if self.SourceExists(source):
-            self._log.error(f"Source 0x{source:02x} already exists (as {self.GetSourceName(source)})")
+            self._log.error(
+                f"Source 0x{source:02x} already exists (as {self.GetSourceName(source)})"
+            )
         self._s[source] = self.Source(source, name)
 
     def SourceExists(self, source):
@@ -248,7 +258,7 @@ class SLChannelMap:
             return True
 
         if self.SourceExists(source):
-            return channel < len (self._s[source].channels)
+            return channel < len(self._s[source].channels)
         return False
 
     def SetSourceName(self, source, name):
@@ -268,6 +278,7 @@ class SLChannelMap:
             self.NewSource(source)
         self._s[source].lastTimestamp = int(timestamp)
 
+
 class SLMessageSink:
     """!
     Parse incoming messages.
@@ -277,6 +288,7 @@ class SLMessageSink:
     Expects data to be provided one message at a time to .Process(), and will
     return data as a dict, printable string or as an SLMessage().
     """
+
     def __init__(self, msglogger=None):
         """
         Initialise message sink
@@ -302,7 +314,7 @@ class SLMessageSink:
         return f"{self._sm.GetSourceName(msg.SourceID)}\t{self._sm.GetChannelName(msg.SourceID, msg.ChannelID)}\t{msg.Data}"
 
     def Process(self, message, output="dict", allMessages=False):
-        """ Process an incoming message
+        """Process an incoming message
 
         Accepts a SLMessage or bytes that can be unpacked.
         If a valid message is decoded, internal data structures are updated to
@@ -326,15 +338,24 @@ class SLMessageSink:
 
         suppressOutput = False
         if message.ChannelID == 0:
-            self._log.log(5, f"New name for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
+            self._log.log(
+                5,
+                f"New name for {self._sm.GetSourceName(message.SourceID)}: {message.Data}",
+            )
             self._sm.SetSourceName(message.SourceID, message.Data)
             suppressOutput = True
         elif message.ChannelID == 1:
-            self._log.log(5, f"New channels for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
+            self._log.log(
+                5,
+                f"New channels for {self._sm.GetSourceName(message.SourceID)}: {message.Data}",
+            )
             self._sm.SetChannelNames(message.SourceID, message.Data)
             suppressOutput = True
         elif message.ChannelID == 2:
-            self._log.log(5, f"New update time for {self._sm.GetSourceName(message.SourceID)}: {message.Data}")
+            self._log.log(
+                5,
+                f"New update time for {self._sm.GetSourceName(message.SourceID)}: {message.Data}",
+            )
             self._sm.UpdateTimestamp(message.SourceID, message.Data)
             suppressOutput = True
         elif message.ChannelID == 125:
@@ -350,10 +371,14 @@ class SLMessageSink:
         if allMessages or (not suppressOutput):
             if output == "dict":
                 return {
-                        'sourceID': message.SourceID, 'sourceName': self._sm.GetSourceName(message.SourceID),
-                        'channelID': message.ChannelID, 'channelName': self._sm.GetChannelName(message.SourceID, message.ChannelID),
-                        'data': message.Data
-                        }
+                    "sourceID": message.SourceID,
+                    "sourceName": self._sm.GetSourceName(message.SourceID),
+                    "channelID": message.ChannelID,
+                    "channelName": self._sm.GetChannelName(
+                        message.SourceID, message.ChannelID
+                    ),
+                    "data": message.Data,
+                }
             elif output == "string":
                 return self.FormatMessage(message)
             elif output == "raw":

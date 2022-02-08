@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
 
 #include "DWTypes.h"
 
@@ -13,13 +13,14 @@ bool test(const char *in, const uint8_t target) {
 	}
 
 	if (val == target) {
-		fprintf(stdout, "Conversion of '%c%c' successfully yielded %d\n", in[0], in[1], target);
+		fprintf(stdout, "Conversion of '%c%c' successfully yielded %d\n", in[0], in[1],
+		        target);
 		return true;
 	}
-	fprintf(stdout, "Conversion of '%c%c' failed (returned %d, not %d)\n", in[0], in[1], val, target);
+	fprintf(stdout, "Conversion of '%c%c' failed (returned %d, not %d)\n", in[0], in[1], val,
+	        target);
 	return false;
 }
-
 
 int main(int argc, char *argv[]) {
 	const char *ts1 = "00";
@@ -40,5 +41,5 @@ int main(int argc, char *argv[]) {
 	res &= test(ts6, 255);
 	res &= test(ts7, 255);
 
-	return (res?0:1);
+	return (res ? 0 : 1);
 }

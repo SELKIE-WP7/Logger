@@ -5,7 +5,6 @@
 #include <string.h>
 #include <unistd.h>
 
-
 /*!
  * Opens the specified bus in read/write mode
  *
@@ -15,9 +14,7 @@
 int i2c_openConnection(const char *bus) {
 	errno = 0;
 	int handle = open(bus, O_RDWR);
-	if (handle < 0) {
-		return -1;
-	}
+	if (handle < 0) { return -1; }
 	return handle;
 }
 
@@ -40,5 +37,5 @@ void i2c_closeConnection(int handle) {
  */
 int16_t i2c_swapbytes(const int16_t in) {
 	uint16_t tmp = in;
-	return (int16_t) ((tmp >> 8) + ((tmp & 0xFF) << 8));
+	return (int16_t)((tmp >> 8) + ((tmp & 0xFF) << 8));
 }

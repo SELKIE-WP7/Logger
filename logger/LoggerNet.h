@@ -2,8 +2,8 @@
 #define SL_LOGGER_NET_H
 
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "SELKIELoggerBase.h"
@@ -19,14 +19,14 @@
  */
 //! Network device specific parameters
 typedef struct {
-	char *sourceName; //!< User defined name for this source
+	char *sourceName;  //!< User defined name for this source
 	uint8_t sourceNum; //!< Source ID for messages
-	char *addr; //!< Target name
-	int port; //!< Target port number
-	int handle; //!< Handle for currently opened device
-	int minBytes; //!< Minimum number of bytes to group into a message
-	int maxBytes; //!< Maximum number of bytes to group into a message
-	int timeout; //!< Reconnect if no data received after this interval [s]
+	char *addr;        //!< Target name
+	int port;          //!< Target port number
+	int handle;        //!< Handle for currently opened device
+	int minBytes;      //!< Minimum number of bytes to group into a message
+	int maxBytes;      //!< Maximum number of bytes to group into a message
+	int timeout;       //!< Reconnect if no data received after this interval [s]
 } net_params;
 
 //! Device thread setup

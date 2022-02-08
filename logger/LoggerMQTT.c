@@ -9,8 +9,8 @@
  * @param ptargs Pointer to log_thread_args_t
  */
 void *mqtt_setup(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	mqtt_params *mqttInfo = (mqtt_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	mqtt_params *mqttInfo = (mqtt_params *)args->dParams;
 
 	queue_init(&(mqttInfo->qm.q));
 	mqttInfo->qm.sourceNum = mqttInfo->sourceNum;
@@ -33,19 +33,23 @@ void *mqtt_setup(void *ptargs) {
 
 void *mqtt_logging(void *ptargs) {
 	signalHandlersBlock();
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	mqtt_params *mqttInfo = (mqtt_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	mqtt_params *mqttInfo = (mqtt_params *)args->dParams;
 	log_info(args->pstate, 1, "[MQTT:%s] Logging thread started", args->tag);
 
 	time_t lastKA = 0;
 	uint16_t count = 0; // Unsigned so that it wraps around
 	while (!shutdownFlag) {
-		if (mqttInfo->victron_keepalives && (count % 200) == 0) { // Check ~ every 10 seconds
+		if (mqttInfo->victron_keepalives &&
+		    (count % 200) == 0) { // Check ~ every 10 seconds
 			time_t now = time(NULL);
 			if ((now - lastKA) >= mqttInfo->keepalive_interval) {
 				lastKA = now;
-				if (!mqtt_victron_keepalive(mqttInfo->conn, &(mqttInfo->qm), mqttInfo->sysid)) {
-					log_warning(args->pstate, "[MQTT:%s] Error sending keepalive message", args->tag);
+				if (!mqtt_victron_keepalive(mqttInfo->conn, &(mqttInfo->qm),
+				                            mqttInfo->sysid)) {
+					log_warning(args->pstate,
+					            "[MQTT:%s] Error sending keepalive message",
+					            args->tag);
 				}
 			}
 		}
@@ -58,7 +62,8 @@ void *mqtt_logging(void *ptargs) {
 			continue;
 		}
 		if (!queue_push(args->logQ, in)) {
-			log_error(args->pstate, "[MQTT:%s] Error pushing message to queue", args->tag);
+			log_error(args->pstate, "[MQTT:%s] Error pushing message to queue",
+			          args->tag);
 			msg_destroy(in);
 			args->returnCode = -1;
 			pthread_exit(&(args->returnCode));
@@ -68,8 +73,8 @@ void *mqtt_logging(void *ptargs) {
 }
 
 void *mqtt_shutdown(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	mqtt_params *mqttInfo = (mqtt_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	mqtt_params *mqttInfo = (mqtt_params *)args->dParams;
 	mqtt_closeConnection(mqttInfo->conn);
 	mqtt_destroy_queue_map(&(mqttInfo->qm));
 	if (mqttInfo->addr) {
@@ -88,13 +93,15 @@ void *mqtt_shutdown(void *ptargs) {
 }
 
 void *mqtt_channels(void *ptargs) {
-	log_thread_args_t *args = (log_thread_args_t *) ptargs;
-	mqtt_params *mqttInfo = (mqtt_params *) args->dParams;
+	log_thread_args_t *args = (log_thread_args_t *)ptargs;
+	mqtt_params *mqttInfo = (mqtt_params *)args->dParams;
 
-	msg_t *m_sn = msg_new_string(mqttInfo->sourceNum, SLCHAN_NAME, strlen(mqttInfo->sourceName), mqttInfo->sourceName);
+	msg_t *m_sn = msg_new_string(mqttInfo->sourceNum, SLCHAN_NAME,
+	                             strlen(mqttInfo->sourceName), mqttInfo->sourceName);
 
 	if (!queue_push(args->logQ, m_sn)) {
-		log_error(args->pstate, "[MQTT:%s] Error pushing channel name to queue", args->tag);
+		log_error(args->pstate, "[MQTT:%s] Error pushing channel name to queue",
+		          args->tag);
 		msg_destroy(m_sn);
 		args->returnCode = -1;
 		pthread_exit(&(args->returnCode));
@@ -105,8 +112,9 @@ void *mqtt_channels(void *ptargs) {
 	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");
 	sa_create_entry(channels, SLCHAN_TSTAMP, 9, "Timestamp");
 	sa_create_entry(channels, SLCHAN_RAW, 1, "-");
-	for (int t=0; t < mqttInfo->qm.numtopics; t++) {
-		sa_create_entry(channels, 4+t, strlen(mqttInfo->qm.tc[t].name), mqttInfo->qm.tc[t].name);
+	for (int t = 0; t < mqttInfo->qm.numtopics; t++) {
+		sa_create_entry(channels, 4 + t, strlen(mqttInfo->qm.tc[t].name),
+		                mqttInfo->qm.tc[t].name);
 	}
 
 	msg_t *m_cmap = msg_new_string_array(mqttInfo->sourceNum, SLCHAN_MAP, channels);
@@ -123,16 +131,13 @@ void *mqtt_channels(void *ptargs) {
 	sa_destroy(channels);
 	free(channels);
 	return NULL;
-
 }
 
 device_callbacks mqtt_getCallbacks() {
-	device_callbacks cb = {
-		.startup = &mqtt_setup,
-		.logging = &mqtt_logging,
-		.shutdown = &mqtt_shutdown,
-		.channels = &mqtt_channels
-	};
+	device_callbacks cb = {.startup = &mqtt_setup,
+	                       .logging = &mqtt_logging,
+	                       .shutdown = &mqtt_shutdown,
+	                       .channels = &mqtt_channels};
 	return cb;
 }
 
@@ -159,12 +164,13 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 
 	mqtt_params *mqtt = calloc(1, sizeof(mqtt_params));
 	if (!mqtt) {
-		log_error(lta->pstate, "[MQTT:%s] Unable to allocate memory for device parameters", lta->tag);
+		log_error(lta->pstate, "[MQTT:%s] Unable to allocate memory for device parameters",
+		          lta->tag);
 		return false;
 	}
 	(*mqtt) = mqtt_getParams();
 
-	for (int i=0; i < s->numopts; i++) {
+	for (int i = 0; i < s->numopts; i++) {
 		config_kv *t = &(s->opts[i]);
 		if (strcasecmp(t->key, "host") == 0) {
 			mqtt->addr = config_qstrdup(t->value);
@@ -172,7 +178,8 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 			errno = 0;
 			mqtt->port = strtol(t->value, NULL, 0);
 			if (errno) {
-				log_error(lta->pstate, "[MQTT:%s] Error parsing port number: %s", lta->tag, strerror(errno));
+				log_error(lta->pstate, "[MQTT:%s] Error parsing port number: %s",
+				          lta->tag, strerror(errno));
 				return false;
 			}
 		} else if (strcasecmp(t->key, "name") == 0) {
@@ -181,11 +188,13 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 			errno = 0;
 			int sn = strtol(t->value, NULL, 0);
 			if (errno) {
-				log_error(lta->pstate, "[MQTT:%s] Error parsing source number: %s", lta->tag, strerror(errno));
+				log_error(lta->pstate, "[MQTT:%s] Error parsing source number: %s",
+				          lta->tag, strerror(errno));
 				return false;
 			}
 			if (sn < 0) {
-				log_error(lta->pstate, "[MQTT:%s] Invalid source number (%s)", lta->tag, t->value);
+				log_error(lta->pstate, "[MQTT:%s] Invalid source number (%s)",
+				          lta->tag, t->value);
 				return false;
 			}
 			if (sn < 10) {
@@ -193,20 +202,29 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 			} else {
 				mqtt->sourceNum = sn;
 				if (sn < SLSOURCE_EXT || sn > (SLSOURCE_EXT + 0x0F)) {
-					log_warning(lta->pstate, "[MQTT:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems", lta->tag, sn);
+					log_warning(
+						lta->pstate,
+						"[MQTT:%s] Unexpected Source ID number (0x%02x)- this may cause analysis problems",
+						lta->tag, sn);
 				}
 			}
 			mqtt->qm.sourceNum = mqtt->sourceNum;
 		} else if (strcasecmp(t->key, "victron_keepalives") == 0) {
 			int tmp = config_parse_bool(t->value);
 			if (tmp < 0) {
-				log_error(lta->pstate, "[MQTT:%s] Invalid value provided for 'victron_keepalives': %s", lta->tag, t->value);
+				log_error(
+					lta->pstate,
+					"[MQTT:%s] Invalid value provided for 'victron_keepalives': %s",
+					lta->tag, t->value);
 				return false;
 			}
 			mqtt->victron_keepalives = (tmp > 0);
 		} else if (strcasecmp(t->key, "sysid") == 0) {
 			if (mqtt->sysid != NULL) {
-				log_error(lta->pstate, "[MQTT:%s] Only a single system ID is supported for Victron keepalive messages", lta->tag);
+				log_error(
+					lta->pstate,
+					"[MQTT:%s] Only a single system ID is supported for Victron keepalive messages",
+					lta->tag);
 				return false;
 			}
 			mqtt->sysid = strdup(t->value);
@@ -214,14 +232,18 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 			errno = 0;
 			int ki = strtol(t->value, NULL, 0);
 			if (errno) {
-				log_error(lta->pstate, "[MQTT:%s] Error parsing keepalive interval: %s", lta->tag, strerror(errno));
+				log_error(lta->pstate,
+				          "[MQTT:%s] Error parsing keepalive interval: %s",
+				          lta->tag, strerror(errno));
 				return false;
 			}
 			mqtt->keepalive_interval = ki;
 		} else if (strcasecmp(t->key, "dumpall") == 0) {
 			int tmp = config_parse_bool(t->value);
 			if (tmp < 0) {
-				log_error(lta->pstate, "[MQTT:%s] Invalid value provided for 'dumpall': %s", lta->tag, t->value);
+				log_error(lta->pstate,
+				          "[MQTT:%s] Invalid value provided for 'dumpall': %s",
+				          lta->tag, t->value);
 				return false;
 			}
 			mqtt->qm.dumpall = (tmp > 0);
@@ -238,7 +260,10 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 				if ((token = strtok_r(NULL, ":", &strtsp))) {
 					int tmp = config_parse_bool(token);
 					if (tmp < 0) {
-						log_error(lta->pstate, "[MQTT:%s] Invalid textmode specifier (%s) for topic '%s' ", lta->tag, t->value, mqtt->qm.tc[n].topic);
+						log_error(
+							lta->pstate,
+							"[MQTT:%s] Invalid textmode specifier (%s) for topic '%s' ",
+							lta->tag, t->value, mqtt->qm.tc[n].topic);
 						return false;
 					}
 					mqtt->qm.tc[n].text = (tmp > 0);
@@ -249,17 +274,23 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 			}
 		} else {
 			if (!(strcasecmp(t->key, "type") == 0 || strcasecmp(t->key, "tag") == 0)) {
-				log_warning(lta->pstate, "[MQTT:%s] Unrecognised configuration option: %s", lta->tag, t->key);
+				log_warning(lta->pstate,
+				            "[MQTT:%s] Unrecognised configuration option: %s",
+				            lta->tag, t->key);
 			}
 		}
 	}
 
 	if (mqtt->qm.numtopics < 1) {
-		log_error(lta->pstate, "[MQTT:%s] Must provide at least one topic to log", lta->tag);
+		log_error(lta->pstate, "[MQTT:%s] Must provide at least one topic to log",
+		          lta->tag);
 		return false;
 	}
 	if (mqtt->victron_keepalives && mqtt->sysid == NULL) {
-		log_error(lta->pstate, "[MQTT:%s] Must provide a system ID if enabling Victron-style keepalive messages", lta->tag);
+		log_error(
+			lta->pstate,
+			"[MQTT:%s] Must provide a system ID if enabling Victron-style keepalive messages",
+			lta->tag);
 		return false;
 	}
 	lta->dParams = mqtt;

@@ -1,5 +1,6 @@
-#include "LoggerI2C.h"
 #include "Logger.h"
+
+#include "LoggerI2C.h"
 #include "LoggerSignals.h"
 
 /*!

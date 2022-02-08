@@ -1,6 +1,7 @@
 #include <time.h>
 
 #include "Logger.h"
+
 #include "LoggerMQTT.h"
 
 /*!

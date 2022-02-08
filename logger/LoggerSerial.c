@@ -1,5 +1,6 @@
-#include "LoggerSerial.h"
 #include "Logger.h"
+
+#include "LoggerSerial.h"
 #include "LoggerSignals.h"
 
 /*!

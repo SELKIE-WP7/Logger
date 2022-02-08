@@ -1,5 +1,6 @@
-#include "LoggerNet.h"
 #include "Logger.h"
+
+#include "LoggerNet.h"
 #include "LoggerSignals.h"
 
 #include <fcntl.h>

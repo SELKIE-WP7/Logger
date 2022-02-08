@@ -1,6 +1,7 @@
-#include "LoggerTime.h"
 #include "Logger.h"
+
 #include "LoggerSignals.h"
+#include "LoggerTime.h"
 
 void *timer_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;

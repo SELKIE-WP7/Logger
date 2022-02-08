@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #include <i2c/smbus.h>

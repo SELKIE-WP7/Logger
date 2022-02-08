@@ -1,6 +1,7 @@
 #include <pthread.h>
 
 #include "Logger.h"
+
 #include "LoggerSignals.h"
 
 //! Trigger clean software shutdown

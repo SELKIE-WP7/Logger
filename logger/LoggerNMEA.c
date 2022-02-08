@@ -1,5 +1,6 @@
-#include "LoggerNMEA.h"
 #include "Logger.h"
+
+#include "LoggerNMEA.h"
 #include "LoggerSignals.h"
 
 /*!

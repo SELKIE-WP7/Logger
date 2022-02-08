@@ -102,6 +102,7 @@ class DatFile:
         simpleSources = [x for x in range(IDs.SLSOURCE_I2C, IDs.SLSOURCE_I2C + 0x10)]
         simpleSources += [x for x in range(IDs.SLSOURCE_MP, IDs.SLSOURCE_MP + 0x10)]
         simpleSources += [x for x in range(IDs.SLSOURCE_ADC, IDs.SLSOURCE_ADC + 0x10)]
+        simpleSources += [x for x in range(IDs.SLSOURCE_EXT, IDs.SLSOURCE_EXT + 0x07)]
 
         fields = {}
         for src in self._sm:
@@ -215,6 +216,9 @@ class DatFile:
                         cid += 1
                         continue
                     elif chan == "":
+                        cid += 1
+                        continue
+                    elif chan == "Raw Data":
                         cid += 1
                         continue
                     elif cid == IDs.SLCHAN_TSTAMP:

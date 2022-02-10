@@ -242,15 +242,13 @@ int main(int argc, char *argv[]) {
 	log_info(&state, 2, "Using log file %s.log", go.monFileStem);
 
 	errno = 0;
-	{
-		char *varFileName = NULL;
-		if (asprintf(&varFileName, "%s.%s", go.monFileStem, "var") < 0) {
-			log_error(&state, "Failed to allocate memory for variable file name: %s",
-			          strerror(errno));
-		}
-		go.varFile = fopen(varFileName, "w+x");
-		free(varFileName);
+	char *varFileName = NULL;
+	if (asprintf(&varFileName, "%s.%s", go.monFileStem, "var") < 0) {
+		log_error(&state, "Failed to allocate memory for variable file name: %s",
+		          strerror(errno));
 	}
+	go.varFile = fopen(varFileName, "w+x");
+
 	if (!go.varFile) {
 		if (errno == EEXIST) {
 			log_error(
@@ -535,7 +533,7 @@ int main(int argc, char *argv[]) {
 
 	if (go.saveState) {
 		errno = 0;
-		if (!write_state_file(go.stateName, stats, lastTimestamp)) {
+		if (!write_state_file(go.stateName, stats, lastTimestamp, varFileName)) {
 			log_error(&state, "Unable to write out state file: %s", strerror(errno));
 			return -1;
 		}
@@ -621,7 +619,8 @@ int main(int argc, char *argv[]) {
 					if ((now - lastSave) > 60) {
 						errno = 0;
 						if (!write_state_file(go.stateName, stats,
-						                      lastTimestamp)) {
+						                      lastTimestamp,
+						                      varFileName)) {
 							log_error(
 								&state,
 								"Unable to write out state file: %s",
@@ -712,17 +711,19 @@ int main(int argc, char *argv[]) {
 
 			FILE *newVar = NULL;
 			errno = 0;
-			{
-				char *varFileName = NULL;
-				if (asprintf(&varFileName, "%s.%s", go.monFileStem, "var") < 0) {
-					log_error(
-						&state,
-						"Failed to allocate memory for variable file name: %s",
-						strerror(errno));
-				}
-				newVar = fopen(varFileName, "w+x");
+
+			if (varFileName) {
 				free(varFileName);
+				varFileName = NULL;
 			}
+			if (asprintf(&varFileName, "%s.%s", go.monFileStem, "var") < 0) {
+				log_error(&state,
+				          "Failed to allocate memory for variable file name: %s",
+				          strerror(errno));
+			}
+			newVar = fopen(varFileName, "w+x");
+			free(varFileName);
+
 			if (newVar == NULL) {
 				// As above, if the issue is log file names then we
 				// continue with the existing file
@@ -918,10 +919,11 @@ void destroy_global_opts(struct global_opts *go) {
 	go->varFile = NULL;
 }
 
-bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS) {
+bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS, char *vFName) {
 	FILE *stateFile = fopen(sFName, "w");
 	if (stateFile == NULL) { return false; }
 	fprintf(stateFile, "%u\n", lTS);
+	fprintf(stateFile, "%s\n", vFName);
 	for (int s = 0; s < 128; s++) {
 		for (int c = 0; c < 128; c++) {
 			if (stats[s][c].count > 0) {

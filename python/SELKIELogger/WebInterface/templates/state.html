@@ -13,8 +13,8 @@
 		<tbody>
 		{% for f in g.stats%}
 		<tr>
-			<td>0x{{ '%02x' % f[0]}}</td>
-			<td>0x{{ '%02x' % f[1]}}</td>
+			<td>0x{{ '%02x' % f[0]}} - {{ g.sourcemap.GetSourceName(f[0]) }}</td>
+			<td>0x{{ '%02x' % f[1]}} - {{ g.sourcemap.GetChannelName(f[0], f[1]) }}</td>
 			<td>{{f[2]}}</td>
 			<td>{{f[5]}}</td>
 			<td>{{f[3]}}</td>

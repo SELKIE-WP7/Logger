@@ -140,6 +140,7 @@ def show_state():
         os.path.join(current_app.config["DATA_PATH"], current_app.config["STATE_NAME"])
     )
     stats = sf.parse()
+    g.sourcemap = sf._vf
     g.stats = stats.to_records()
     g.lastTS = sf.timestamp()
     g.lastDT = sf.to_clocktime(sf.timestamp()).strftime("%Y-%m-%d %H:%M:%S")

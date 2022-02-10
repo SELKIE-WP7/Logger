@@ -221,16 +221,28 @@ class SLChannelMap:
 
     def GetSourceName(self, source):
         """Return formatted name for source ID"""
+        try:
+            if isinstance(source, str):
+                source = int(source, base=0)
+            else:
+                source = int(source)
+        except Exception as e:
+            self._log.error(str(e))
         if source in self._s:
             return self._s[source].name
         else:
-            return f"[{source:02x}]"
+            return f"[0x{source:02x}]"
 
     def GetChannelName(self, source, channel):
         """Return formatted channel name"""
-        if not isinstance(channel, int):
-            self._log.warning(f"Non-integer channel number requested: {channel}")
-            return f"[Invalid:{channel}]"
+        try:
+            if isinstance(source, str):
+                channel = int(channel, base=0)
+            else:
+                channel = int(channel)
+        except Exception as e:
+            self._log.error(str(e))
+
         if self.SourceExists(source):
             if channel < len(self._s[source].channels):
                 return self._s[source].channels[channel]
@@ -241,7 +253,7 @@ class SLChannelMap:
             elif channel == 127:
                 return "Error"
             else:
-                return f"[{channel:02x}]"
+                return f"[0x{channel:02x}]"
 
     def NewSource(self, source, name=None):
         if self.SourceExists(source):

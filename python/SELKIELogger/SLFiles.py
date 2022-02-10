@@ -357,11 +357,13 @@ class StateFile:
         self._fn = filename
         self._sm = None
         self._ts = 0
+        self._vf = None
         self._stats = None
 
     def parse(self):
         with open(self._fn) as sf:
             self._ts = int(sf.readline())
+            self._vf = VarFile(sf.readline().strip()).getSourceMap()
             cols = ["Source", "Channel", "Count", "Last"]
             self._stats = pd.read_csv(
                 sf,

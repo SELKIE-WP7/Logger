@@ -362,7 +362,7 @@ void *dw_channels(void *ptargs) {
 		pthread_exit(&(args->returnCode));
 	}
 
-	int nChans = 16;
+	int nChans = 17;
 	if (dwInfo->parseSpectrum) { nChans = 24; }
 
 	strarray *channels = sa_new(nChans);

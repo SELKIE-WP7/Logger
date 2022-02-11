@@ -722,7 +722,6 @@ int main(int argc, char *argv[]) {
 				          strerror(errno));
 			}
 			newVar = fopen(varFileName, "w+x");
-			free(varFileName);
 
 			if (newVar == NULL) {
 				// As above, if the issue is log file names then we

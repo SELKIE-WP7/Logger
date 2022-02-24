@@ -47,6 +47,10 @@ add_executable(MQTTTest MQTTTest.c)
 target_link_libraries(MQTTTest PUBLIC SELKIELoggerBase SELKIELoggerMQTT)
 install(TARGETS MQTTTest RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
 
+add_executable(N2KRead N2KRead.c)
+target_link_libraries(N2KRead PUBLIC SELKIELoggerBase SELKIELoggerN2K)
+install(TARGETS N2KRead RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
+
 set(CPACK_COMPONENT_CONVERSION_GROUP "Applications")
 set(CPACK_COMPONONT_CONVERSION_DESCRIPTION "Data format conversion/inspection utilities")
 

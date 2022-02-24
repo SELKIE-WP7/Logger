@@ -10,6 +10,7 @@ add_subdirectory(GPS)
 add_subdirectory(MP)
 add_subdirectory(MQTT)
 add_subdirectory(NMEA)
+add_subdirectory(N2K)
 add_subdirectory(I2C)
 
 include(CMakePackageConfigHelpers)

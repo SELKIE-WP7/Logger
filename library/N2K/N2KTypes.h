@@ -85,6 +85,7 @@ typedef struct {
 bool n2k_act_to_bytes(const n2k_act_message *act, uint8_t **out, size_t *len);
 bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **msg, size_t *pos, bool debug);
 uint8_t n2k_act_checksum(const n2k_act_message *msg);
+void n2k_act_print(const n2k_act_message *msg);
 
 //! @}
 #endif

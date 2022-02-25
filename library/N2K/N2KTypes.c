@@ -194,3 +194,14 @@ uint8_t n2k_act_checksum(const n2k_act_message *msg) {
 
 	return 256 - csum;
 }
+
+void n2k_act_print(const n2k_act_message *msg) {
+	uint8_t *tmp = NULL;
+	size_t len = 0;
+	n2k_act_to_bytes(msg, &tmp, &len);
+	fprintf(stdout, "N2k ACT Message: ");
+	for (int j = 0; j < len; ++j) {
+		fprintf(stdout, "%c%02x", j > 0 ? ':' : ' ', tmp[j]);
+	}
+	fprintf(stdout, "\n");
+}

@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 #define BUFSIZE 1024
 	uint8_t buf[BUFSIZE] = {0};
 	size_t hw = 0;
-
+	int count = 0;
 	while (processing || hw > 18) {
 		if (processing && (hw < BUFSIZE)) {
 			ssize_t ret = fread(&(buf[hw]), sizeof(uint8_t), BUFSIZE - hw, nf);
@@ -80,6 +80,7 @@ int main(int argc, char *argv[]) {
 		bool r = n2k_act_from_bytes(buf, hw, &nm, &end, (state.verbose > 2));
 		if (r) {
 			log_info(&state, 2, "Decoded message from %zu bytes", end);
+			count++;
 		} else {
 			log_info(&state, 2, "%zu bytes read, failed to decode message", end);
 			if (!processing && end == 0) {
@@ -105,5 +106,6 @@ int main(int argc, char *argv[]) {
 
 		memset(&(buf[hw]), 0, BUFSIZE - hw);
 	}
+	log_info(&state, 0, "%d messages successfully read from file", count);
 	return 0;
 }

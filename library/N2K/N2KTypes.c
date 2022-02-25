@@ -39,7 +39,7 @@ bool n2k_act_to_bytes(const n2k_act_message *act, uint8_t **out, size_t *len) {
 	return true;
 }
 
-bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **msg, size_t *pos) {
+bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **msg, size_t *pos, bool debug) {
 	if (in == NULL || msg == NULL || len < 18 || pos == NULL) { return NULL; }
 
 	ssize_t start = -1;
@@ -153,15 +153,22 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 	uint8_t ee = in[(start + off++)];
 	uint8_t et = in[(start + off++)];
 	if (ee != ACT_ESC || et != ACT_EOT) {
-		if (!(et == ACT_ESC && (start + off) < remaining && in[(start + off++)] == ACT_EOT)) {
-			fprintf(stderr, "Unexpected sequence at end of message: 0x%02x 0x%02x\n", ee, et);
+		if (et == ACT_ESC && (start + off) < remaining) {
+			uint8_t next = in[(start + off)];
+			if (next == ACT_EOT) {
+				// Ended up with ACT_ESC, ACT_ESC, ACT_EOT - bad escaping?
+				off++;
+			} else if (debug) {
+				fprintf(stderr, "Unexpected sequence at end of message: 0x%02x 0x%02x\n", ee, et);
+			}
 		}
 	}
 
 	(*pos) = start + off;
 	if ((*msg)->csum != (uint8_t)(256 - csum)) {
-		fprintf(stderr, "Checksum mismatch (0x%02x => 0x%02x. PGN %9d)\n", (*msg)->src, (*msg)->dst,
-		        (*msg)->PGN);
+		if (debug) {
+			fprintf(stderr, "Bad checksum (%d => %d\tPGN %d)\n", (*msg)->src, (*msg)->dst, (*msg)->PGN);
+		}
 		return false; // Signal error, but send the message out
 	}
 	return true;

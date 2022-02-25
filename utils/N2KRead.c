@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
 		}
 		n2k_act_message *nm = NULL;
 		size_t end = 0;
-		bool r = n2k_act_from_bytes(buf, hw, &nm, &end);
+		bool r = n2k_act_from_bytes(buf, hw, &nm, &end, (state.verbose > 2));
 		if (r) {
 			log_info(&state, 2, "Decoded message from %zu bytes", end);
 		} else {

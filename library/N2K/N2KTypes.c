@@ -93,10 +93,6 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 		return false;
 	}
 
-	uint8_t csum = 0;
-	for (int i = 2; i < 15; i++) {
-		csum += in[start + i];
-	}
 	(*msg)->data = calloc((*msg)->datalen, sizeof(uint8_t));
 	if ((*msg)->data == NULL) {
 		perror("n2k_act_from_bytes:data-calloc");
@@ -140,7 +136,7 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 		} else {
 			(*msg)->data[i] = c;
 		}
-		csum += c;
+
 		if (remaining < ((*msg)->datalen - i + 3)) {
 			free((*msg)->data);
 			free(*msg);
@@ -166,11 +162,35 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 	}
 
 	(*pos) = start + off;
-	if ((*msg)->csum != (uint8_t)(256 - csum)) {
+	uint8_t cs = n2k_act_checksum(*msg);
+
+	if ((*msg)->csum != cs) {
 		if (debug) {
 			fprintf(stderr, "Bad checksum (%d => %d\tPGN %d)\n", (*msg)->src, (*msg)->dst, (*msg)->PGN);
 		}
 		return false; // Signal error, but send the message out
 	}
 	return true;
+}
+
+uint8_t n2k_act_checksum(const n2k_act_message *msg) {
+	uint8_t csum = ACT_N2K;
+	csum += msg->length;
+	csum += msg->priority;
+	csum += (msg->PGN & 0x0000FF);
+	csum += ((msg->PGN & 0x00FF00) >> 8);
+	csum += ((msg->PGN & 0xFF0000) >> 16);
+	csum += msg->dst;
+	csum += msg->src;
+	csum += (msg->timestamp & 0x000000FF);
+	csum += ((msg->timestamp & 0x0000FF00) >> 8);
+	csum += ((msg->timestamp & 0x00FF0000) >> 16);
+	csum += ((msg->timestamp & 0xFF000000) >> 24);
+	csum += (msg->datalen);
+
+	for (int i = 0; i < msg->datalen; ++i) {
+		csum += msg->data[i];
+	};
+
+	return 256 - csum;
 }

@@ -12,6 +12,7 @@
  * @{
  */
 #include "N2K/N2KConnection.h"
+#include "N2K/N2KMessages.h"
 #include "N2K/N2KTypes.h"
 //! @}
 #endif

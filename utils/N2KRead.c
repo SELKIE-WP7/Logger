@@ -79,7 +79,16 @@ int main(int argc, char *argv[]) {
 		size_t end = 0;
 		bool r = n2k_act_from_bytes(buf, hw, &nm, &end, (state.verbose > 2));
 		if (r) {
-			log_info(&state, 2, "Decoded message from %zu bytes", end);
+			log_info(&state, 1, "%d=>%d: PGN %d, Priority %d", nm->src, nm->dst,
+			         nm->PGN, nm->priority);
+			switch (nm->PGN) {
+				case 129025:
+					n2k_129025_print(nm);
+					break;
+				case 129026:
+					n2k_129026_print(nm);
+					break;
+			}
 			count++;
 		} else {
 			log_info(&state, 2, "%zu bytes read, failed to decode message", end);

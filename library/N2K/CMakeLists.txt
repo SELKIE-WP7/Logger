@@ -1,5 +1,5 @@
-list(APPEND SL_N2K_SRC N2KTypes.c N2KConnection.c)
-list(APPEND SL_N2K_INC N2KTypes.h N2KConnection.h)
+list(APPEND SL_N2K_SRC N2KTypes.c N2KConnection.c N2KMessages.c)
+list(APPEND SL_N2K_INC N2KTypes.h N2KConnection.h N2KMessages.h)
 
 add_library(SELKIELoggerN2K ${SL_N2K_SRC})
 set_target_properties(SELKIELoggerN2K PROPERTIES VERSION ${PROJECT_VERSION})

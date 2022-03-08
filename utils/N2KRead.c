@@ -88,6 +88,9 @@ int main(int argc, char *argv[]) {
 				case 129026:
 					n2k_129026_print(nm);
 					break;
+				case 130306:
+					n2k_130306_print(nm);
+					break;
 			}
 			count++;
 		} else {

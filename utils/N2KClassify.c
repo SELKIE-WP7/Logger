@@ -105,5 +105,6 @@ int main(int argc, char *argv[]) {
 	for (int i = 0; i < PGN_MAX; i++) {
 		if (msgCount[i] > 0) { fprintf(stdout, "%6d\t%6d\n", i, msgCount[i]); }
 	}
+	fclose(nf);
 	return 0;
 }

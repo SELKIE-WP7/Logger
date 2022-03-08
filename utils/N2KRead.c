@@ -116,5 +116,6 @@ int main(int argc, char *argv[]) {
 		memset(&(buf[hw]), 0, BUFSIZE - hw);
 	}
 	log_info(&state, 0, "%d messages successfully read from file", count);
+	fclose(nf);
 	return 0;
 }

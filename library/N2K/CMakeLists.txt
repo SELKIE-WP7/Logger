@@ -9,6 +9,7 @@ set_target_properties(SELKIELoggerN2K PROPERTIES PUBLIC_HEADER SELKIELoggerN2K.h
 set_target_properties(SELKIELoggerN2K PROPERTIES PRIVATE_HEADER "${SL_N2K_INC}")
 
 target_link_libraries(SELKIELoggerN2K PUBLIC SELKIELoggerBase)
+target_link_libraries(SELKIELoggerDW PUBLIC m)
 
 include(GNUInstallDirs)
 

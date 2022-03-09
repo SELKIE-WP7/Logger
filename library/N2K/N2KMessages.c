@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <math.h>
+
 #include "N2KMessages.h"
 #include "N2KTypes.h"
 
@@ -39,53 +41,145 @@ uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset) {
 	return v;
 }
 
+bool n2k_127257_values(const n2k_act_message *n, uint8_t *seq, double *yaw, double *pitch, double *roll) {
+	if (n->PGN != 127257 || !n->data || n->datalen < 7) { return false; }
+	if (seq) { *seq = n2k_get_uint8(n, 0); }
+	bool success = true;
+	if (yaw) {
+		int16_t y = n2k_get_int16(n, 1);
+		if (y == INT16_MAX) {
+			(*yaw) = NAN;
+			success = false;
+		} else {
+			(*yaw) = y * N2K_TO_DEGREES;
+		}
+	}
+	if (pitch) {
+		int16_t p = n2k_get_int16(n, 3);
+		if (p == INT16_MAX) {
+			(*pitch) = NAN;
+			success = false;
+		} else {
+			(*pitch) = p * N2K_TO_DEGREES;
+		}
+	}
+	if (roll) {
+		int16_t r = n2k_get_int16(n, 5);
+		if (r == INT16_MAX) {
+			(*roll) = NAN;
+			success = false;
+		} else {
+			(*roll) = r * N2K_TO_DEGREES;
+		}
+	}
+	return success;
+}
+
+bool n2k_129025_values(const n2k_act_message *n, double *lat, double *lon) {
+	if (n->PGN != 129025 || !n->data || n->datalen < 8) { return false; }
+	if (lat) {
+		int32_t l = n2k_get_int32(n, 0);
+		if (l == INT32_MAX) {
+			(*lat) = NAN;
+		} else {
+			(*lat) = l * 1E-7;
+		}
+	}
+	if (lon) {
+		int32_t l = n2k_get_int32(n, 4);
+		if (l == INT32_MAX) {
+			(*lon) = NAN;
+		} else {
+			(*lon) = n2k_get_int32(n, 4) * 1E-7;
+		}
+	}
+	return !(isnan(*lat) || isnan(*lon));
+}
+
+bool n2k_129026_values(const n2k_act_message *n, uint8_t *seq, uint8_t *mag, double *course, double *speed) {
+	if (n->PGN != 129026 || !n->data || n->datalen < 8) { return false; }
+	if (seq) { *seq = n2k_get_uint8(n, 0); }
+	if (mag) { (*mag) = n2k_get_uint8(n, 1) & 0x03; }
+
+	bool success = true;
+	if (course) {
+		int16_t c = n2k_get_int16(n, 2);
+		if (c == INT16_MAX) {
+			(*course) = NAN;
+			success = false;
+		} else {
+			(*course) = c * N2K_TO_DEGREES;
+		}
+	}
+	if (speed) {
+		int16_t s = n2k_get_int16(n, 4);
+		if (s == INT16_MAX) {
+			(*speed) = NAN;
+			success = false;
+		} else {
+			(*speed) = s * 0.01;
+		}
+	}
+	return success;
+}
+
+bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, double *speed, double *angle) {
+	if (n->PGN != 130306 || !n->data || n->datalen < 8) { return false; }
+
+	if (seq) { *seq = n2k_get_uint8(n, 0); }
+
+	if (ref) { *ref = n2k_get_uint8(n, 5) & 0x07; }
+
+	bool success = true;
+	if (speed) {
+		int16_t s = n2k_get_int16(n, 1);
+		if (s == INT16_MAX) {
+			(*speed) = NAN;
+			success = false;
+		} else {
+			(*speed) = s * 0.01;
+		}
+	}
+
+	if (angle) {
+		int16_t a = n2k_get_int16(n, 3);
+		if (a == INT16_MAX) {
+			(*angle) = NAN;
+			success = false;
+		} else {
+			(*angle) = a * N2K_TO_DEGREES;
+		}
+	}
+	return success;
+}
+
 void n2k_127257_print(const n2k_act_message *n) {
-	if (n->PGN != 127257) {
-		fprintf(stdout, "Bad PGN - Got %d, expected 127257\n", n->PGN);
-		return;
-	}
+	if (!n) { return; }
 
-	if (!n->data || n->datalen < 7) {
-		fprintf(stdout, "Insufficient data (%d bytes) for PGN 127257\n", n->datalen);
-		return;
-	}
-
-	uint8_t seq = n2k_get_uint8(n, 0);
-	double yaw = n2k_get_int16(n, 1) * 0.0057295779513082332;
-	double pitch = n2k_get_int16(n, 3) * 0.0057295779513082332;
-	double roll = n2k_get_int16(n, 5) * 0.0057295779513082332;
+	uint8_t seq = 0;
+	double yaw = 0;
+	double pitch = 0;
+	double roll = 0;
+	bool s = n2k_127257_values(n, &seq, &yaw, &pitch, &roll);
+	if (!s) { fprintf(stdout, "[!] "); }
 	fprintf(stdout, "Pitch: %.3lf, Roll: %.3lf, Yaw: %.3lf. Seq. ID: %03d\n", pitch, roll, yaw, seq);
 }
 
 void n2k_129025_print(const n2k_act_message *n) {
-	if (n->PGN != 129025) {
-		fprintf(stdout, "Bad PGN - Got %d, expected 129025\n", n->PGN);
-		return;
-	}
-
-	if (!n->data || n->datalen < 8) {
-		fprintf(stdout, "Insufficient data (%d bytes) for PGN 129025\n", n->datalen);
-		return;
-	}
-	double lat = n2k_get_int32(n, 0) * 1E-7;
-	double lon = n2k_get_int32(n, 4) * 1E-7;
+	double lat = 0;
+	double lon = 0;
+	if (!n) { return; }
+	if (!n2k_129025_values(n, &lat, &lon)) { fprintf(stdout, "[!] "); }
 	fprintf(stdout, "GPS Position: %lf, %lf\n", lat, lon);
 }
 
 void n2k_129026_print(const n2k_act_message *n) {
-	if (n->PGN != 129026) {
-		fprintf(stdout, "Bad PGN - Got %d, expected 129026\n", n->PGN);
-		return;
-	}
-	if (!n->data || n->datalen < 8) {
-		fprintf(stdout, "Insufficient data (%d bytes) for PGN 129026\n", n->datalen);
-		return;
-	}
-	uint8_t seq = n2k_get_uint8(n, 0);
-	uint8_t magnetic = (n2k_get_uint8(n, 1) & 0x3);
-	double course = n2k_get_int16(n, 2) * 0.0057295779513082332;
-	double speed = n2k_get_int16(n, 4) * 0.01;
+	uint8_t seq = 0;
+	uint8_t magnetic = 0;
+	double course = 0;
+	double speed = 0;
 
+	if (!n2k_129026_values(n, &seq, &magnetic, &course, &speed)) { fprintf(stdout, "[!] "); }
 	char *magStr = NULL;
 	switch (magnetic) {
 		case 0:
@@ -103,19 +197,12 @@ void n2k_129026_print(const n2k_act_message *n) {
 }
 
 void n2k_130306_print(const n2k_act_message *n) {
-	if (n->PGN != 130306) {
-		fprintf(stdout, "Bad PGN - Got %d, expected 130306\n", n->PGN);
-		return;
-	}
-	if (!n->data || n->datalen < 8) {
-		fprintf(stdout, "Insufficient data (%d bytes) for PGN 130306\n", n->datalen);
-		return;
-	}
+	uint8_t seq = 0;
+	double speed = 0;
+	double angle = 0;
+	uint8_t ref = 0;
 
-	uint8_t seq = n2k_get_uint8(n, 0);
-	double speed = n2k_get_int16(n, 1) * 0.01;
-	double angle = n2k_get_int16(n, 3) * 0.0057295779513082332;
-	uint8_t ref = (n2k_get_uint8(n, 5) & 0x07);
+	if (!n2k_130306_values(n, &seq, &ref, &speed, &angle)) { fprintf(stdout, "[!] "); }
 
 	char *refStr = NULL;
 	switch (ref) {

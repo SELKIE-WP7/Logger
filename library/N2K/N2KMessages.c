@@ -39,6 +39,24 @@ uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset) {
 	return v;
 }
 
+void n2k_127257_print(const n2k_act_message *n) {
+	if (n->PGN != 127257) {
+		fprintf(stdout, "Bad PGN - Got %d, expected 127257\n", n->PGN);
+		return;
+	}
+
+	if (!n->data || n->datalen < 7) {
+		fprintf(stdout, "Insufficient data (%d bytes) for PGN 127257\n", n->datalen);
+		return;
+	}
+
+	uint8_t seq = n2k_get_uint8(n, 0);
+	double yaw = n2k_get_int16(n, 1) * 0.0057295779513082332;
+	double pitch = n2k_get_int16(n, 3) * 0.0057295779513082332;
+	double roll = n2k_get_int16(n, 5) * 0.0057295779513082332;
+	fprintf(stdout, "Pitch: %.3lf, Roll: %.3lf, Yaw: %.3lf. Seq. ID: %03d\n", pitch, roll, yaw, seq);
+}
+
 void n2k_129025_print(const n2k_act_message *n) {
 	if (n->PGN != 129025) {
 		fprintf(stdout, "Bad PGN - Got %d, expected 129025\n", n->PGN);

@@ -11,6 +11,7 @@ struct dmap dmap[] = {
 	{"GPS", &gps_getCallbacks, &gps_parseConfig},
 	{"I2C", &i2c_getCallbacks, &i2c_parseConfig},
 	{"NMEA", &nmea_getCallbacks, &nmea_parseConfig},
+	{"N2K", &n2k_getCallbacks, &n2k_parseConfig},
 	{"MP", &mp_getCallbacks, &mp_parseConfig},
 	{"MQTT", &mqtt_getCallbacks, &mqtt_parseConfig},
 	{"SL", &mp_getCallbacks, &mp_parseConfig},

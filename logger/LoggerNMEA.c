@@ -224,6 +224,15 @@ bool nmea_parseConfig(log_thread_args_t *lta, config_section *s) {
 	(*nmp) = nmea_getParams();
 
 	config_kv *t = NULL;
+
+	if ((t = config_get_key(s, "name"))) {
+		nmp->sourceName = config_qstrdup(t->value);
+	} else {
+		// Must set a name, so nick the tag value
+		nmp->sourceName = strdup(lta->tag);
+	}
+	t = NULL;
+
 	if ((t = config_get_key(s, "port"))) { nmp->portName = config_qstrdup(t->value); }
 	t = NULL;
 

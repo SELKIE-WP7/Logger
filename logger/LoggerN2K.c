@@ -99,6 +99,7 @@ void *n2k_logging(void *ptargs) {
 			// more data
 			usleep(SERIAL_SLEEP);
 		}
+		if (out.data) { free(out.data); }
 	}
 	free(buf);
 	log_info(args->pstate, 1, "[N2K:%s] Logging thread exiting", args->tag);

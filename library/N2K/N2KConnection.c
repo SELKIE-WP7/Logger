@@ -85,7 +85,11 @@ bool n2k_act_readMessage_buf(int handle, n2k_act_message *out, uint8_t buf[N2K_B
 		(*out) = (*t);
 		free(t); // Shallow copied into out, so don't free ->data
 		t = NULL;
+	} else {
+		out->priority = 0xEE;
 	}
+
+	if (!r) { out->priority = 0xEE; }
 
 	if ((*hw) > 0 && (*index) > (*hw)) {
 		// Move data from index back to zero position

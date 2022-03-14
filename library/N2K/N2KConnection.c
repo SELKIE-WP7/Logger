@@ -68,7 +68,7 @@ bool n2k_act_readMessage_buf(int handle, n2k_act_message *out, uint8_t buf[N2K_B
 			}
 		}
 	}
-	if (((*hw) == N2K_BUFF) && (*index) > 0 && (*index) > (*hw) - 18) {
+	if (((*hw) == N2K_BUFF) && (*index) > 0 && (*index) > ((*hw) - 25)) {
 		// Full buffer, very close to the fill limit
 		// Assume we're full of garbage before index
 		memmove(buf, &(buf[(*index)]), N2K_BUFF - (*index));
@@ -91,7 +91,7 @@ bool n2k_act_readMessage_buf(int handle, n2k_act_message *out, uint8_t buf[N2K_B
 
 	if (!r) { out->priority = 0xEE; }
 
-	if ((*hw) > 0 && (*index) > (*hw)) {
+	if ((*hw) > 0 && ((*hw) >= (*index))) {
 		// Move data from index back to zero position
 		memmove(buf, &(buf[(*index)]), N2K_BUFF - (*index));
 		(*hw) -= (*index);

@@ -56,7 +56,7 @@ void *n2k_logging(void *ptargs) {
 				if (!n2k_act_to_bytes(&out, &rd, &mlen)) {
 					log_warning(
 						args->pstate,
-						"[NMEA:%s] Unable to serialise message (PGN %d, Source %d)",
+						"[N2K:%s] Unable to serialise message (PGN %d, Source %d)",
 						args->tag, out.PGN, out.src);
 					if (rd) { free(rd); }
 					continue;
@@ -65,7 +65,7 @@ void *n2k_logging(void *ptargs) {
 				rm = msg_new_bytes(n2kInfo->sourceNum, 3, mlen, rd);
 				if (!queue_push(args->logQ, rm)) {
 					log_error(args->pstate,
-					          "[NMEA:%s] Error pushing message to queue",
+					          "[N2K:%s] Error pushing message to queue",
 					          args->tag);
 					msg_destroy(rm);
 					args->returnCode = -1;

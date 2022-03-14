@@ -3,6 +3,8 @@
 #include "LoggerN2K.h"
 #include "LoggerSignals.h"
 
+#include "N2KMessages.h"
+
 /*!
  * Set up connection to an N2K serial gateway device.
  *
@@ -50,6 +52,40 @@ void *n2k_logging(void *ptargs) {
 		if (n2k_act_readMessage_buf(n2kInfo->handle, &out, buf, &n2k_index, &n2k_hw)) {
 			bool handled = false;
 
+			if (out.PGN == 129025) {
+				double lat = 0;
+				double lon = 0;
+				if (n2k_129025_values(&out, &lat, &lon)) {
+					msg_t *rm = NULL;
+					rm = msg_new_float(n2kInfo->sourceNum, N2KCHAN_LAT, lat);
+					if (!queue_push(args->logQ, rm)) {
+						log_error(
+							args->pstate,
+							"[N2K:%s] Error pushing message to queue",
+							args->tag);
+						msg_destroy(rm);
+						args->returnCode = -1;
+						pthread_exit(&(args->returnCode));
+					}
+					rm = NULL; // Discard pointer as message is now "owned" by
+					           // queue
+					rm = msg_new_float(n2kInfo->sourceNum, N2KCHAN_LON, lon);
+					if (!queue_push(args->logQ, rm)) {
+						log_error(
+							args->pstate,
+							"[N2K:%s] Error pushing message to queue",
+							args->tag);
+						msg_destroy(rm);
+						args->returnCode = -1;
+						pthread_exit(&(args->returnCode));
+					}
+				} else {
+					log_warning(
+						args->pstate,
+						"[N2K:%s] Failed to decode message (PGN %d, Source %d)",
+						args->tag, out.PGN, out.src);
+				}
+			}
 			if (!handled) {
 				size_t mlen = 0;
 				uint8_t *rd = NULL;
@@ -62,7 +98,7 @@ void *n2k_logging(void *ptargs) {
 					continue;
 				}
 				msg_t *rm = NULL;
-				rm = msg_new_bytes(n2kInfo->sourceNum, 3, mlen, rd);
+				rm = msg_new_bytes(n2kInfo->sourceNum, N2KCHAN_RAW, mlen, rd);
 				if (!queue_push(args->logQ, rm)) {
 					log_error(args->pstate,
 					          "[N2K:%s] Error pushing message to queue",
@@ -150,12 +186,13 @@ void *n2k_channels(void *ptargs) {
 		pthread_exit(&(args->returnCode));
 	}
 
-	strarray *channels = sa_new(5);
-	sa_create_entry(channels, SLCHAN_NAME, 4, "Name");
-	sa_create_entry(channels, SLCHAN_MAP, 8, "Channels");
-	sa_create_entry(channels, SLCHAN_TSTAMP, 9, "Timestamp");
-	sa_create_entry(channels, SLCHAN_RAW, 8, "Raw N2K");
-	sa_create_entry(channels, 4, 5, "");
+	strarray *channels = sa_new(6);
+	sa_create_entry(channels, N2KCHAN_NAME, 4, "Name");
+	sa_create_entry(channels, N2KCHAN_MAP, 8, "Channels");
+	sa_create_entry(channels, N2KCHAN_TSTAMP, 9, "Timestamp");
+	sa_create_entry(channels, N2KCHAN_RAW, 8, "Raw N2K");
+	sa_create_entry(channels, N2KCHAN_LAT, 9, "Latitude");
+	sa_create_entry(channels, N2KCHAN_LON, 9, "Longitude");
 
 	msg_t *m_cmap = msg_new_string_array(n2kInfo->sourceNum, SLCHAN_MAP, channels);
 

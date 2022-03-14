@@ -21,6 +21,13 @@
  * @{
  */
 
+#define N2KCHAN_NAME   SLCHAN_NAME
+#define N2KCHAN_MAP    SLCHAN_MAP
+#define N2KCHAN_TSTAMP SLCHAN_TSTAMP
+#define N2KCHAN_RAW    SLCHAN_RAW
+#define N2KCHAN_LAT    4
+#define N2KCHAN_LON    5
+
 //! N2K Device specific parameters
 typedef struct {
 	char *portName;    //!< Target port name

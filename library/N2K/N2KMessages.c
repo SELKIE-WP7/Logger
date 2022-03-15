@@ -30,8 +30,10 @@ uint16_t n2k_get_uint16(const n2k_act_message *n, size_t offset) {
 
 int32_t n2k_get_int32(const n2k_act_message *n, size_t offset) {
 	uint32_t u = n2k_get_uint32(n, offset);
-	int32_t v = (u & 0x7FFFFFFF);
-	if (u & 0x80000000) { v = -1 * ((1 << 31) - v); }
+	int32_t v = (u & 0x7FFFFFFFUL);
+	if (u & 0x80000000UL) {
+		v = -1 * ((1UL << 31) - v);
+	}
 	return v;
 }
 

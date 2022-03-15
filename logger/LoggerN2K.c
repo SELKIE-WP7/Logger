@@ -80,10 +80,12 @@ void *n2k_logging(void *ptargs) {
 						pthread_exit(&(args->returnCode));
 					}
 				} else {
+					/*
 					log_warning(
 						args->pstate,
 						"[N2K:%s] Failed to decode message (PGN %d, Source %d)",
 						args->tag, out.PGN, out.src);
+						*/
 				}
 			}
 			if (!handled) {

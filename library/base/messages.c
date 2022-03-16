@@ -175,6 +175,8 @@ msg_t *msg_new_float_array(const uint8_t source, const uint8_t type, const size_
  * @param[in] msg Message to be destroyed
  */
 void msg_destroy(msg_t *msg) {
+	if (msg == NULL) { return; }
+
 	switch (msg->dtype) {
 		case MSG_ERROR:
 		case MSG_FLOAT:

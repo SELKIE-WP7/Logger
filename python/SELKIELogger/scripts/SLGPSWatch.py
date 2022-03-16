@@ -5,9 +5,11 @@ import pandas as pd
 from numpy import sin, cos, sqrt, arcsin, power, deg2rad
 
 from os import path
-from time import sleep
+from time import monotonic, sleep
+
 from . import log
 from ..SLFiles import StateFile
+from ..PushoverClient import PushoverClient
 
 
 class ChannelSpec:
@@ -80,6 +82,14 @@ def process_arguments():
     )
 
     options.add_argument(
+        "-P",
+        "--disable-pushover",
+        default=False,
+        action="store_true",
+        help="Disable pushover notifications",
+    )
+
+    options.add_argument(
         "locator",
         nargs="+",
         help="Specify lat/lon channels, reference point and distance threshold",
@@ -121,8 +131,29 @@ def checkLocator(s, l):
         log.info(
             f"{l.name} is {d:.1f}m from reference point, with a {l.threshold:.1f}m radius set"
         )
-        return (True, d)
-    return (False, d)
+        return (True, d, (curLat, curLon))
+    return (False, d, (curLat, curLon))
+
+
+def generateWarningMessage(states):
+    message = "At least one GPS input has moved beyond configured limits:\n"
+    # Report flagged markers first
+    for s in states:
+        if s[1]:
+            message += (
+                f"{s[0].name}: Current coordinates ({s[3][0]:.5f}, {s[3][1]:.5f}), "
+            )
+            message += f"{s[2] - s[0].threshold:.0f}m beyond {s[0].threshold:.0f}m limit from reference point.\n"
+    message += "\n"
+
+    # Now for the remainder:
+    for s in states:
+        if not s[1]:
+            message += (
+                f"{s[0].name}: Current coordinates ({s[3][0]:.5f}, {s[3][1]:.5f}), "
+            )
+            message += f"within {s[0].threshold:.0f}m of reference point.\n"
+    return message
 
 
 def SLGPSWatch():
@@ -135,6 +166,8 @@ def SLGPSWatch():
     log.debug(f"Log level set to {log.getLevelName(log.getEffectiveLevel())}")
     log.info(f"Using '{args.file}' as state file")
 
+    lastFlagged = False
+    lastFlaggedTime = monotonic()
     while True:
         sf = StateFile(args.file)
         ds = sf.parse()
@@ -143,8 +176,24 @@ def SLGPSWatch():
         anyFlagged = False
         for l in args.locator:
             locator = LocatorSpec(l)
-            flagged, distance = checkLocator(ds, locator)
-            states.append((locator, flagged, distance))
+            flagged, distance, coords = checkLocator(ds, locator)
+            states.append((locator, flagged, distance, coords))
             if flagged:
                 anyFlagged = True
+
+        if (lastFlagged != anyFlagged) and not args.disable_pushover:
+            now = monotonic()
+            if anyFlagged == False:
+                PushoverClient().sendMessage(
+                    "All monitored GPS inputs are within configured boundaries",
+                    "[OK] GPS Monitoring",
+                )
+                lastFlagged = False
+                lastFlaggedTime = now
+            else:
+                message = generateWarningMessage(states)
+                PushoverClient().sendMessage(message, "[WARNING] GPS Monitoring")
+                lastFlagged = True
+                lastFlaggedTime = now
+
         sleep(args.interval)

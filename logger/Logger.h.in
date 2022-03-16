@@ -102,6 +102,7 @@ typedef struct {
 typedef struct {
 	unsigned int count;
 	uint32_t lastTimestamp;
+	msg_t *lastMessage;
 } channel_stats;
 
 //! Difference between timespecs (used for rate keeping)

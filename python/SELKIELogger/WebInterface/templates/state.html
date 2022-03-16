@@ -8,7 +8,7 @@
 	<table class="table table-striped table-hover">
 		<caption>Recorded State</caption>
 		<thead class="thead-dark">
-			<tr><th scope="col">Source</th><th scope="col">Channel</th><th scope="col">Message Count</th><th scope="col">Last Message</th><th scope="col">Device Timestamp</th><th scope-"col">Seconds since last message</th></tr>
+			<tr><th scope="col">Source</th><th scope="col">Channel</th><th scope="col">Message Count</th><th scope="col">Last Message</th><th scope="col">Device Timestamp</th><th scope-"col">Seconds since last message</th><th>Last Value</th></tr>
 		</thead>
 		<tbody>
 		{% for f in g.stats%}
@@ -16,9 +16,10 @@
 			<td>0x{{ '%02x' % f[0]}} - {{ g.sourcemap.GetSourceName(f[0]) }}</td>
 			<td>0x{{ '%02x' % f[1]}} - {{ g.sourcemap.GetChannelName(f[0], f[1]) }}</td>
 			<td>{{f[2]}}</td>
-			<td>{{f[5]}}</td>
+			<td>{{f[6]}}</td>
 			<td>{{f[3]}}</td>
-			<td>{{'%0.2f' % -f[4]}}</td>
+			<td>{{'%0.2f' % -f[5]}}</td>
+			<td>{{f[4]}}</td>
 		</tr>
 		{% endfor %}
 		</tbody>

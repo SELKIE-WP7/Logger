@@ -364,17 +364,17 @@ class StateFile:
         with open(self._fn) as sf:
             self._ts = int(sf.readline())
             self._vf = VarFile(sf.readline().strip()).getSourceMap()
-            cols = ["Source", "Channel", "Count", "Last"]
+            cols = ["Source", "Channel", "Count", "Time", "Value"]
             self._stats = pd.read_csv(
                 sf,
                 header=None,
                 names=cols,
                 index_col=["Source", "Channel"],
-                converters={x: lambda z: int(z, base=0) for x in cols},
+                converters={x: lambda z: int(z, base=0) for x in cols if x != "Value"},
             )
-        self._stats["SecondsAgo"] = (self._stats["Last"] - self._ts) / 1000
+        self._stats["SecondsAgo"] = (self._stats["Time"] - self._ts) / 1000
         self._stats["DateTime"] = (
-            self._stats["Last"]
+            self._stats["Time"]
             .apply(self.to_clocktime)
             .apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S"))
         )

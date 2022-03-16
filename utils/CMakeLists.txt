@@ -29,6 +29,10 @@ target_link_libraries(dat2csv PUBLIC SELKIELoggerBase SELKIELoggerMP)
 target_compile_options(dat2csv PRIVATE -Wno-format) # Silence warnings about positional printf arguments
 install(TARGETS dat2csv RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
 
+add_executable(DumpMessages DumpMessages.c)
+target_link_libraries(DumpMessages PUBLIC SELKIELoggerBase SELKIELoggerMP)
+install(TARGETS DumpMessages RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
+
 find_package(ZLIB REQUIRED)
 add_executable(ExtractSatInfo ExtractSatInfo.c)
 target_link_libraries(ExtractSatInfo PUBLIC ZLIB::ZLIB)

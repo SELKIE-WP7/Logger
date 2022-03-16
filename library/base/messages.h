@@ -74,6 +74,12 @@ msg_t *msg_new_bytes(const uint8_t source, const uint8_t type, const size_t len,
 //! Create a new message containing an array of floating point data
 msg_t *msg_new_float_array(const uint8_t source, const uint8_t type, const size_t entries, const float *array);
 
+//! Generate string representation of message
+char *msg_to_string(const msg_t *msg);
+
+//! Generate string representation of message data
+char *msg_data_to_string(const msg_t *msg);
+
 //! Destroy a message
 void msg_destroy(msg_t *msg);
 //! @}

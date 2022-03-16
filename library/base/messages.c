@@ -167,6 +167,70 @@ msg_t *msg_new_float_array(const uint8_t source, const uint8_t type, const size_
 }
 
 /*!
+ * Generate string representation of message.
+ *
+ * Allocates a suitable character array, which must be freed by the caller.
+ *
+ * @param[in] msg Message to be represented
+ * @returns Pointer to string, or NULL
+ */
+char *msg_to_string(const msg_t *msg) {
+	if (msg == NULL) { return NULL; }
+
+	char *out = NULL;
+	if (asprintf(&out, "0x%02x:0x%02x %s", msg->source, msg->type, msg_data_to_string(msg)) >= 0) { return out; }
+
+	return NULL;
+}
+
+/*!
+ * Generate string representation of message data
+ *
+ * Allocates a suitable character array, which must be freed by the caller.
+ *
+ * @param[in] msg Message containing data to be represented
+ * @returns Pointer to string, or NULL
+ */
+char *msg_data_to_string(const msg_t *msg) {
+	if (msg == NULL) { return NULL; }
+
+	char *out = NULL;
+	int rv = 0;
+	switch (msg->dtype) {
+		case MSG_FLOAT:
+			rv = asprintf(&out, "%.6f", msg->data.value);
+			break;
+		case MSG_TIMESTAMP:
+			rv = asprintf(&out, "%09u", msg->data.timestamp);
+			break;
+		case MSG_STRING:
+			rv = asprintf(&out, "%*s", (int)msg->data.string.length, msg->data.string.data);
+			break;
+		case MSG_STRARRAY:
+			rv = asprintf(&out, "[String array, %zd entries]", msg->length);
+			break;
+		case MSG_BYTES:
+			rv = asprintf(&out, "[Binary data, %zd bytes]", msg->length);
+			break;
+		case MSG_NUMARRAY:
+			rv = asprintf(&out, "[Numeric array, %zd entries]", msg->length);
+			break;
+		case MSG_ERROR:
+			out = strdup("[Message flagged as error]");
+		case MSG_UNDEF:
+			out = strdup("[Message flagged as uninitialised]");
+		default:
+			out = strdup("[Message type unknown]");
+			break;
+	}
+	if (rv < 0) {
+		if (out) { free(out); }
+		return NULL;
+	}
+	return out;
+}
+
+/*!
  * Destroy a message, regardless of data type.
  *
  * Note that this function does not free the message itself, only the data

@@ -351,7 +351,7 @@ class DatFile:
 
 
 class StateFile:
-    """! Represent a channel mapping (.var) file, caching information as necessary"""
+    """! Represent a logger state file, caching information as necessary"""
 
     def __init__(self, filename):
         self._fn = filename

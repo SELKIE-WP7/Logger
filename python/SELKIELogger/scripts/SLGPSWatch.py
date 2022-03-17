@@ -165,7 +165,7 @@ def SLGPSWatch():
     log.debug(f"Log level set to {log.getLevelName(log.getEffectiveLevel())}")
     log.info(f"Using '{args.file}' as state file")
 
-    lastFlagged = False
+    lastFlagged = None
     lastFlaggedTime = monotonic()
     while True:
         sf = StateFile(args.file)

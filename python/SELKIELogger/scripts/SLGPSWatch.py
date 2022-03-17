@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import pandas as pd
 
-from numpy import sin, cos, sqrt, arcsin, power, deg2rad
+from numpy import sin, cos, sqrt, arcsin, power, deg2rad, isnan
 
 from os import path
 from time import monotonic, sleep
@@ -97,11 +97,15 @@ def process_arguments():
 
 
 def getLocatorValue(state, locator):
-    val = state.loc[(locator.source, locator.channel)].Value
-    if locator.index is None:
-        return float(val)
-    else:
-        return float(val.split(",")[locator.index - 1])
+    try:
+        val = state.loc[(locator.source, locator.channel)].Value
+        if locator.index is None:
+            return float(val)
+        else:
+            return float(val.split(",")[locator.index - 1])
+    except:
+        return float("NaN")
+
 
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -121,6 +125,10 @@ def haversine(lat1, lon1, lat2, lon2):
 def checkLocator(s, l):
     curLat = getLocatorValue(s, l.latChan)
     curLon = getLocatorValue(s, l.lonChan)
+    if isnan(curLat) or isnan(curLon):
+        log.warning(f"{l.name} has invalid coordinates")
+        return (True, float("nan"), (curLat, curLon))
+
     d = haversine(curLat, curLon, l.refLat, l.refLon)
     log.info(
         f"{l.name}:\t {curLat:.5f},{curLon:.5f} \t--\t {l.refLat:.5f},{l.refLon:.5f} \t--\t {d:.2f}"
@@ -136,9 +144,14 @@ def checkLocator(s, l):
 
 def generateWarningMessage(states):
     message = "At least one GPS input has moved beyond configured limits:\n"
+    for s in states:
+        if isnan(s[2]):
+            message += f"{s[0].name} has missing or invalid coordinates ({s[3][0]:.5f}, {s[3][1]:.5f})\n"
+    message += "\n"
+
     # Report flagged markers first
     for s in states:
-        if s[1]:
+        if s[1] and not isnan(s[2]):
             message += (
                 f"{s[0].name}: Current coordinates ({s[3][0]:.5f}, {s[3][1]:.5f}), "
             )
@@ -147,7 +160,7 @@ def generateWarningMessage(states):
 
     # Now for the remainder:
     for s in states:
-        if not s[1]:
+        if not s[1] and not isnan(s[2]):
             message += (
                 f"{s[0].name}: Current coordinates ({s[3][0]:.5f}, {s[3][1]:.5f}), "
             )

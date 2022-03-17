@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import inotify.adapters as ia
 import pandas as pd
 
 from numpy import sin, cos, sqrt, arcsin, power, deg2rad

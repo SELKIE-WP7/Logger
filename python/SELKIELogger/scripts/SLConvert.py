@@ -1,14 +1,12 @@
 #!/usr/bin/python3
-import msgpack
-import pandas as pd
-
 from os import path
+
 from . import log
-from ..SLMessages import SLMessage, SLMessageSink, IDs
-from ..SLFiles import DatFile, VarFile
+from ..SLMessages import IDs
+from ..Processes import convertDataFile
 
 
-def process_arguments():
+def processArguments():
     import argparse
 
     options = argparse.ArgumentParser(
@@ -65,7 +63,7 @@ def process_arguments():
 
 
 def SLConvert():
-    args = process_arguments()
+    args = processArguments()
     if args.verbose > 1:
         log.setLevel(log.DEBUG)
     elif args.verbose > 0:
@@ -92,63 +90,15 @@ def SLConvert():
                 "No channel map (.var) file found - will fall back to information embedded in main data file. This can be very slow!"
             )
 
-    log.info(f"Using '{args.varfile}' as channel map file")
-    vf = VarFile(args.varfile)
-    smap = vf.getSourceMap()
-    if args.verbose > 1:
-        vf.printSourceMap(smap)
-
-    log.info("Channel map created")
-    log.info(f"Using {smap[args.timesource]} as master clock source")
-
-    log.info("Beginning message processing")
-    df = DatFile(args.file, pcs=args.timesource)
-    df.addSourceMap(smap)
-    data = df.asDataFrame(dropna=args.dropna, resample=args.resample)
-    log.info("Message processing completed")
-
-    log.info("Writing data out to file")
-    if args.output is None:
-        if args.resample:
-            cf = path.splitext(args.file)[0] + "-" + args.resample + "." + args.format
-        else:
-            cf = path.splitext(args.file)[0] + "." + args.format
-
-    else:
-        cf = args.output
-    if args.format == "csv":
-        data.to_csv(cf)
-    elif args.format == "csv.gz":
-        data.to_csv(cf, compression="gzip")
-    elif args.format == "xlsx":
-        data.to_excel(cf, freeze_panes=(1, 1))
-    elif args.format == "parquet":
-        data.reset_index().to_parquet(cf, index=False)
-    elif args.format == "mat":
-        from scipy import io
-
-        data.reset_index(inplace=True)
-
-        def matlabFieldName(s):
-            # Alphanumeric or underscores, starts with a letter
-            import re
-
-            s = re.sub("\W", "_", s)
-            if not s[0].isalpha():
-                s = "L_" + s
-            return s
-
-        data = data.T.dropna(how="all").T
-        io.savemat(
-            cf,
-            {matlabFieldName(x): data[x].to_numpy() for x in data.columns},
-            oned_as="column",
+        return convertDataFile(
+            args.varfile,
+            args.file,
+            args.output,
+            args.format,
+            args.timesource,
+            args.resample,
+            args.dropna,
         )
-    else:
-        log.error(f"Invalid output format: {args.format}!")
-        raise Exception(f"Invalid output format requested: {args.format}")
-
-    log.info(f"Data output to {cf}")
 
 
 if __name__ == "__main__":

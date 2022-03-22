@@ -1,6 +1,11 @@
 from . import main
 from .SLConvert import SLConvertGUI
+from .SLExtract import SLExtractGUI
 
 
 def runSLConvertGUI():
-    main(SLConvertGUI)
+    return main(SLConvertGUI)
+
+
+def runSLExtractGUI():
+    return main(SLExtractGUI)

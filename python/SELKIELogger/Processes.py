@@ -4,6 +4,7 @@ from os import path
 
 import logging
 from .SLFiles import DatFile, VarFile
+from .SLMessages import IDs
 
 
 def convertDataFile(varfile, datfile, output, fileFormat, timesource, resample, dropna):
@@ -63,5 +64,30 @@ def convertDataFile(varfile, datfile, output, fileFormat, timesource, resample, 
             {matlabFieldName(x): data[x].to_numpy() for x in data.columns},
             oned_as="column",
         )
+
+    log.info(f"Data output to {cf}")
+
+
+def extractFromFile(datfile, output, source, channel, raw=True):
+    log = logging.getLogger("SELKIELogger.extractFromFile")
+
+    log.info("Beginning message processing")
+    df = DatFile(datfile)
+
+    if output is None:
+        if channel != IDs.SLCHAN_RAW:
+            cf = path.splitext(datfile)[0] + f".s{source:02x}.c{channel:02x}.dat"
+        else:
+            cf = path.splitext(datfile)[0] + f".s{source:02x}.raw.dat"
+    else:
+        cf = output
+    log.info(f"Writing data out to {cf}")
+
+    with open(cf, "wb") as outFile:
+        for m in df.messages(source=source, channel=channel):
+            if raw:
+                outFile.write(m.Data)
+            else:
+                outFile.write(m.pack())
 
     log.info(f"Data output to {cf}")

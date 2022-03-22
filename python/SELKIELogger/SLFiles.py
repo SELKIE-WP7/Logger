@@ -256,11 +256,7 @@ class DatFile:
                 record[ls[x]] = dat[x]
         return record
 
-    def processMessages(self, includeTS=False, force=False, chunkSize=100000):
-        if self._records and not force:
-            return self._records
-
-        self._records = []
+    def messages(self, source=None, channel=None):
         datFile = open(self._fn, "rb")
         unpacker = msgpack.Unpacker(datFile, unicode_errors="ignore")
         sink = SLMessageSink(msglogger=log.getChild("Data"))
@@ -268,18 +264,34 @@ class DatFile:
         sink.Process(SLMessage(0, 0, "Logger").pack())
         sink.Process(SLMessage(1, 0, "SLPython").pack())
 
+        for msg in unpacker:
+            msg = sink.Process(msg, output="raw", allMessages=True)
+            if msg is None:
+                continue
+
+            if source and msg.SourceID != source:
+                continue
+
+            if channel and msg.ChannelID != channel:
+                continue
+
+            yield msg
+
+        datFile.close()
+
+    def processMessages(self, includeTS=False, force=False, chunkSize=100000):
+        if self._records and not force:
+            return self._records
+
         fields = self.prepConverters(includeTS=includeTS, force=force)
         log.debug(fields)
 
+        self._records = []
         stack = []
         currentTime = 0
         nextTime = 0
         count = 0
-        for msg in unpacker:
-            msg = sink.Process(msg, output="raw", allMessages=True)
-            # log.debug(msg)
-            if msg is None:
-                continue
+        for msg in self.messages():
 
             count += 1
 

@@ -55,7 +55,7 @@ class SLMessage:
             assert 0 <= sourceID and sourceID < 128
             assert 0 <= channelID and channelID < 128
         except:
-            log.error(
+            logging.error(
                 f"Invalid source/channel values: Source: {sourceID}, Channel: {channelID}, Data: {data}"
             )
             raise ValueError("Invalid source/channel values")

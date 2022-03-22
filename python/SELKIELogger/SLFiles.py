@@ -342,7 +342,7 @@ class DatFile:
             else:
                 df = pd.concat([df, ndf], copy=False)
                 del ndf
-            log.debug(
+            log.info(
                 f"{count} steps processed ({pd.to_timedelta((df.index.max() - df.index.min()), unit='ms')})"
             )
 

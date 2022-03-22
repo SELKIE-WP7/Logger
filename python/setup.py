@@ -35,6 +35,7 @@ setup(
             "SLDump = SELKIELogger.scripts.SLDump:SLDump",
             "SLClassify = SELKIELogger.scripts.SLClassify:SLClassify",
             "SLConvert = SELKIELogger.scripts.SLConvert:SLConvert",
+            "SLConvertGUI = SELKIELogger.scripts.SLGUI:runSLConvertGUI",
             "SLGPSWatch = SELKIELogger.scripts.SLGPSWatch:SLGPSWatch",
             "SLWebDev = SELKIELogger.WebInterface:run_dev_server[Web]",
         ],

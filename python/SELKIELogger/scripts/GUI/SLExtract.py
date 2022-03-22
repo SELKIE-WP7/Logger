@@ -425,7 +425,7 @@ class SLExtractGUI:
             return step1OK() and step4OK() and step5OK()
 
         if step1OK():
-            self.root.title(f"SLConvert: {os.path.basename(self.options.dataFile)}")
+            self.root.title(f"SLExtract: {os.path.basename(self.options.dataFile)}")
             self.steps[1]["status"].configure(
                 text="OK", foreground="white", background="green"
             )
@@ -433,7 +433,7 @@ class SLExtractGUI:
                 text=f"{os.path.basename(self.options.dataFile)} selected"
             )
         else:
-            self.root.title("SLConvert: (No file selected)")
+            self.root.title("SLExtract: (No file selected)")
             self.steps[1]["status"].configure(
                 text="X", foreground="white", background="red"
             )

@@ -5,7 +5,7 @@ here = path.abspath(path.dirname(__file__))
 
 setup(
     name="SELKIELogger",
-    version="1.6.0",
+    version="1.6.1",
     description="Parsing and processing scripts for SELKIE data logger",
     author="Thomas Lake",
     author_email="t.lake@swansea.ac.uk",
@@ -36,6 +36,8 @@ setup(
             "SLClassify = SELKIELogger.scripts.SLClassify:SLClassify",
             "SLConvert = SELKIELogger.scripts.SLConvert:SLConvert",
             "SLConvertGUI = SELKIELogger.scripts.GUI.apps:runSLConvertGUI",
+            "SLExtract = SELKIELogger.scripts.SLExtract:SLExtract",
+            "SLExtractGUI = SELKIELogger.scripts.GUI.apps:runSLExtractGUI",
             "SLGPSWatch = SELKIELogger.scripts.SLGPSWatch:SLGPSWatch",
             "SLWebDev = SELKIELogger.WebInterface:run_dev_server[Web]",
         ],

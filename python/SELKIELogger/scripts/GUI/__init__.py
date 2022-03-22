@@ -1,0 +1,86 @@
+import sys
+import logging
+import traceback
+
+import tkinter as tk
+from tkinter import ttk
+
+
+def exceptionHandler(exc_type, exc_value, exc_traceback, thread=None):
+    if issubclass(exc_type, KeyboardInterrupt):
+        logging.info("Exiting on keyboard interrupt")
+        sys.exit()
+        return
+
+    if thread:
+        logging.critical(
+            f"Unhandled exception in {thread}: {exc_type.__name__} - {exc_value}"
+        )
+    else:
+        logging.critical(f"Unhandled exception: {exc_type.__name__} - {exc_value}")
+    if exc_traceback:
+        for tbline in traceback.format_tb(exc_traceback):
+            logging.critical(tbline)
+
+
+class TextHandler(logging.Handler):
+    # This class allows you to log to a Tkinter Text or ScrolledText widget
+    # Adapted from Moshe Kaplan: https://gist.github.com/moshekaplan/c425f861de7bbf28ef06
+
+    def __init__(self, text):
+        # run the regular Handler __init__
+        logging.Handler.__init__(self)
+        # Store a reference to the Text it will log to
+        self.text = text
+        _lf = logging.Formatter("[%(asctime)s]\t%(levelname)s\t%(message)s")
+        self.setFormatter(_lf)
+
+    def emit(self, record):
+        msg = self.format(record)
+
+        def append():
+            self.text.configure(state="normal")
+            self.text.insert(tk.END, msg + "\n")
+            self.text.configure(state="disabled")
+            # Autoscroll to the bottom
+            self.text.yview(tk.END)
+
+        # This is necessary because we can't modify the Text from other threads
+        self.text.after(0, append)
+
+
+def Button(parent, command, config=None, **kwargs):
+    """Wrapper around tk.Button()
+
+    Applies a default configuration and binds commands to both the default
+    "command" option and additionally to the return/enter key to match
+    expected behaviour.
+
+    Default configuration can be overriden by providing a dictionary of
+    options that will be expanded and passed to .configure()
+    """
+    button_defconfig = {"width": 8}
+    # b = tk.Button(parent, command=command, **kwargs)
+    b = ttk.Button(parent, command=command)
+    b.bind("<Return>", command)
+    b.configure(**button_defconfig)
+    if config:
+        b.configure(**config)
+    return b
+
+
+def main(gui):
+    root = tk.Tk()
+    root.geometry("800x600")
+    try:
+        ttk.Style().theme_use("alt")
+    except:
+        pass
+
+    sys.excepthook = exceptionHandler
+    excepthook = exceptionHandler  # For threads
+
+    app = gui(root)
+    root.protocol("WM_DELETE_WINDOW", app.exit)
+    logging.info("GUI startup")
+    root.mainloop()

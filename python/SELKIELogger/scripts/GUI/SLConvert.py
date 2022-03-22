@@ -4,20 +4,15 @@ import os
 
 from threading import Thread
 
-try:
-    from threading import excepthook
-except ImportError:
-    # Python <3.8
-    excepthook = None
-
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as tkfd
 from tkinter import messagebox as tkmb
 from tkinter.scrolledtext import ScrolledText
 
-import logging
 from SELKIELogger.scripts import log
+from SELKIELogger.scripts.GUI import Button, TextHandler
+
 from SELKIELogger import SLFiles as SLF
 from SELKIELogger.SLMessages import IDs
 from SELKIELogger.Processes import convertDataFile
@@ -37,75 +32,29 @@ class SLConvertOpts:
         self.outFormat = "csv.gz"
 
 
-class TextHandler(logging.Handler):
-    # This class allows you to log to a Tkinter Text or ScrolledText widget
-    # Adapted from Moshe Kaplan: https://gist.github.com/moshekaplan/c425f861de7bbf28ef06
-
-    def __init__(self, text):
-        # run the regular Handler __init__
-        logging.Handler.__init__(self)
-        # Store a reference to the Text it will log to
-        self.text = text
-        _lf = logging.Formatter("[%(asctime)s]\t%(levelname)s\t%(message)s")
-        self.setFormatter(_lf)
-
-    def emit(self, record):
-        msg = self.format(record)
-
-        def append():
-            self.text.configure(state="normal")
-            self.text.insert(tk.END, msg + "\n")
-            self.text.configure(state="disabled")
-            # Autoscroll to the bottom
-            self.text.yview(tk.END)
-
-        # This is necessary because we can't modify the Text from other threads
-        self.text.after(0, append)
-
-
 allSticky = (tk.N, tk.W, tk.E, tk.S)
+resampleIntervals = [
+    "None",
+    "10min",
+    "2min",
+    "1min",
+    "10s",
+    "1s",
+    "500ms",
+    "200ms",
+    "100ms",
+]
+supportedFormatsLabels = [
+    "CSV (compressed)",
+    "CSV (uncompressed)",
+    "MATLAB data file",
+    "Parquet file",
+    "Excel spreadsheet",
+]
+supportedFormats = ["csv.gz", "csv", "mat", "parquet", "xlsx"]
 
 
 class SLConvertGUI:
-    resampleIntervals = [
-        "None",
-        "10min",
-        "2min",
-        "1min",
-        "10s",
-        "1s",
-        "500ms",
-        "200ms",
-        "100ms",
-    ]
-    supportedFormatsLabels = [
-        "CSV (compressed)",
-        "CSV (uncompressed)",
-        "MATLAB data file",
-        "Parquet file",
-        "Excel spreadsheet",
-    ]
-    supportedFormats = ["csv.gz", "csv", "mat", "parquet", "xlsx"]
-
-    def Button(self, parent, command, config=None, **kwargs):
-        """Wrapper around tk.Button()
-
-        Applies a default configuration and binds commands to both the default
-        "command" option and additionally to the return/enter key to match
-        expected behaviour.
-
-        Default configuration can be overriden by providing a dictionary of
-        options that will be expanded and passed to .configure()
-        """
-        button_defconfig = {"width": 8}
-        # b = tk.Button(parent, command=command, **kwargs)
-        b = ttk.Button(parent, command=command)
-        b.bind("<Return>", command)
-        b.configure(**button_defconfig)
-        if config:
-            b.configure(**config)
-        return b
-
     def __init__(self, tkroot):
         self.options = SLConvertOpts()
         self.bgThread = None
@@ -136,7 +85,7 @@ class SLConvertGUI:
         self.status = ttk.Label(statusArea, textvariable=self.statusText)
         self.status.grid(column=0, row=0, sticky=allSticky)
 
-        #        self.actionbutton = self.Button(
+        #        self.actionbutton = Button(
         #            statusArea,
         #            config={"text": "Cancel", "state": tk.DISABLED},
         #            # command=lambda e=None: self.processCancel(e),
@@ -149,7 +98,7 @@ class SLConvertGUI:
         self.logPane = ScrolledText(self.MFrame, height=8)
         self.logPane.grid(column=0, row=1, sticky=allSticky)
         log.addHandler(TextHandler(self.logPane))
-        log.setLevel(logging.INFO)
+        log.setLevel(log.INFO)
 
         # self.root.bind("<<ProcessingComplete>>", self.processComplete)
         # self.root.bind("<<ProcessingProgress>>", self.processProgress)
@@ -180,7 +129,7 @@ class SLConvertGUI:
                     background="red",
                 ),
                 "label": ttk.Label(controlArea, text="Select data file: "),
-                "button": self.Button(
+                "button": Button(
                     controlArea, config={"text": "Select"}, command=self.selectDataFile
                 ),
             },
@@ -196,7 +145,7 @@ class SLConvertGUI:
                 "label": ttk.Label(
                     controlArea, text="Select variable / channel mapping file: "
                 ),
-                "button": self.Button(
+                "button": Button(
                     controlArea, config={"text": "Select"}, command=self.selectVarFile
                 ),
             },
@@ -210,7 +159,7 @@ class SLConvertGUI:
                     background="red",
                 ),
                 "label": ttk.Label(controlArea, text="Load channel information: "),
-                "button": self.Button(
+                "button": Button(
                     controlArea,
                     config={"text": "Load", "state": tk.DISABLED},
                     command=self.loadChannels,
@@ -241,7 +190,7 @@ class SLConvertGUI:
                 ),
                 "label": ttk.Label(controlArea, text="Set resample interval: "),
                 "button": ttk.Combobox(
-                    controlArea, values=self.resampleIntervals, text="None"
+                    controlArea, values=resampleIntervals, text="None"
                 ),
             },
             6: {
@@ -254,7 +203,7 @@ class SLConvertGUI:
                     background="red",
                 ),
                 "label": ttk.Label(controlArea, text="Set output format: "),
-                "button": ttk.Combobox(controlArea, values=self.supportedFormatsLabels),
+                "button": ttk.Combobox(controlArea, values=supportedFormatsLabels),
             },
             7: {
                 "status": ttk.Label(
@@ -266,7 +215,7 @@ class SLConvertGUI:
                     background="red",
                 ),
                 "label": ttk.Label(controlArea, text="Select output file: "),
-                "button": self.Button(
+                "button": Button(
                     controlArea,
                     config={"text": "Select"},
                     command=self.selectOutputFile,
@@ -297,7 +246,7 @@ class SLConvertGUI:
         self.steps[6]["button"].bind("<<ComboboxSelected>>", self.setFormat)
         self.steps[6]["button"].bind("<Return>", self.setFormat)
         self.steps[6]["button"].bind("<Tab>", self.setFormat)
-        self.steps[6]["button"].set(self.supportedFormatsLabels[0])
+        self.steps[6]["button"].set(supportedFormatsLabels[0])
 
         self.steps[8]["button"].state(["!alternate", "selected"])
         self.steps[9]["button"].state(["!alternate", "!selected"])
@@ -313,7 +262,7 @@ class SLConvertGUI:
                 row=s, column=2, sticky=allSticky, padx=3, pady=5
             )
 
-        self.runButton = self.Button(
+        self.runButton = Button(
             controlArea,
             config={"text": "Start Conversion", "width": 18, "state": tk.DISABLED},
             command=self.startConversion,
@@ -401,14 +350,14 @@ class SLConvertGUI:
         de = self.options.outFormat
         if de is None:
             de = "csv.gz"
-        ix = self.supportedFormats.index(de)
+        ix = supportedFormats.index(de)
 
         name = tkfd.asksaveasfilename(
             parent=self.MFrame,
             title="Select output file",
             filetypes=[
-                (self.supportedFormatsLabels[ix], f"*.{self.supportedFormats[ix]}"),
-                ("All supported formats", [f"*.{x}" for x in self.supportedFormats]),
+                (supportedFormatsLabels[ix], f"*.{supportedFormats[ix]}"),
+                ("All supported formats", [f"*.{x}" for x in supportedFormats]),
                 ("All files", "*.*"),
             ],
             defaultextension=f".{de}",
@@ -448,15 +397,15 @@ class SLConvertGUI:
         ix = self.steps[6]["button"].current()
         if ix < 0:
             try:
-                ix2 = self.supportedFormats.index(
+                ix2 = supportedFormats.index(
                     self.steps[6]["button"].get().strip().lower()
                 )
-                self.options.outFormat = self.supportedFormats[ix2]
-                self.steps[6]["button"].set(self.supportedFormatsLabels[ix2])
+                self.options.outFormat = supportedFormats[ix2]
+                self.steps[6]["button"].set(supportedFormatsLabels[ix2])
             except ValueError:
                 self.options.outFormat = None
         else:
-            self.options.outFormat = self.supportedFormats[ix]
+            self.options.outFormat = supportedFormats[ix]
 
         self.update()
 
@@ -525,7 +474,7 @@ class SLConvertGUI:
             return self.options.resample is not None
 
         def step6OK():
-            return self.options.outFormat in self.supportedFormats
+            return self.options.outFormat in supportedFormats
 
         def step7OK():
             return self.options.outFileAuto or self.options.outFile
@@ -698,47 +647,7 @@ class SLConvertGUI:
             self.bgThread.join()
 
 
-import sys
-import traceback
-
-
-def exceptionHandler(exc_type, exc_value, exc_traceback, thread=None):
-    if issubclass(exc_type, KeyboardInterrupt):
-        log.info("Exiting on keyboard interrupt")
-        sys.exit()
-        return
-
-    if thread:
-        log.critical(
-            f"Unhandled exception in {thread}: {exc_type.__name__} - {exc_value}"
-        )
-    else:
-        log.critical(f"Unhandled exception: {exc_type.__name__} - {exc_value}")
-    if exc_traceback:
-        for tbline in traceback.format_tb(exc_traceback):
-            log.critical(tbline)
-
-
-def main(gui):
-    root = tk.Tk()
-    root.geometry("800x600")
-    try:
-        ttk.Style().theme_use("alt")
-    except:
-        pass
-
-    sys.excepthook = exceptionHandler
-    excepthook = exceptionHandler  # For threads
-
-    app = gui(root)
-    root.protocol("WM_DELETE_WINDOW", app.exit)
-    log.info("GUI startup")
-    root.mainloop()
-
-
-def runSLConvertGUI():
-    main(SLConvertGUI)
-
-
 if __name__ == "__main__":
-    runSLConvertGUI()
+    from SELKIELogger.scripts.GUI import main
+
+    main(SLConvertGUI)

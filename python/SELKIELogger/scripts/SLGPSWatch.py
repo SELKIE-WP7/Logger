@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import pandas as pd
 
 from numpy import sin, cos, sqrt, arcsin, power, deg2rad, isnan
@@ -6,9 +6,9 @@ from numpy import sin, cos, sqrt, arcsin, power, deg2rad, isnan
 from os import path
 from time import monotonic, sleep
 
-from . import log
-from ..SLFiles import StateFile
-from ..PushoverClient import PushoverClient
+from SELKIELogger.scripts import log
+from SELKIELogger.SLFiles import StateFile
+from SELKIELogger.PushoverClient import PushoverClient
 
 
 class ChannelSpec:
@@ -105,7 +105,6 @@ def getLocatorValue(state, locator):
             return float(val.split(",")[locator.index - 1])
     except:
         return float("NaN")
-
 
 
 def haversine(lat1, lon1, lat2, lon2):

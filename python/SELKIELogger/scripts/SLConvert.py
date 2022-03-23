@@ -1,9 +1,9 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 from os import path
 
-from . import log
-from ..SLMessages import IDs
-from ..Processes import convertDataFile
+from SELKIELogger.scripts import log
+from SELKIELogger.SLMessages import IDs
+from SELKIELogger.Processes import convertDataFile
 
 
 def processArguments():

@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import msgpack
-from . import log
-from ..SLMessages import SLMessageSink
+from SELKIELogger.scripts import log
+from SELKIELogger.SLMessages import SLMessageSink
 
 
 def process_arguments():

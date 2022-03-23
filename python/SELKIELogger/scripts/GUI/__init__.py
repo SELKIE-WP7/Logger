@@ -69,6 +69,19 @@ def Button(parent, command, config=None, **kwargs):
     return b
 
 
+def logFuncExceptions(func, *args, **kwargs):
+    res = None
+    try:
+        res = func(*args, **kwargs)
+    except Exception as e:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        logging.critical(f"Exception: {exc_type.__name__} - {exc_value}")
+        if exc_traceback:
+            for tbline in traceback.format_tb(exc_traceback):
+                logging.debug(tbline)
+    return res
+
+
 def main(gui):
     root = tk.Tk()
     root.geometry("800x600")
@@ -78,9 +91,17 @@ def main(gui):
         pass
 
     sys.excepthook = exceptionHandler
-    excepthook = exceptionHandler  # For threads
+    try:
+        from threading import excepthook
+
+        excepthook = exceptionHandler  # For threads
+    except ImportError:
+        logging.warning(
+            "Threaded exception handler not available - some errors may only appear on the console"
+        )
 
     app = gui(root)
     root.protocol("WM_DELETE_WINDOW", app.exit)
+
     logging.info("GUI startup")
     root.mainloop()

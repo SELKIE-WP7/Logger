@@ -11,7 +11,7 @@ from tkinter import messagebox as tkmb
 from tkinter.scrolledtext import ScrolledText
 
 from SELKIELogger.scripts import log
-from SELKIELogger.scripts.GUI import Button, TextHandler
+from SELKIELogger.scripts.GUI import Button, TextHandler, logFuncExceptions
 
 from SELKIELogger import SLFiles as SLF
 from SELKIELogger.SLMessages import IDs
@@ -354,8 +354,9 @@ class SLExtractGUI:
             return
 
         self.bgThread = Thread(
-            target=extractFromFile,
+            target=logFuncExceptions,
             args=[
+                extractFromFile,
                 self.options.dataFile,
                 self.options.outFile,
                 self.options.source,

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from os import path
+from os import path, access, W_OK
 
 import logging
 from .SLFiles import DatFile, VarFile
@@ -21,13 +21,6 @@ def convertDataFile(varfile, datfile, output, fileFormat, timesource, resample, 
         log.error(f"Invalid output format: {fileFormat}!")
         raise Exception(f"Invalid output format requested: {fileFormat}")
 
-    log.info("Beginning message processing")
-    df = DatFile(datfile, pcs=timesource)
-    df.addSourceMap(smap)
-    data = df.asDataFrame(dropna=dropna, resample=resample)
-    log.info("Message processing completed")
-
-    log.info("Writing data out to file")
     if output is None:
         if resample:
             cf = path.splitext(datfile)[0] + "-" + resample + "." + fileFormat
@@ -35,6 +28,23 @@ def convertDataFile(varfile, datfile, output, fileFormat, timesource, resample, 
             cf = path.splitext(datfile)[0] + "." + fileFormat
     else:
         cf = output
+
+    # The output file gets opened later (method depends on output format)
+    # The check here is so we can bail early rather than waiting until after the messages are processed
+    # Writing to the output could still fail later!
+    if (path.exists(cf) and not access(cf, W_OK)) or not (
+        path.exists(path.dirname(cf)) and access(path.dirname(cf), W_OK)
+    ):
+        log.error(f"Output path {cf} not writeable")
+        return
+
+    log.info("Beginning message processing")
+    df = DatFile(datfile, pcs=timesource)
+    df.addSourceMap(smap)
+    data = df.asDataFrame(dropna=dropna, resample=resample)
+    log.info("Message processing completed")
+
+    log.info("Writing data out to file")
 
     if fileFormat == "csv":
         data.to_csv(cf)

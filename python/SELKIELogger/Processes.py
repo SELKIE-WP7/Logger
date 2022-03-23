@@ -32,8 +32,9 @@ def convertDataFile(varfile, datfile, output, fileFormat, timesource, resample, 
     # The output file gets opened later (method depends on output format)
     # The check here is so we can bail early rather than waiting until after the messages are processed
     # Writing to the output could still fail later!
+    dcf = path.dirname(cf) or "./"
     if (path.exists(cf) and not access(cf, W_OK)) or not (
-        path.exists(path.dirname(cf)) and access(path.dirname(cf), W_OK)
+        path.exists(dcf) and access(dcf, W_OK)
     ):
         log.error(f"Output path {cf} not writeable")
         return

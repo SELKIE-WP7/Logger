@@ -1,14 +1,16 @@
 from setuptools import setup, find_packages
 from os import path
+import setup_common as sc
+
 
 here = path.abspath(path.dirname(__file__))
 
 setup(
-    name="SELKIELogger",
-    version="1.6.2",
-    description="Parsing and processing scripts for SELKIE data logger",
-    author="Thomas Lake",
-    author_email="t.lake@swansea.ac.uk",
+    name=sc.project,
+    version=sc.getVersionString(),
+    description=sc.description,
+    author=sc.author,
+    author_email=sc.author_email,
     classifiers=[  # Optional
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

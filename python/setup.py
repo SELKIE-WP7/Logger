@@ -1,5 +1,9 @@
 from setuptools import setup, find_packages
 from os import path
+
+import sys
+
+sys.path.append(".")
 import setup_common as sc
 
 

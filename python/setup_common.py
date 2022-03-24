@@ -4,7 +4,7 @@ import re
 import sys
 
 from shutil import which
-from subprocess import run
+from subprocess import run, PIPE
 
 project = "SELKIELogger"
 description = "Parsing and processing scripts for SELKIE data logger"
@@ -16,7 +16,7 @@ git = which("git")
 
 
 def getGitProjectVersion():
-    out = run([git, "describe", "--always", "--dirty=X", "--tags"], capture_output=True)
+    out = run([git, "describe", "--always", "--dirty=X", "--tags"], stdout=PIPE)
     if out.returncode != 0:
         return None
     versionString = out.stdout.decode("utf-8").strip()
@@ -24,7 +24,7 @@ def getGitProjectVersion():
 
 
 def getGitProjectBranch():
-    out = run([git, "symbolic-ref", "-q", "--short", "HEAD"], capture_output=True)
+    out = run([git, "symbolic-ref", "-q", "--short", "HEAD"], stdout=PIPE)
     if out.returncode != 0:
         return None
     branch = out.stdout.decode("utf-8").strip()

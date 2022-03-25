@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+from pandas import to_timedelta
 
 from threading import Thread
 
@@ -390,7 +391,11 @@ class SLConvertGUI:
         if rs == "" or rs.lower() == "none":
             self.options.resample = -1
         else:
-            self.options.resample = rs
+            try:
+                to_timedelta(rs)
+                self.options.resample = rs
+            except ValueError:
+                self.options.resample = None
         self.update()
 
     def setFormat(self, event=None):

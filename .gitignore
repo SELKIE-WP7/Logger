@@ -1,6 +1,11 @@
+*.pdf
+
 build/
 env/
 *.egg-info/
 __pycache__/
 testData/
+pdfs/
 python/instance/
+python/dist/
+python/build/

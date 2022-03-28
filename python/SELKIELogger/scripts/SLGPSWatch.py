@@ -57,10 +57,10 @@ class LocatorSpec:
         if len(parts) == 6:
             self.name = parts[5]
         else:
-            self.name = f"{self.latChan},{self.lonChan}"
+            self.name = f"{self.latChan}/{self.lonChan}"
 
     def __str__(self):
-        return f"{self.latChan},{self.lonChan},{self.refLat},{self.refLon},{self.threshold}"
+        return f"{self.latChan},{self.lonChan},{self.refLat},{self.refLon},{self.threshold},{self.name}"
 
 
 def process_arguments():

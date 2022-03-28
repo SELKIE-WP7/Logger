@@ -34,7 +34,7 @@ Once data source information has been loaded, the different sources will be list
 ### Step 5: Select channel
 Once a source has been selected, all advertised channels from that source will be listed here. If you are trying to create a data file for use with other software, select "Raw Data". This will usually be channel 3 for sources supporting this function.
 
-![Screenshot showing example channels](SLExtractGUI-channel.ong)
+![Screenshot showing example channels](SLExtractGUI-channel.png)
 
 ### Step 6: Select output file
 

@@ -5,8 +5,8 @@
 - [SLGPSWatch](manual/SLGPSWatch.md)
 
 ## Data processing and conversion
-- [SLConvert](manual/SLConvert.md) and [SLConvertGUI](manual/SLConvertGUI.md)
-- [SLExtract](manual/SLExtract.md) and [SLExtractGUI](manual/SLExtractGUI.md)
+- [SLConvert](@ref SLConvert) and [SLConvertGUI](@ref SLConvertGUI)
+- [SLExtract](@ref SLExtract) and [SLExtractGUI](@ref SLExtractGUI)
 
 - [SLDump](manual/SLDump.md)
 - [SLClassify](manual/SLClassify.md)
@@ -25,8 +25,8 @@
 - [DWRead](manual/DWRead.md)
 
 ## Test and debugging tools
-- [PowerHatRead](manual/PowerHatRead.md)
-- [AutomationHatRead](manual/AutomationHatRead.md)
-- [AutomationHatLEDTest](manual/AutomationHatLEDTest.md)
-- [DumpMessages](manual/DumpMessages.md)
-- [MQTTTest](manual/MQTTTest.md)
+- [PowerHatRead](@ref PowerHatRead)
+- [AutomationHatRead](@ref AutomationHatRead)
+- [AutomationHatLEDTest](@ref AutomationHatLEDTest)
+- [DumpMessages](@ref DumpMessages)
+- [MQTTTest](@ref MQTTTest)

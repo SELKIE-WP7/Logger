@@ -178,7 +178,7 @@ class SLChannelMap:
 
         def __getitem__(self, ch):
             if ch < len(self.channels):
-                return self.channels[ch]
+                return str(self.channels[ch])
             elif ch == 125:
                 return "Information"
             elif ch == 126:
@@ -192,7 +192,7 @@ class SLChannelMap:
             return iter(self.channels)
 
         def __str__(self):
-            return self.name
+            return str(self.name)
 
     class Channel:
         __slots__ = ["name"]

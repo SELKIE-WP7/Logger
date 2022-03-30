@@ -169,9 +169,9 @@ class SLChannelMap:
             self.id = number
             if name:
                 self.name = f"[{number:02x}]"
-            self.name = name
+            self.name = str(name)
             if channels:
-                self.channels = channels
+                self.channels = [str(x) for x in channels]
             else:
                 self.channels = ["Name", "Channels", "Timestamp"]
             self.lastTimestamp = 0
@@ -192,7 +192,7 @@ class SLChannelMap:
             return iter(self.channels)
 
         def __str__(self):
-            return str(self.name)
+            return self.name
 
     class Channel:
         __slots__ = ["name"]

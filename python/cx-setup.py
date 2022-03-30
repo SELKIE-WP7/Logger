@@ -56,6 +56,9 @@ executables = [
     Executable(
         "SELKIELogger/scripts/SLGPSWatch.py", base=console, target_name="SLGPSWatch"
     ),
+    Executable(
+        "SELKIELogger/scripts/SLIcinga.py", base=console, target_name="SLIcinga"
+    ),
 ]
 
 setup(

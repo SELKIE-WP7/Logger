@@ -43,6 +43,7 @@ setup(
             "SLConvert = SELKIELogger.scripts.SLConvert:SLConvert",
             "SLExtract = SELKIELogger.scripts.SLExtract:SLExtract",
             "SLGPSWatch = SELKIELogger.scripts.SLGPSWatch:SLGPSWatch",
+            "SLIcinga = SELKIELogger.scripts.SLIcinga:SLIcinga",
             "SLWebDev = SELKIELogger.WebInterface:run_dev_server[Web]",
         ],
         "gui_scripts": [

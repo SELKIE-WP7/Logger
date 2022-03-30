@@ -368,7 +368,7 @@ class StateFile:
     def __init__(self, filename):
         self._fn = filename
         self._sm = None
-        self._ts = 0
+        self._ts = None
         self._vf = None
         self._stats = None
 
@@ -392,12 +392,44 @@ class StateFile:
         )
         return self._stats
 
+    def sources(self):
+        if self._stats is None:
+            self.parse()
+        return sorted(set(self._stats.index.get_level_values(0)))
+
+    def channels(self, source):
+        if self._stats is None:
+            self.parse()
+        return sorted(
+            set(self._stats[(source, 0x00):(source, 0xFF)].index.get_level_values(1))
+        )
+
+    def last_source_message(self, source):
+        if self._stats is None:
+            self.parse()
+        try:
+            return self._stats.loc[(source, 0x00):(source, 0xFF)].SecondsAgo.max()
+        except KeyError:
+            return None
+
+    def last_channel_message(self, source, channel):
+        if self._stats is None:
+            self.parse()
+        try:
+            return self._stats.loc[(source, channel)].SecondsAgo.max()
+        except KeyError:
+            return None
+
     def timestamp(self):
+        if self._ts is None:
+            self.parse()
         return self._ts
 
     def to_clocktime(self, timestamp):
-        if self._ts is None:
+        if timestamp is None:
             return None
+        if self._ts is None:
+            self.parse()
         mtime = os.stat(self._fn).st_mtime
         delta = mtime - self._ts / 1000
         return pd.to_datetime(timestamp / 1000 + delta, unit="s")

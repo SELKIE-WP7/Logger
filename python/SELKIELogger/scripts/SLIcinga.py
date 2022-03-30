@@ -71,7 +71,7 @@ def SLIcinga():
 
     # Sources
     for s in args.source:
-        lm = sf.to_clocktime(sf.last_source_message(s))
+        lm = sf.last_source_message(s)
         try:
             lmd = int(10 * (time() - lm.timestamp())) / 10.0
             lms = lm.strftime("%Y-%m-%d %H:%M:%S")
@@ -86,7 +86,7 @@ def SLIcinga():
 
     # Channels
     for c in args.channel:
-        lm = sf.to_clocktime(sf.last_channel_message(c.source, c.channel))
+        lm = sf.last_channel_message(c.source, c.channel)
         try:
             lmd = int(10 * (time() - lm.timestamp())) / 10.0
             lms = lm.strftime("%Y-%m-%d %H:%M:%S")

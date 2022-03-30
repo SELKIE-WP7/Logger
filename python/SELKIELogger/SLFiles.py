@@ -408,7 +408,7 @@ class StateFile:
         if self._stats is None:
             self.parse()
         try:
-            return self._stats.loc[(source, 0x00):(source, 0xFF)].SecondsAgo.max()
+            return self.to_clocktime(self._stats.loc[(source, 0x00):(source, 0xFF)].Time.max())
         except KeyError:
             return None
 
@@ -416,7 +416,7 @@ class StateFile:
         if self._stats is None:
             self.parse()
         try:
-            return self._stats.loc[(source, channel)].SecondsAgo.max()
+            return self.to_clocktime(self._stats.loc[(source, channel)].Time)
         except KeyError:
             return None
 

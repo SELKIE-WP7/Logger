@@ -1,11 +1,8 @@
 from time import time
+from sys import exit
 
 from SELKIELogger.scripts import ChannelSpec
 from SELKIELogger.SLFiles import StateFile
-
-# GPS: 2017-10-16 00:00:00 (+51.6201, -3.8754) ±999998.9|lat=+51.6201 lon=-3.8754 acc=999998.9;100.000000;500.000000;0;100
-# Clock difference: +140521373.0 seconds|diff=+140521373.0;60.000000;180.000000;-100;100
-
 
 def process_arguments():
     import argparse
@@ -40,26 +37,20 @@ def process_arguments():
 
     return options.parse_args()
 
-
-#    .strftime("%Y-%m-%d %H:%M:%S")g.ip = get_ip()
-
-
 def SLIcinga():
     args = process_arguments()
     sf = StateFile(args.file)
     stats = sf.parse()
 
-    anyUnknown = False
-    anyWarning = False
-    anyErrors = False
-
-    def setWarnings(x):
+    exitStatus = 0
+    def updateWarnings(x, y):
         if x > args.timeout:
-            anyErrors = True
+           return 2 
         elif x > args.warning:
-            anyWarning = True
+            return 1
         elif x < 0:
-            anyUnknown = True
+            return -1
+        return y
 
     # File Age (Convert from source relative stamp to posix time)
     lastMessage = sf.to_clocktime(sf.timestamp())
@@ -67,7 +58,7 @@ def SLIcinga():
     print(
         f"Most recent data: {lastMessage.strftime('%Y-%m-%d %H:%M:%S')}|age={int(fileAge)};{args.warning};{args.timeout};0;86400"
     )
-    setWarnings(fileAge)
+    exitStatus = updateWarnings(fileAge, exitStatus)
 
     # Sources
     for s in args.source:
@@ -82,7 +73,7 @@ def SLIcinga():
         print(
             f"Last {name} message: {lms}|last{s}={lmd};{args.warning};{args.timeout};0;86400"
         )
-        setWarnings(lmd)
+        exitStatus = updateWarnings(lmd, exitStatus)
 
     # Channels
     for c in args.channel:
@@ -103,15 +94,9 @@ def SLIcinga():
         print(
             f"Last {source}/{channel} message: {lms}|last{c.source}_{c.channel}={lmd};{args.warning};{args.timeout};0;86400"
         )
-        setWarnings(lmd)
+        exitStatus = updateWarnings(lmd, exitStatus)
 
-    if anyErrors:
-        return 2
-    elif anyWarning:
-        return 1
-
-    return 0
-
+    exit(exitStatus)
 
 if __name__ == "__main__":
     SLIcinga()

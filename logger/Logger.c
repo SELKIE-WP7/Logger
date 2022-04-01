@@ -185,8 +185,8 @@ int main(int argc, char *argv[]) {
 	 * Set up various log files and mechanisms
 	 *********************************************************************************************/
 
-	int mon_yday = -1;     //!< Log rotation markers: Day for currently opened files
-	int mon_nextyday = -2; //!< Log rotation markers: Day for next files
+	int mon_yday = -1;     // Log rotation markers: Day for currently opened files
+	int mon_nextyday = -2; // Log rotation markers: Day for next files
 
 	{
 		/*
@@ -525,16 +525,16 @@ int main(int argc, char *argv[]) {
 	signalHandlersInstall();
 	signalHandlersUnblock();
 
-	//! Number of successfully handled messages
+	// Number of successfully handled messages
 	int msgCount = 0;
 
-	//! Per-source, Per-channel message counts
+	// Per-source, Per-channel message counts
 	channel_stats stats[128][128] = {0};
 
-	//! Last 'tick' / timestamp value seen
+	// Last 'tick' / timestamp value seen
 	uint32_t lastTimestamp = 0;
 
-	//! Last statefile save time
+	// Last statefile save time
 	time_t lastSave = 0;
 
 	if (go.saveState) {
@@ -546,7 +546,7 @@ int main(int argc, char *argv[]) {
 	}
 	lastSave = time(NULL);
 
-	//! Loop count. Used to avoid checking e.g. date on every iteration
+	// Loop count. Used to avoid checking e.g. date on every iteration
 	unsigned int loopCount = 0;
 	while (!shutdownFlag) {
 		/*

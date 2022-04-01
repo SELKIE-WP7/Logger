@@ -12,15 +12,19 @@
 #include "version.h"
 
 /*!
- * @file ExtractSatInfo.c
- *
+ * @file
  * @brief Extract satellite information from .dat file
- *
- * Parses raw UBX data included for NAV-SAT messages and reports basic
- * information on each satellite detected.
  * @ingroup Executables
  */
 
+/*!
+ * Parses raw UBX data included for NAV-SAT messages and reports basic
+ * information on each satellite detected.
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns -1 on error, otherwise 0
+ */
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;

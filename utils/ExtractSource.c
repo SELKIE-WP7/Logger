@@ -12,14 +12,18 @@
 #include "version.h"
 
 /*!
- * @file ExtractSource.c
- *
+ * @file
  * @brief Extract subset of messages from .dat file
- *
- * Writes a new .dat file containing only messages with a specific source ID.
  * @ingroup Executables
  */
 
+/*!
+ * Writes a new .dat file containing only messages with a specific source ID.
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns -1 on error, otherwise 0
+ */
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;

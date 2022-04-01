@@ -10,10 +10,34 @@
 #include "SELKIELoggerN2K.h"
 
 #include "version.h"
+/*!
+ * @file
+ * @brief Read N2K messages and summarise
+ * @ingroup Executables
+ */
 
+//! Largest possible PGN value
 #define PGN_MAX 16777216
+
+//! Allocated read buffer size
+#define BUFSIZE 1024
+
+/*!
+ * Count of messages seen by PGN number
+ *
+ * Could be smarter, but it's a relatively small amount of memory in the grand
+ * scheme of things.
+ */
 int msgCount[PGN_MAX];
 
+/*!
+ * Reads messages from file, and prints the number seen for each PGN number.
+ * Zero counts are suppressed.
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns -1 on error, otherwise 0
+ */
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
@@ -52,7 +76,7 @@ int main(int argc, char *argv[]) {
 
 	state.started = true;
 	bool processing = true;
-#define BUFSIZE 1024
+
 	uint8_t buf[BUFSIZE] = {0};
 	size_t hw = 0;
 	int count = 0;

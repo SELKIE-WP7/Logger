@@ -13,13 +13,9 @@
 #include "version.h"
 
 /*!
- * @file dat2csv.c
+ * @file
  * @brief Simple CSV conversion utility
  * @ingroup Executables
- *
- * Groups messages from a recorded .dat file based on ticks of a nominated
- * timestamp source (defaults to local timestamps). First message in each tick
- * wins. Output files are gzip compressed by default.
  */
 
 /*!
@@ -70,28 +66,28 @@ char *csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const 
 char *csv_all_timestamp_data(const msg_t *msg);
 
 //! Generate CSV header for GPS position fields
-char *csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+char *csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                const char *channelName);
 
 //! Convert GPS position information to CSV string
 char *csv_gps_position_data(const msg_t *msg);
 
 //! Generate CSV header for GPS velocity information
-char *csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+char *csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                const char *channelName);
 
 //! Convert GPS velocity information to CSV string
 char *csv_gps_velocity_data(const msg_t *msg);
 
 //! Generate CSV header for GPS date and time information
-char *csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+char *csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                const char *channelName);
 
 //! Convert GPS date and time information to appropriate CSV string
 char *csv_gps_datetime_data(const msg_t *msg);
 
 //! Generate CSV header for any single value floating point channel
-char *csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+char *csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                             const char *channelName);
 
 //! Convert single value floating point data channel to CSV string
@@ -113,6 +109,15 @@ typedef struct {
 //! Tidy up source and channel name arrays
 void free_sn_cn(char *sn[128], char *cn[128][128]);
 
+/*!
+ * Groups messages from a recorded .dat file based on ticks of a nominated
+ * timestamp source (defaults to local timestamps). First message in each tick
+ * wins. Output files are gzip compressed by default.
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns -1 on error, otherwise 0
+ */
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
@@ -624,6 +629,12 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
+/*!
+ * Iterate over the array and free any allocated source and channel names.
+ *
+ * @param sn Source name array
+ * @param cn Channel name array
+ */
 void free_sn_cn(char *sn[128], char *cn[128][128]) {
 	for (int i = 0; i < 128; i++) {
 		if (sn[i] != NULL) { free(sn[i]); }
@@ -641,6 +652,7 @@ void free_sn_cn(char *sn[128], char *cn[128][128]) {
 /*!
  * @param[in] a Pointer to uint8_t
  * @param[in] b Pointer to uint8_t
+ * @returns 1 if a > b, -1 if a < b, else 0
  */
 int sort_uint(const void *a, const void *b) {
 	const uint8_t *ai = a;
@@ -653,6 +665,15 @@ int sort_uint(const void *a, const void *b) {
 	return 0;
 }
 
+/*!
+ * Returned string must be freed by caller
+ *
+ * @param[in] source Source number
+ * @param[in] type Channel number (ignored)
+ * @param[in] sourceName Name of this source (ignored)
+ * @param[in] channelName Name of this channel (ignored)
+ * @returns Timestamp field name
+ */
 char *csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                 const char *channelName) {
 	char *fields = NULL;
@@ -660,6 +681,12 @@ char *csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const 
 	return fields;
 }
 
+/*!
+ * Returned string must be freed by caller
+ *
+ * @param[in] msg Message to be interpreted as timestamp
+ * @returns Message value, as string
+ */
 char *csv_all_timestamp_data(const msg_t *msg) {
 	char *out = NULL;
 	if (msg == NULL) { return strdup(""); }
@@ -668,7 +695,16 @@ char *csv_all_timestamp_data(const msg_t *msg) {
 	return out;
 }
 
-char *csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+/*!
+ * Returned string must be freed by caller
+ *
+ * @param[in] source Source number
+ * @param[in] type Channel number (ignored)
+ * @param[in] sourceName Name of this source (ignored)
+ * @param[in] channelName Name of this channel (ignored)
+ * @returns Headers for GPS field components
+ */
+char *csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                const char *channelName) {
 	char *fields = NULL;
 	if (asprintf(&fields,
@@ -679,6 +715,15 @@ char *csv_gps_position_headers(const uint8_t source, const uint8_t type, const c
 	return fields;
 }
 
+/*!
+ * Returns field containing comma separated values corresponding to the headers
+ * in csv_gps_position_headers().
+ *
+ * Returned string must be freed by caller
+ *
+ * @param[in] msg Message containing GPS data
+ * @returns Data from message, as a string
+ */
 char *csv_gps_position_data(const msg_t *msg) {
 	char *out = NULL;
 	if (msg == NULL) { return strdup(",,,,"); }
@@ -689,7 +734,16 @@ char *csv_gps_position_data(const msg_t *msg) {
 	return out;
 }
 
-char *csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+/*!
+ * Returned string must be freed by caller
+ *
+ * @param[in] source Source number
+ * @param[in] type Channel number (ignored)
+ * @param[in] sourceName Name of this source (ignored)
+ * @param[in] channelName Name of this channel (ignored)
+ * @returns Headers for GPS Velocity components
+ */
+char *csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                const char *channelName) {
 	char *fields = NULL;
 	if (asprintf(
@@ -701,6 +755,15 @@ char *csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const c
 	return fields;
 }
 
+/*!
+ * Returns field containing comma separated values corresponding to the headers
+ * in csv_gps_velocity_headers().
+ *
+ * Returned string must be freed by caller
+ *
+ * @param[in] msg Message containing GPS data
+ * @returns Data from message, as a string
+ */
 char *csv_gps_velocity_data(const msg_t *msg) {
 	char *out = NULL;
 	if (msg == NULL) { return strdup(",,,,,"); }
@@ -713,7 +776,16 @@ char *csv_gps_velocity_data(const msg_t *msg) {
 	return out;
 }
 
-char *csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+/*!
+ * Returned string must be freed by caller
+ *
+ * @param[in] source Source number
+ * @param[in] type Channel number (ignored)
+ * @param[in] sourceName Name of this source (ignored)
+ * @param[in] channelName Name of this channel (ignored)
+ * @returns Headers for GPS Date and time components
+ */
+char *csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                const char *channelName) {
 	char *fields = NULL;
 	if (asprintf(&fields, "Date:%1$02X,Time:%1$02X,DTAcc:%1$02X", source) <= 0) {
@@ -722,6 +794,15 @@ char *csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const c
 	return fields;
 }
 
+/*!
+ * Returns field containing comma separated values corresponding to the headers
+ * in csv_gps_datetime_headers().
+ *
+ * Returned string must be freed by caller
+ *
+ * @param[in] msg Message containing GPS data
+ * @returns Data from message, as a string
+ */
 char *csv_gps_datetime_data(const msg_t *msg) {
 	char *out = NULL;
 	if (msg == NULL) { return strdup(",,"); }
@@ -733,13 +814,32 @@ char *csv_gps_datetime_data(const msg_t *msg) {
 	return out;
 }
 
-char *csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourcename,
+/*!
+ * Generic handler for channels representing single floating point values.
+ *
+ * Returned string must be freed by caller
+ *
+ * @param[in] source Source number
+ * @param[in] type Channel number (ignored)
+ * @param[in] sourceName Name of this source (ignored)
+ * @param[in] channelName Name of this channel
+ * @returns String representing this source/channel
+ */
+char *csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                             const char *channelName) {
 	char *fields = NULL;
 	if (asprintf(&fields, "%s:%02X", channelName, source) <= 0) { return NULL; }
 	return fields;
 }
 
+/*!
+ * Returns single floating point value as a string
+ *
+ * Returned string must be freed by caller
+ *
+ * @param[in] msg Message containing float value
+ * @returns Data from message, as a string
+ */
 char *csv_all_float_data(const msg_t *msg) {
 	char *out = NULL;
 	if (msg == NULL) { return strdup(""); }

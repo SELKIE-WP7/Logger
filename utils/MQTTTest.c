@@ -12,12 +12,34 @@
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerMQTT.h"
 
+/*!
+ * @file
+ * @brief Test MQTT broker connection and subscriptions
+ * @ingroup Executables
+ */
+
+//! Set true to start clean shutdown
 bool shutdown = false;
 
+/*!
+ * Signal handler - sets shutdown flag
+ *
+ * @param[in] signnum Signal number (ignored)
+ */
 void signalShutdown(int signnum __attribute__((unused))) {
 	shutdown = true;
 }
 
+/*!
+ * Connects to MQTT broker, subscribing to topics given on the command line.
+ *
+ * Topics will be printed to stdout when received, optionally dumping messages
+ * not matching subscription topics (i.e. messages matching wildcards)
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns -1 on error, otherwise 0
+ */
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;

@@ -10,15 +10,21 @@
 #include "version.h"
 
 /*!
- * @file ExtractSatInfo.c
- *
- * @brief Extract satellite information from .dat file
- *
- * Parses raw UBX data included for NAV-SAT messages and reports basic
- * information on each satellite detected.
+ * @file
+ * @brief Print messages in a .dat file
  * @ingroup Executables
  */
 
+/*!
+ * Reads messages from a SELKIELogger data file and prints out a simple
+ * representation.
+ *
+ * Does not attempt to use friendly names for sources or channels.
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns -1 on error, otherwise 0
+ */
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;

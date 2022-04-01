@@ -10,7 +10,25 @@
 #include "SELKIELoggerN2K.h"
 
 #include "version.h"
+/*!
+ * @file
+ * @brief Read and print N2K messages
+ * @ingroup Executables
+ */
 
+//! Allocated read buffer size
+#define BUFSIZE 1024
+
+/*!
+ * Read messages from file and print details to screen.
+ *
+ * Detail printed depends on whether structure of message is known, although
+ * brief data can be printed for all messages at higher verbosities.
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns -1 on error, otherwise 0
+ */
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
@@ -57,7 +75,7 @@ int main(int argc, char *argv[]) {
 
 	state.started = true;
 	bool processing = true;
-#define BUFSIZE 1024
+
 	uint8_t buf[BUFSIZE] = {0};
 	size_t hw = 0;
 	int count = 0;
@@ -79,7 +97,7 @@ int main(int argc, char *argv[]) {
 		size_t end = 0;
 		bool r = n2k_act_from_bytes(buf, hw, &nm, &end, (state.verbose > 2));
 		if (r) {
-			log_info(&state, 1, "%d=>%d: PGN %d, Priority %d", nm->src, nm->dst,
+			log_info(&state, 2, "%d=>%d: PGN %d, Priority %d", nm->src, nm->dst,
 			         nm->PGN, nm->priority);
 			switch (nm->PGN) {
 				case 127257:
@@ -97,7 +115,7 @@ int main(int argc, char *argv[]) {
 			}
 			count++;
 		} else {
-			log_info(&state, 2, "%zu bytes read, failed to decode message", end);
+			log_info(&state, 3, "%zu bytes read, failed to decode message", end);
 			if (!processing && end == 0) {
 				// If we're not making progress and we're at the end of file then
 				// this must be a bad message Force the process to move onwards

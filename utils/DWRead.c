@@ -9,6 +9,23 @@
 
 #include "version.h"
 
+/*!
+ * @file
+ * @brief Read messages from Datawell HVX file
+ * @ingroup Executables
+ */
+
+//! Allocated buffer size
+#define BUFSIZE 1024
+
+/*!
+ * Reads messages from a HVX file (or equivalent data extracted from a
+ * SELKIELogger data file) and prints out a simple representation.
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns -1 or 1 on error, and 0 on success
+ */
 int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
@@ -65,7 +82,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	bool processing = true;
-#define BUFSIZE 1024
+
 	char buf[BUFSIZE] = {0};
 	size_t hw = fread(buf, sizeof(char), BUFSIZE, inFile);
 	uint16_t cycdata[20] = {0};

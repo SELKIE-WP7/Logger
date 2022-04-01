@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "SELKIELoggerBase.h"
+//! @file
 
 /*!
  * @addtogroup loggerDW Logger: Datawell WaveBuoy / Receiver support
@@ -19,41 +20,48 @@
 
 //! Configuration is as per simple network sources
 typedef struct {
-	char *sourceName;  //!< User defined name for this source
-	uint8_t sourceNum; //!< Source ID for messages
-	char *addr;        //!< Target name
-	int handle;        //!< Handle for currently opened device
-	int timeout;       //!< Reconnect if no data received after this interval [s]
-	bool recordRaw;
-	bool parseSpectrum;
+	char *sourceName;   //!< User defined name for this source
+	uint8_t sourceNum;  //!< Source ID for messages
+	char *addr;         //!< Target name
+	int handle;         //!< Handle for currently opened device
+	int timeout;        //!< Reconnect if no data received after this interval [s]
+	bool recordRaw;     //!< Enable retention of raw data
+	bool parseSpectrum; //!< Enable parsing of spectral data
 } dw_params;
 
-#define DWCHAN_NAME   SLCHAN_NAME
-#define DWCHAN_MAP    SLCHAN_MAP
-#define DWCHAN_TSTAMP SLCHAN_TSTAMP
-#define DWCHAN_RAW    SLCHAN_RAW
-#define DWCHAN_SIG    4
-#define DWCHAN_DN     5
-#define DWCHAN_DW     6
-#define DWCHAN_DV     7
+/*!
+ * @addtogroup loggerDWChannels Logger: Datawell WaveBuoy channel numbering
+ * @ingroup loggerDW
+ * @{
+ */
+#define DWCHAN_NAME   SLCHAN_NAME   //!< Source name
+#define DWCHAN_MAP    SLCHAN_MAP    //!< Channel map
+#define DWCHAN_TSTAMP SLCHAN_TSTAMP //!< Timestamps
+#define DWCHAN_RAW    SLCHAN_RAW    //!< Raw data (recorded unmodified)
+#define DWCHAN_SIG    4             //!< Reported signal strength
+#define DWCHAN_DN     5             //!< Displacement (North)
+#define DWCHAN_DW     6             //!< Displacement (West)
+#define DWCHAN_DV     7             //!< Displacement (Vertical)
 
-#define DWCHAN_LAT    8
-#define DWCHAN_LON    9
-#define DWCHAN_ORIENT 10
-#define DWCHAN_INCLIN 11
-#define DWCHAN_GPSFIX 12
-#define DWCHAN_HRMS   13
-#define DWCHAN_TREF   14
-#define DWCHAN_TWTR   15
-#define DWCHAN_WEEKS  16
+#define DWCHAN_LAT    8  //!< Latitude (Decimal degrees)
+#define DWCHAN_LON    9  //!< Longitude (Decimal degrees)
+#define DWCHAN_ORIENT 10 //!< Device orientation
+#define DWCHAN_INCLIN 11 //!< Device inclination
+#define DWCHAN_GPSFIX 12 //!< GPS quality
+#define DWCHAN_HRMS   13 //!< RMS Wave Height
+#define DWCHAN_TREF   14 //!< Reference Temperature
+#define DWCHAN_TWTR   15 //!< Water Temperature
+#define DWCHAN_WEEKS  16 //!< Estimated weeks of battery remaining
 
-#define DWCHAN_SPF    17
-#define DWCHAN_SPD    18
-#define DWCHAN_SPS    19
-#define DWCHAN_SPM    20
-#define DWCHAN_SPN    21
-#define DWCHAN_SPR    22
-#define DWCHAN_SPK    23
+#define DWCHAN_SPF    17 //!< Spectral data: Frequency
+#define DWCHAN_SPD    18 //!< Spectral data: Direction
+#define DWCHAN_SPS    19 //!< Spectral data: Spread
+#define DWCHAN_SPM    20 //!< Spectral data: M2 coefficient
+#define DWCHAN_SPN    21 //!< Spectral data: N2 coefficient
+#define DWCHAN_SPR    22 //!< Spectral data: Relative PSD
+#define DWCHAN_SPK    23 //!< Spectral data: K factor
+
+//! @}
 
 //! Datawell thread setup
 void *dw_setup(void *ptargs);

@@ -8,7 +8,8 @@
  *
  * It is assumed that no other setup is required for these devices.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *rx_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -27,11 +28,16 @@ void *rx_setup(void *ptargs) {
 }
 
 /*!
- * Reads messages from the serial connection established by rx_setup(), and pushes them to
- * the queue. As messages are already in the right format, no further processing is done
- * here.
+ * Reads messages from the connection established by rx_setup(), and pushes them to the
+ * queue. Data is not interpreted, just pushed into the queue with suitable headers.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * Message size is variable, based on min/max limits and the amount of data
+ * available to read from the source.
+ *
+ * Terminates thread in case of error.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *rx_logging(void *ptargs) {
 	signalHandlersBlock();
@@ -88,7 +94,8 @@ void *rx_logging(void *ptargs) {
 /*!
  * Simple wrapper around rx_closeConnection(), which will do any cleanup required.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *rx_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -105,6 +112,9 @@ void *rx_shutdown(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @returns device_callbacks for serial sources
+ */
 device_callbacks rx_getCallbacks() {
 	device_callbacks cb = {.startup = &rx_setup,
 	                       .logging = &rx_logging,
@@ -113,6 +123,9 @@ device_callbacks rx_getCallbacks() {
 	return cb;
 }
 
+/*!
+ * @returns Default parameters for serial sources
+ */
 rx_params rx_getParams() {
 	rx_params mp = {.portName = NULL,
 	                .baudRate = 115200,
@@ -125,6 +138,11 @@ rx_params rx_getParams() {
 
 /*!
  * Populate list of channels and push to queue as a map message
+ *
+ * Exits thread in case of error.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *rx_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -164,6 +182,11 @@ void *rx_channels(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @param[in] lta Pointer to log_thread_args_t
+ * @param[in] s Pointer to config_section to be parsed
+ * @returns True on success, false on error
+ */
 bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
 		log_error(lta->pstate, "[Serial:%s] Refusing to reconfigure", lta->tag);

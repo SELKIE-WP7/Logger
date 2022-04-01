@@ -17,7 +17,8 @@
  *
  * It is assumed that no other setup is required for these devices.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code set in ptargs->returnCode if required
  */
 void *dw_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -38,7 +39,8 @@ void *dw_setup(void *ptargs) {
  * Reads messages from the connection established by dw_setup(), and pushes them to the
  * queue. As messages are already in the right format, no further processing is done here.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - thread terminated on error.
  */
 void *dw_logging(void *ptargs) {
 	signalHandlersBlock();
@@ -231,7 +233,14 @@ void *dw_logging(void *ptargs) {
 }
 
 /*!
+ * Generate a single message for specified source and channel.
+ *
  * Terminates thread in the event of an error
+ *
+ * @param[in] args Pointer to log_thread_args_t
+ * @param[in] sNum Source number
+ * @param[in] cNum Channel number. @sa loggerDWChannels
+ * @param[in] data Message value
  */
 void dw_push_message(log_thread_args_t *args, uint8_t sNum, uint8_t cNum, float data) {
 	msg_t *mm = msg_new_float(sNum, cNum, data);
@@ -251,7 +260,8 @@ void dw_push_message(log_thread_args_t *args, uint8_t sNum, uint8_t cNum, float 
 /*!
  * Cleanly shutdown network connection
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL
  */
 void *dw_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -272,6 +282,12 @@ void *dw_shutdown(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * Network connection helper.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns True on success, false on failure
+ */
 bool dw_net_connect(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
 	dw_params *dwInfo = (dw_params *)args->dParams;
@@ -327,6 +343,9 @@ bool dw_net_connect(void *ptargs) {
 	return true;
 }
 
+/*!
+ * @returns device_callbacks for WaveRider type devices
+ */
 device_callbacks dw_getCallbacks() {
 	device_callbacks cb = {.startup = &dw_setup,
 	                       .logging = &dw_logging,
@@ -335,6 +354,9 @@ device_callbacks dw_getCallbacks() {
 	return cb;
 }
 
+/*!
+ * @returns Waverider specific defaults
+ */
 dw_params dw_getParams() {
 	dw_params dw = {.addr = NULL,
 	                // .port = 1180,
@@ -347,6 +369,9 @@ dw_params dw_getParams() {
 
 /*!
  * Populate list of channels and push to queue as a map message
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - terminates thread on error
  */
 void *dw_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -417,6 +442,11 @@ void *dw_channels(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @param[in] lta Pointer to log_thread_args_t
+ * @param[in] s Pointer to config_section to be parsed
+ * @returns True on success, false on error
+ */
 bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
 		log_error(lta->pstate, "[DW:%s] Refusing to reconfigure", lta->tag);

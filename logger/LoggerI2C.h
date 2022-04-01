@@ -11,6 +11,8 @@
 #include "SELKIELoggerI2C.h"
 #include "SELKIELoggerMP.h"
 
+//! @file
+
 /*!
  * @addtogroup loggerI2C Logger: I2C Support
  * @ingroup logger

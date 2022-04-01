@@ -1,5 +1,18 @@
 #include "LoggerConfig.h"
 
+/*!
+ *
+ * Not called directly. This function is called by ini_parse() and used to
+ * populate an ini_config structure that is passed in as the first parameter.
+ * The ini_config structure must have been initialised before passing to the
+ * initial ini_parse() call.
+ *
+ * @param[in] user Pointer to ini_config structure passed to ini_parse()
+ * @param[in] section Section name
+ * @param[in] name Key name
+ * @param[in] value Key value, as string
+ * @return 0 on error (abort parsing), 1 on success
+ */
 int config_handler(void *user, const char *section, const char *name, const char *value) {
 	ini_config *c = (ini_config *)user;
 
@@ -63,6 +76,15 @@ int config_handler(void *user, const char *section, const char *name, const char
 	return 1;
 }
 
+/*!
+ * Allocates memory and initialises the structure with sensible defaults.
+ *
+ * Allocates space for 10 sections and initialises section 0 as a blank/unnamed
+ * section with space for up to 10 key=value pairs.
+ *
+ * @param c Pointer to ini_config structure to be initialised.
+ * @returns True on success, false on failure.
+ */
 bool new_config(ini_config *c) {
 	if (c == NULL) { return false; }
 	c->sectsize = 10;
@@ -92,6 +114,11 @@ bool new_config(ini_config *c) {
 	return true;
 }
 
+/*!
+ * Recursively frees memory within an ini_config structure.
+ *
+ * @param c Pointer to ini_config structure to be destroyed
+ */
 void destroy_config(ini_config *c) {
 	if (c == NULL) { return; }
 
@@ -107,6 +134,12 @@ void destroy_config(ini_config *c) {
 	free(c->sects);
 }
 
+/*!
+ * Will print formatted configuration to stdout, suitable for reuse in a
+ * configuration file.
+ *
+ * @param[in] c Pointer to ini_config structure
+ */
 void print_config(ini_config *c) {
 	if (c == NULL) { return; }
 
@@ -120,6 +153,16 @@ void print_config(ini_config *c) {
 	}
 }
 
+/*!
+ * Iterates over all sections in the supplied ini_config structure and checks
+ * for a matching section name.
+ *
+ * Comparison between search key and section names is case insensitive.
+ *
+ * @param[in] in Pointer to ini_config structure to search
+ * @param[in] sn Pointer to null-terminated search string
+ * @returns Pointer to first config_section found, or NULL if no matches
+ */
 config_section *config_get_section(const ini_config *in, const char *sn) {
 	for (int i = 0; i < in->numsects; i++) {
 		config_section *cs = &(in->sects[i]);
@@ -128,6 +171,16 @@ config_section *config_get_section(const ini_config *in, const char *sn) {
 	return NULL;
 }
 
+/*!
+ * Iterates over all entries in the supplied config_section structure and
+ * checks for a matching key name.
+ *
+ * Comparison between search key and key names is case insensitive.
+ *
+ * @param[in] cs Pointer to config_section structure to search
+ * @param[in] kn Pointer to null-terminated search string
+ * @returns Pointer to first config_kv found, or NULL if no matches
+ */
 config_kv *config_get_key(const config_section *cs, const char *kn) {
 	for (int i = 0; i < cs->numopts; i++) {
 		config_kv *k = &(cs->opts[i]);
@@ -136,12 +189,34 @@ config_kv *config_get_key(const config_section *cs, const char *kn) {
 	return NULL;
 }
 
+/*!
+ * Convenience wrapper around config_get_section and config_get_key.
+ *
+ * Will search for section, then search that section for a matching key.
+ *
+ * @param[in] in Pointer to ini_config structure to search
+ * @param[in] sn Pointer to null-terminated section name
+ * @param[in] kn Pointer to null-terminated key name
+ * @returns Pointer to first config_kv found, or NULL if no matches
+ */
 config_kv *config_get_option(const ini_config *in, const char *sn, const char *kn) {
 	config_section *cs = config_get_section(in, sn);
 	if (cs == NULL) { return NULL; }
 	return config_get_key(cs, kn);
 }
 
+/*!
+ * Provides a consistent approach for parsing strings to boolean values.
+ *
+ * This is a very simple test - any string starting with 1, Y, y, t, or T is
+ * considered to be True and anything starting with 0, N, n, F, or f will be
+ * considered False.
+ *
+ * Any other initial character is treated as unknown.
+ *
+ * @param[in] b Pointer to null-terminated string
+ * @returns 1 for true, 0 for false and -1 for unknown
+ */
 int config_parse_bool(const char *b) {
 	if (b == NULL || (strcmp(b, "") == 0)) { return -1; }
 
@@ -162,6 +237,17 @@ int config_parse_bool(const char *b) {
 	return -1;
 }
 
+/*!
+ * Checks for matching single or double quotes around a string and duplicates the enclosed value.
+ *
+ * If no quotes are present (or if the leading and trailing quotes don't match)
+ * then the string is duplicated in its entirety.
+ *
+ * Input string is not modified. Returned string must be freed by caller.
+ *
+ * @param[in] c String to duplicate
+ * @returns Pointer to new string or NULL on failure.
+ */
 char *config_qstrdup(const char *c) {
 	size_t sl = strlen(c);
 	if (((c[0] == '"') && (c[sl - 1] == '"')) || ((c[0] == '\'') && (c[sl - 1] == '\''))) {

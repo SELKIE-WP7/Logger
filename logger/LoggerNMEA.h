@@ -10,6 +10,8 @@
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerNMEA.h"
 
+//! @file
+
 /*!
  * @addtogroup loggerNMEA Logger: NMEA Support
  * @ingroup logger

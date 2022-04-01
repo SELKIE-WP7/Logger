@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <stdatomic.h>
 #include <stdbool.h>
+//! @file
 
 /*!
  * @addtogroup loggerTriggers Logger: Global triggers/signal handlers
@@ -25,51 +26,22 @@ extern atomic_bool shutdownFlag;
 extern atomic_bool rotateNow;
 extern atomic_bool pauseLog;
 
-/*! @brief Set safe shutdown flag
- *
- * By default, this is hooked to SIGINT, SIGQUIT and SIGRTMIN + 1
- */
+//! Set safe shutdown flag
 void signalShutdown(int signnum);
 
-/*! @brief Set log rotate flag
- *
- * By default, this is hooked to SIGUSR1, SIGHUP and SIGRTMIN + 2
- *
- * This flag will be cleared by the main loop once logs have been successfully
- * rotated. If the logger is paused, logs will be rotated when resumed.
- */
-void signalRotate(int signnum);
+//! Set log rotate flag void signalRotate(int signnum);
 
-/*! @brief Set logger pause flag
- *
- * By default, this is hooked to SIGRTMIN + 3
- *
- * The pause flag can only be cleared by the unpause signal handler, or during shutdown.
- * Calling this function while already paused will have no additional effect.
- */
+//! Set logger pause flag
 void signalPause(int signnum);
 
-/*! @brief Clear logger pause flag
- *
- * By default, this is hooked to SIGRTMIN + 4
- *
- * Calling this while the logger is not paused has no effect.
- */
+//! Clear logger pause flag
 void signalUnpause(int signnum);
 /*! @} */
 
 //! Install signal handlers
 void signalHandlersInstall();
 
-/*! @brief Get signal mask
- *
- * Allocates and returns as signal mask that blocks all of the signals that we
- * have explicit handlers for.
- *
- * This can then be used to ensure that source handling threads do not respond
- * to signals, and that the main logging thread doesn't respond to any of these
- * signals until it's ready to do so.
- */
+//! Return a signal mask with suitable defaults
 sigset_t *signalHandlerMask();
 
 //! Block signals that we have handlers for

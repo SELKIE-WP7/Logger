@@ -12,6 +12,12 @@
  * @}
  */
 
+/*!
+ * Main Logger Executable
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns Exit status (0 for success)
+ */
 int main(int argc, char *argv[]) {
 	struct global_opts go = {0};
 
@@ -889,12 +895,9 @@ bool timespec_subtract(struct timespec *result, struct timespec *x, struct times
 }
 
 /*!
- * @brief Push software version into message queue
- *
  * @param[in] q Log queue
  * @return True on success
  */
-
 bool log_softwareVersion(msgqueue *q) {
 	const char *version = "Logger version: " GIT_VERSION_STRING;
 	msg_t *verMsg = msg_new_string(SLSOURCE_LOCAL, SLCHAN_LOG_INFO, strlen(version), version);
@@ -906,6 +909,12 @@ bool log_softwareVersion(msgqueue *q) {
 	return true;
 }
 
+/*!
+ * The global_opts structure should be left in a safe state after calling this
+ * function, and calling this function repeatedly should not cause an error.
+ *
+ * @param[in] go Pointer to structure
+ */
 void destroy_global_opts(struct global_opts *go) {
 	if (go->configFileName) { free(go->configFileName); }
 	if (go->dataPrefix) { free(go->dataPrefix); }
@@ -924,6 +933,19 @@ void destroy_global_opts(struct global_opts *go) {
 	go->varFile = NULL;
 }
 
+/*!
+ * Truncates and recreates the state file, including last received message statistics, timestamps
+ * and path to the channel mapping file currently in use. Any change to this output format also
+ * needs to be reflected in SLFiles.py
+ *
+ * @todo Write to temporary file and atomically move into place
+ *
+ * @param[in] sFName Name and path to state file
+ * @param[in] stats Channel statistics array
+ * @param[in] lTS Last received timestamp
+ * @param[in] vFName Name and path to current channel mapping file
+ * @return False if unable to create state file, True otherwise
+ */
 bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS, char *vFName) {
 	FILE *stateFile = fopen(sFName, "w");
 	if (stateFile == NULL) { return false; }

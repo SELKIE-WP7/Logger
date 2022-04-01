@@ -10,7 +10,8 @@
  *
  * No other steps required.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *n2k_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -33,9 +34,10 @@ void *n2k_setup(void *ptargs) {
  * messages from a device configured with n2k_setup() and pushes them to the
  * message queue.
  *
- * Exits on error or when shutdown is signalled.
+ * Exits thread on error or when shutdown is signalled.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *n2k_logging(void *ptargs) {
 	signalHandlersBlock();
@@ -146,7 +148,8 @@ void *n2k_logging(void *ptargs) {
 /*!
  * Calls n2k_closeConnection(), which will do any cleanup required.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL
  */
 void *n2k_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -170,7 +173,10 @@ void *n2k_shutdown(void *ptargs) {
 /*!
  * Populate list of channels and push to queue as a map message
  *
- * @param ptargs Pointer to log_thread_args_t
+ * Terminates thread on error
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *n2k_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -210,6 +216,9 @@ void *n2k_channels(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @returns device_callbacks for N2K serial sources
+ */
 device_callbacks n2k_getCallbacks() {
 	device_callbacks cb = {.startup = &n2k_setup,
 	                       .logging = &n2k_logging,
@@ -218,12 +227,20 @@ device_callbacks n2k_getCallbacks() {
 	return cb;
 }
 
+/*!
+ * @returns Default parameters for N2K serial sources
+ */
 n2k_params n2k_getParams() {
 	n2k_params gp = {
 		.portName = NULL, .sourceNum = SLSOURCE_N2K, .baudRate = 115200, .handle = -1};
 	return gp;
 }
 
+/*!
+ * @param[in] lta Pointer to log_thread_args_t
+ * @param[in] s Pointer to config_section to be parsed
+ * @returns True on success, false on error
+ */
 bool n2k_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
 		log_error(lta->pstate, "[N2K:%s] Refusing to reconfigure", lta->tag);

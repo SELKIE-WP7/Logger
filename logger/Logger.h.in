@@ -62,7 +62,7 @@ struct global_opts {
 	// Not really options, but this is a convenient place to track them
 	FILE *monitorFile; //!< Current data output file
 	char *monFileStem; //!< Current serial numbered file prefix
-	FILE *varFile; //! Current variables file
+	FILE *varFile; //!< Current variables file
 };
 
 //! Device specific callback functions
@@ -100,9 +100,9 @@ typedef struct {
  * messages of each source/channel seen and the system timestamp associated with the most recent message.
  */
 typedef struct {
-	unsigned int count;
-	uint32_t lastTimestamp;
-	msg_t *lastMessage;
+	unsigned int count; //!< Number of messages received
+	uint32_t lastTimestamp; //!< Timestamp of last received message
+	msg_t *lastMessage; //!< Last message received
 } channel_stats;
 
 //! Difference between timespecs (used for rate keeping)

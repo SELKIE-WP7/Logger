@@ -8,6 +8,8 @@
 
 #include "SELKIELoggerBase.h"
 
+//! @file
+
 /*!
  * @addtogroup loggerSerial Logger: Generic serial device support
  * @ingroup logger

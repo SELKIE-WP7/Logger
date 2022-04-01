@@ -8,7 +8,8 @@
  *
  * No other steps required.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *nmea_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -33,7 +34,8 @@ void *nmea_setup(void *ptargs) {
  *
  * Exits on error or when shutdown is signalled.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *nmea_logging(void *ptargs) {
 	signalHandlersBlock();
@@ -131,7 +133,8 @@ void *nmea_logging(void *ptargs) {
 /*!
  * Calls nmea_closeConnection(), which will do any cleanup required.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *nmea_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -155,7 +158,10 @@ void *nmea_shutdown(void *ptargs) {
 /*!
  * Populate list of channels and push to queue as a map message
  *
- * @param ptargs Pointer to log_thread_args_t
+ * Exits thread in case of error.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *nmea_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -195,6 +201,9 @@ void *nmea_channels(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @returns device_callbacks for NMEA serial sources
+ */
 device_callbacks nmea_getCallbacks() {
 	device_callbacks cb = {.startup = &nmea_setup,
 	                       .logging = &nmea_logging,
@@ -203,12 +212,20 @@ device_callbacks nmea_getCallbacks() {
 	return cb;
 }
 
+/*!
+ * @returns Default parameters for NMEA serial sources
+ */
 nmea_params nmea_getParams() {
 	nmea_params gp = {
 		.portName = NULL, .sourceNum = SLSOURCE_NMEA, .baudRate = 115200, .handle = -1};
 	return gp;
 }
 
+/*!
+ * @param[in] lta Pointer to log_thread_args_t
+ * @param[in] s Pointer to config_section to be parsed
+ * @returns True on success, false on error
+ */
 bool nmea_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
 		log_error(lta->pstate, "[NMEA:%s] Refusing to reconfigure", lta->tag);

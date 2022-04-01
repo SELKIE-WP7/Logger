@@ -7,7 +7,8 @@
  * Uses mp_openConnection to connect to a device providing messge pack formatted data.
  * It is assumed that no other setup is required for these devices.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code stored in ptarges->returnCode if required
  */
 void *mp_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -30,7 +31,8 @@ void *mp_setup(void *ptargs) {
  * the queue. As messages are already in the right format, no further processing is done
  * here.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code stored in ptarges->returnCode if required
  */
 void *mp_logging(void *ptargs) {
 	signalHandlersBlock();
@@ -130,10 +132,14 @@ void *mp_logging(void *ptargs) {
 	pthread_exit(NULL);
 	return NULL; // Superfluous, as returning zero via pthread_exit above
 }
+
 /*!
  * Duplicate cached channel map and enqueue
  *
- * @param ptargs Pointer to log_thread_args_t
+ * Terminates thread on error.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code set in ptargs->returnCode if required
  */
 void *mp_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -174,7 +180,8 @@ void *mp_channels(void *ptargs) {
 /*!
  * Simple wrapper around mp_closeConnection(), which will do any cleanup required.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL
  */
 void *mp_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -191,6 +198,9 @@ void *mp_shutdown(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @returns device_callbacks for SELKIELogger serial devices
+ */
 device_callbacks mp_getCallbacks() {
 	device_callbacks cb = {.startup = &mp_setup,
 	                       .logging = &mp_logging,
@@ -199,6 +209,9 @@ device_callbacks mp_getCallbacks() {
 	return cb;
 }
 
+/*!
+ * @returns Default parameters for SELKIELogger serial devices
+ */
 mp_params mp_getParams() {
 	mp_params mp = {.portName = NULL,
 	                .baudRate = 115200,
@@ -209,6 +222,11 @@ mp_params mp_getParams() {
 	return mp;
 }
 
+/*!
+ * @param[in] lta Pointer to log_thread_args_t
+ * @param[in] s Pointer to config_section to be parsed
+ * @returns True on success, false on error
+ */
 bool mp_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
 		log_error(lta->pstate, "[MP:%s] Refusing to reconfigure", lta->tag);

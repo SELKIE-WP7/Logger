@@ -8,7 +8,8 @@
  *
  * Device specific parameters need to be specified in an i2c_params structure
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code set in ptargs->returnCode if required
  */
 void *i2c_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -39,7 +40,10 @@ void *i2c_setup(void *ptargs) {
  * attempt to keep the poll frequency at the rate requested. This is a best
  * effort attempt.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * Thread will exit on error
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code set in ptargs->returnCode if required
  */
 void *i2c_logging(void *ptargs) {
 	signalHandlersBlock();
@@ -104,7 +108,8 @@ void *i2c_logging(void *ptargs) {
 /*!
  * Simple wrapper around i2c_closeConnection(), which will do any cleanup required.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL
  */
 void *i2c_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -132,7 +137,11 @@ void *i2c_shutdown(void *ptargs) {
 
 /*!
  * Populate list of channels and push to queue as a map message
- * @param ptargs Pointer to log_thread_args_t
+ *
+ * Terminates thread on error
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code set in ptargs->returnCode if required
  */
 void *i2c_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -180,6 +189,9 @@ void *i2c_channels(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @returns device_callbacks for I2C devices
+ */
 device_callbacks i2c_getCallbacks() {
 	device_callbacks cb = {.startup = &i2c_setup,
 	                       .logging = &i2c_logging,
@@ -188,6 +200,9 @@ device_callbacks i2c_getCallbacks() {
 	return cb;
 }
 
+/*!
+ * @returns Default I2C parameters
+ */
 i2c_params i2c_getParams() {
 	i2c_params i2c = {.busName = NULL,
 	                  .sourceName = NULL,
@@ -204,6 +219,7 @@ i2c_params i2c_getParams() {
  * channels are used and that device addresses and read functions are set.
  *
  * @param[in] ip Pointer to i2c_params structure
+ * @returns True if all parameters are valid, false otherwise
  */
 bool i2c_validate_chanmap(i2c_params *ip) {
 	i2c_msg_map *cmap = ip->chanmap;
@@ -359,6 +375,11 @@ bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_
 	return true;
 }
 
+/*!
+ * @param[in] lta Pointer to log_thread_args_t
+ * @param[in] s Pointer to config_section to be parsed
+ * @returns True on success, false on error
+ */
 bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
 		log_error(lta->pstate, "[I2C:%s] Refusing to reconfigure", lta->tag);

@@ -10,11 +10,13 @@
 #include <sys/socket.h>
 
 /*!
- * Opens a network connection
+ * The actual work is delegated to net_connect() so we can reuse the logic
+ * elsewhere
  *
  * It is assumed that no other setup is required for these devices.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *net_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -33,9 +35,13 @@ void *net_setup(void *ptargs) {
 
 /*!
  * Reads messages from the connection established by net_setup(), and pushes them to the
- * queue. As messages are already in the right format, no further processing is done here.
+ * queue. Data is not interpreted, just pushed into the queue with suitable headers.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * Message size is variable, based on min/max limits and the amount of data
+ * available to read from the source.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *net_logging(void *ptargs) {
 	signalHandlersBlock();
@@ -115,7 +121,8 @@ void *net_logging(void *ptargs) {
 /*!
  * Simple wrapper around net_closeConnection(), which will do any cleanup required.
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL
  */
 void *net_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -137,6 +144,15 @@ void *net_shutdown(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * Closes any existing connection, then attempts to open a new connection using
+ * the details in net_params.
+ *
+ * Socket is set as nonblocking, so zero-length reads are to be expected.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns True on success, false on error
+ */
 bool net_connect(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
 	net_params *netInfo = (net_params *)args->dParams;
@@ -194,6 +210,9 @@ bool net_connect(void *ptargs) {
 	return true;
 }
 
+/*!
+ * @returns device_callbacks for generic network sources
+ */
 device_callbacks net_getCallbacks() {
 	device_callbacks cb = {.startup = &net_setup,
 	                       .logging = &net_logging,
@@ -202,6 +221,9 @@ device_callbacks net_getCallbacks() {
 	return cb;
 }
 
+/*!
+ * @returns Default parameters for generic network sources
+ */
 net_params net_getParams() {
 	net_params mp = {.addr = NULL,
 	                 .port = -1,
@@ -214,6 +236,9 @@ net_params net_getParams() {
 
 /*!
  * Populate list of channels and push to queue as a map message
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *net_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -253,6 +278,11 @@ void *net_channels(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @param[in] lta Pointer to log_thread_args_t
+ * @param[in] s Pointer to config_section to be parsed
+ * @returns True on success, false on error
+ */
 bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
 		log_error(lta->pstate, "[Network:%s] Refusing to reconfigure", lta->tag);

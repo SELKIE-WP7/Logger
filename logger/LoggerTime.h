@@ -9,6 +9,9 @@
 
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerMP.h"
+
+//! @file
+
 /*!
  * @addtogroup loggerTime Logger: Timer functions
  * @ingroup logger
@@ -22,8 +25,8 @@
 //! Timer specific parameters
 typedef struct {
 	uint8_t sourceNum; //!< Source ID for messages
-	char *sourceName;
-	int frequency; //!< Aim to sample this many times per second
+	char *sourceName;  //!< Name to report for this timer
+	int frequency;     //!< Aim to sample this many times per second
 } timer_params;
 
 //! Check parameters, but no other setup required

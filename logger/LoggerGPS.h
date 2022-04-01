@@ -11,6 +11,8 @@
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerGPS.h"
 
+//! @file
+
 /*!
  * @addtogroup loggerGPS Logger: GPS Support
  * @ingroup logger

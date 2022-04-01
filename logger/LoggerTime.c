@@ -3,6 +3,14 @@
 #include "LoggerSignals.h"
 #include "LoggerTime.h"
 
+/*!
+ * Ensure a name is allocated to the timer.
+ *
+ * No other initialisation is required in this case.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
+ */
 void *timer_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
 	timer_params *timerInfo = (timer_params *)args->dParams;
@@ -18,6 +26,18 @@ void *timer_setup(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * Generate timestamp messages at the specified interval using CLOCK_MONOTONIC,
+ * and epoch messages whenever the value of time() changes (i.e once a second).
+ *
+ * The loop saves the value of CLOCK_MONOTONIC at the start of each iteration
+ * and uses that to calculate the target start time for the next iteration.  If
+ * the execution of the loop has taken too long (i.e. the next iteration should
+ * already have started), a warning is generated.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
+ */
 void *timer_logging(void *ptargs) {
 	signalHandlersBlock();
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -78,6 +98,12 @@ void *timer_logging(void *ptargs) {
 	return NULL; // Superfluous, as returning zero via pthread_exit above
 }
 
+/*!
+ * Free resources as required.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
+ */
 void *timer_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
 	timer_params *timerInfo = (timer_params *)args->dParams;
@@ -91,6 +117,11 @@ void *timer_shutdown(void *ptargs) {
 
 /*!
  * Populate list of channels and push to queue as a map message
+ *
+ * Exits thread in case of error.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Exit code in ptargs->returnCode if required
  */
 void *timer_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -130,6 +161,9 @@ void *timer_channels(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @returns device_callbacks for timestamp generators
+ */
 device_callbacks timer_getCallbacks() {
 	device_callbacks cb = {.startup = &timer_setup,
 	                       .logging = &timer_logging,
@@ -138,6 +172,9 @@ device_callbacks timer_getCallbacks() {
 	return cb;
 }
 
+/*!
+ * @returns Default parameters for a timestamp generator
+ */
 timer_params timer_getParams() {
 	timer_params timer = {
 		.sourceNum = SLSOURCE_TIMER,
@@ -147,6 +184,11 @@ timer_params timer_getParams() {
 	return timer;
 }
 
+/*!
+ * @param[in] lta Pointer to log_thread_args_t
+ * @param[in] s Pointer to config_section to be parsed
+ * @returns True on success, false on error
+ */
 bool timer_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
 		log_error(lta->pstate, "[Timer:%s] Refusing to reconfigure", lta->tag);

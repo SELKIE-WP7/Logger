@@ -9,6 +9,8 @@
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerMP.h"
 
+//! @file
+
 /*!
  * @addtogroup loggerMP Logger: Native device support
  * @ingroup logger

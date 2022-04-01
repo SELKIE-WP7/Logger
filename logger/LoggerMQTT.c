@@ -7,7 +7,8 @@
 /*!
  * Sets up MQTT server connection
  *
- * @param ptargs Pointer to log_thread_args_t
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code stored in ptarges->returnCode
  */
 void *mqtt_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -32,6 +33,22 @@ void *mqtt_setup(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * MQTT Logging thread
+ *
+ * Handles sending keepalive commands (if enabled) and popping items from
+ * within the MQTT specific queue and moving them into the main message queue.
+ *
+ * Unlike the _logging function for other sources, this doesn't read anything
+ * directly. Message processing is handled in a thread managed by the mosquitto
+ * library and we pass in a callback function to format and enqueue the
+ * messages.
+ *
+ * Terminates thread on error
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code stored in ptarges->returnCode
+ */
 void *mqtt_logging(void *ptargs) {
 	signalHandlersBlock();
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -73,6 +90,12 @@ void *mqtt_logging(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * Cleanly shutdown MQTT connection and release resources.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL
+ */
 void *mqtt_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
 	mqtt_params *mqttInfo = (mqtt_params *)args->dParams;
@@ -93,6 +116,14 @@ void *mqtt_shutdown(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * Create channel map from configured IDs and push to queue.
+ *
+ * Terminates thread on error.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code stored in ptarges->returnCode
+ */
 void *mqtt_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
 	mqtt_params *mqttInfo = (mqtt_params *)args->dParams;
@@ -134,6 +165,9 @@ void *mqtt_channels(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @returns device_callbacks for MQTT network sources
+ */
 device_callbacks mqtt_getCallbacks() {
 	device_callbacks cb = {.startup = &mqtt_setup,
 	                       .logging = &mqtt_logging,
@@ -142,6 +176,9 @@ device_callbacks mqtt_getCallbacks() {
 	return cb;
 }
 
+/*!
+ * @returns Default parameters for MQTT network sources
+ */
 mqtt_params mqtt_getParams() {
 	mqtt_params mp = {
 		.sourceName = NULL,
@@ -157,6 +194,11 @@ mqtt_params mqtt_getParams() {
 	return mp;
 }
 
+/*!
+ * @param[in] lta Pointer to log_thread_args_t
+ * @param[in] s Pointer to config_section to be parsed
+ * @returns True on success, false on error
+ */
 bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
 		log_error(lta->pstate, "[MQTT:%s] Refusing to reconfigure", lta->tag);

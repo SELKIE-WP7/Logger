@@ -15,6 +15,9 @@
  *
  * GPS module information is also requested at initial startup, but not on a
  * regular basis.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code set in ptargs->returnCode if required
  */
 void *gps_setup(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -87,10 +90,14 @@ void *gps_setup(void *ptargs) {
 
 /*!
  * Takes a gps_params struct (passed via log_thread_args_t)
- * messages from a device configured with gps_setup() and pushes them to the
- * message queue.
+ *
+ * Reads messages from a device configured with gps_setup() and pushes them to
+ * the message queue.
  *
  * Exits on error or when shutdown is signalled.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code set in ptargs->returnCode if required
  */
 void *gps_logging(void *ptargs) {
 	signalHandlersBlock();
@@ -223,6 +230,9 @@ void *gps_logging(void *ptargs) {
 
 /*!
  * Calls ubx_closeConnection(), which will do any cleanup required.
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code set in ptargs->returnCode if required
  */
 void *gps_shutdown(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -245,6 +255,11 @@ void *gps_shutdown(void *ptargs) {
 
 /*!
  * Populate list of channels and push to queue as a map message
+ *
+ * Terminates thread on error
+ *
+ * @param[in] ptargs Pointer to log_thread_args_t
+ * @returns NULL - Error code set in ptargs->returnCode if required
  */
 void *gps_channels(void *ptargs) {
 	log_thread_args_t *args = (log_thread_args_t *)ptargs;
@@ -285,6 +300,9 @@ void *gps_channels(void *ptargs) {
 	return NULL;
 }
 
+/*!
+ * @returns device_callbacks for uBlox GPS devices
+ */
 device_callbacks gps_getCallbacks() {
 	device_callbacks cb = {.startup = &gps_setup,
 	                       .logging = &gps_logging,
@@ -293,6 +311,9 @@ device_callbacks gps_getCallbacks() {
 	return cb;
 }
 
+/*!
+ * @returns Default parameters for uBlox GPS devices
+ */
 gps_params gps_getParams() {
 	gps_params gp = {.portName = NULL,
 	                 .sourceNum = SLSOURCE_GPS,
@@ -303,6 +324,11 @@ gps_params gps_getParams() {
 	return gp;
 }
 
+/*!
+ * @param[in] lta Pointer to log_thread_args_t
+ * @param[in] s Pointer to config_section to be parsed
+ * @returns True on success, false on error
+ */
 bool gps_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (lta->dParams) {
 		log_error(lta->pstate, "[GPS:%s] Refusing to reconfigure", lta->tag);

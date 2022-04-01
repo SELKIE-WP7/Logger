@@ -10,6 +10,8 @@
 #include "SELKIELoggerBase.h"
 #include "SELKIELoggerN2K.h"
 
+//! @file
+
 /*!
  * @addtogroup loggerN2K Logger: N2K Support
  * @ingroup logger
@@ -21,12 +23,12 @@
  * @{
  */
 
-#define N2KCHAN_NAME   SLCHAN_NAME
-#define N2KCHAN_MAP    SLCHAN_MAP
-#define N2KCHAN_TSTAMP SLCHAN_TSTAMP
-#define N2KCHAN_RAW    SLCHAN_RAW
-#define N2KCHAN_LAT    4
-#define N2KCHAN_LON    5
+#define N2KCHAN_NAME   SLCHAN_NAME   //!< Source name
+#define N2KCHAN_MAP    SLCHAN_MAP    //!< Channel map
+#define N2KCHAN_TSTAMP SLCHAN_TSTAMP //!< Timestamps
+#define N2KCHAN_RAW    SLCHAN_RAW    //!< Raw data (recorded unmodified)
+#define N2KCHAN_LAT    4             //!< Latitude (from GPS)
+#define N2KCHAN_LON    5             //!< Longitude (from GPS)
 
 //! N2K Device specific parameters
 typedef struct {

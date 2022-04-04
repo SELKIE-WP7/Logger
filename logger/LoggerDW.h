@@ -13,7 +13,7 @@
  * @addtogroup loggerDW Logger: Datawell WaveBuoy / Receiver support
  * @ingroup logger
  *
- * Adds support for reading data from Datawell Wavebuoys in HVX format
+ * Adds support for reading data from Datawell Wavebuoys in HXV format
  *
  * @{
  */

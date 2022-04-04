@@ -37,7 +37,7 @@
 typedef enum dw_types {
 	DW_TYPE_UNKNOWN = -1,
 	DW_TYPE_HVA = 0,
-	DW_TYPE_HVX,
+	DW_TYPE_HXV,
 	DW_TYPE_BVA,
 } dw_types;
 
@@ -68,7 +68,7 @@ typedef struct dw_bva {
 } dw_bva;
 
 /*!
- * @brief Internal representation of a Datawell HVX message
+ * @brief Internal representation of a Datawell HXV message
  *
  * Transmitted as text, terminated by a carriage return (not stored).
  *

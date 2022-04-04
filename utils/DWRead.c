@@ -11,7 +11,7 @@
 
 /*!
  * @file
- * @brief Read messages from Datawell HVX file
+ * @brief Read messages from Datawell HXV file
  * @ingroup Executables
  */
 
@@ -19,7 +19,7 @@
 #define BUFSIZE 1024
 
 /*!
- * Reads messages from a HVX file (or equivalent data extracted from a
+ * Reads messages from a HXV file (or equivalent data extracted from a
  * SELKIELogger data file) and prints out a simple representation.
  *
  * @param[in] argc Argument count
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 	char *usage = "Usage: %1$s [-v] [-q] [-x] datfile\n"
 		      "\t-v\tIncrease verbosity\n"
 		      "\t-q\tDecrease verbosity\n"
-		      "\t-x\tInput file is in HVX format\n"
+		      "\t-x\tInput file is in HXV format\n"
 		      "\nVersion: " GIT_VERSION_STRING "\n";
 
 	opterr = 0; // Handle errors ourselves
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 				state.verbose--;
 				break;
 			case 'x':
-				inputType = DW_TYPE_HVX;
+				inputType = DW_TYPE_HXV;
 				break;
 			case '?':
 				log_error(&state, "Unknown option `-%c'", optopt);
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
 		size_t end = hw;
 		dw_hxv tmp = {0};
 		switch (inputType) {
-			case DW_TYPE_HVX:
+			case DW_TYPE_HXV:
 				// Read HXV
 				if (dw_string_hxv(buf, &end, &tmp)) {
 					cycdata[cycCount++] = dw_hxv_cycdat(&tmp);

@@ -29,7 +29,8 @@ extern atomic_bool pauseLog;
 //! Set safe shutdown flag
 void signalShutdown(int signnum);
 
-//! Set log rotate flag void signalRotate(int signnum);
+//! Set log rotate flag
+void signalRotate(int signnum);
 
 //! Set logger pause flag
 void signalPause(int signnum);

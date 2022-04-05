@@ -51,9 +51,13 @@ bool mp_readMessage(int handle, msg_t *out) {
 }
 
 /*!
- * This function maintains a static internal message buffer, filling it from
- * the file handle provided. This handle can be anything supported by read(),
- * but would usually be a file or a serial port.
+ * This function maintains a message buffer (allocated by the caller), filling
+ * it from the file handle provided. This handle can be anything supported by
+ * read(), but would usually be a file or a serial port.
+ *
+ * The index (current search position) and hw (high water / end of valid data)
+ * values are also provided by the caller, but will be updated by this
+ * function.
  *
  * If a valid message is found then it is written to the structure provided as
  * a parameter and the function returns true.
@@ -73,7 +77,6 @@ bool mp_readMessage(int handle, msg_t *out) {
  * @param[in,out] index Current search position within `buf`
  * @param[in,out] hw End of current valid data in `buf`
  * @return True if out now contains a valid message, false otherwise.
- *
  */
 bool mp_readMessage_buf(int handle, msg_t *out, uint8_t buf[MP_SERIAL_BUFF], int *index, int *hw) {
 	int ti = 0;
@@ -455,6 +458,7 @@ void mp_pack_numarray(msgpack_packer *pack, const size_t entries, const float *f
  *
  * @param[in] sa  Pointer to string array to be updated
  * @param[in] obj MessagePacked array
+ * @return True on success, False on error
  */
 bool mp_unpack_strarray(strarray *sa, msgpack_object_array *obj) {
 	const int nEntries = obj->size;

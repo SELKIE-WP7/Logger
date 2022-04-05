@@ -3,6 +3,14 @@
 
 #include "DWTypes.h"
 
+/*!
+ * Character array pointed to by `in` must contain at least two characters
+ * (i.e. char[1] must be a valid read).
+ *
+ * @param[in] in Input string containing two hexadecimal characters
+ * @param[out] out Pointer to output variable. Zeroed for error cases.
+ * @return True on success, false on error.
+ */
 bool hexpair_to_uint(const char *in, uint8_t *out) {
 	if (in == NULL || out == NULL) { return false; }
 
@@ -46,6 +54,21 @@ bool hexpair_to_uint(const char *in, uint8_t *out) {
 	return true;
 }
 
+/*!
+ * Read up to `end` characters from `in` and populate the dw_hxv structure
+ * pointed to by `out`.
+ *
+ * Looks for a carriage return character to mark the end of a line, then
+ * attempts to read a HXV line from the data immediately preceding it.
+ *
+ * The `data` parameter initially indicates the number of characters available,
+ * and will be set to the number of characters read at exit.
+ *
+ * @param[in] in Pointer to character array containing input data
+ * @param[in,out] end Data length/position marker
+ * @param[out] out Pointer to dw_hxv structure to fill
+ * @return True on success, false on error.
+ */
 bool dw_string_hxv(const char *in, size_t *end, dw_hxv *out) {
 	if (in == NULL || out == NULL || (*end) < 25) { return false; }
 

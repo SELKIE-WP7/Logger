@@ -15,14 +15,28 @@
  * @{
  */
 
+//! Extract cyclic data word from HXV input line
 uint16_t dw_hxv_cycdat(const dw_hxv *in);
+
+//! Extract vertical displacement component from HXV input line
 int16_t dw_hxv_vertical(const dw_hxv *in);
+
+//! Extract north displacement component from HXV input line
 int16_t dw_hxv_north(const dw_hxv *in);
+
+//! Extract west displacement component from HXV input line
 int16_t dw_hxv_west(const dw_hxv *in);
+
+//! Extract parity word from HXV input line
 uint16_t dw_hxv_parity(const dw_hxv *in);
 
+//! Populate dw_spectrum from array of cyclic data words
 bool dw_spectrum_from_array(const uint16_t *arr, dw_spectrum *out);
+
+//! Populate a specific component of dw_spectrum from array of cyclic data words
 bool dw_spectral_block(const uint16_t *arr, const int ix, dw_spectrum *out);
+
+//! Extract system data from array of cyclic data words
 bool dw_system_from_array(const uint16_t *arr, dw_system *out);
 //! @}
 #endif

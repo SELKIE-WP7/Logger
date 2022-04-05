@@ -6,9 +6,18 @@
 #include "N2KTypes.h"
 #include "SELKIELoggerBase.h"
 
+/*!
+ * @file N2KConnection.h N2K connection handling
+ * @ingroup SELKIELoggerN2K
+ */
+
+//! Default serial buffer allocation size
 #define N2K_BUFF 1024
 
+//! Open connection to an N2K serial device
 int n2k_openConnection(const char *device, const int baud);
+
+//! Close N2K serial connection
 void n2k_closeConnection(int handle);
 
 //! Static wrapper around n2k_readMessage_buf

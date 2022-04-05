@@ -6,10 +6,20 @@
 #include "N2KMessages.h"
 #include "N2KTypes.h"
 
+/*!
+ * @param[in] n N2K message containing target daat
+ * @param[in] offset Starting offset within n2k_act_message.data
+ * @returns Unsigned byte
+ */
 uint8_t n2k_get_uint8(const n2k_act_message *n, size_t offset) {
 	return n->data[offset];
 }
 
+/*!
+ * @param[in] n N2K message containing target daat
+ * @param[in] offset Starting offset within n2k_act_message.data
+ * @returns Signed byte
+ */
 int8_t n2k_get_int8(const n2k_act_message *n, size_t offset) {
 	uint8_t u = n2k_get_uint8(n, offset);
 	int8_t v = (u & 0x7F);
@@ -17,6 +27,11 @@ int8_t n2k_get_int8(const n2k_act_message *n, size_t offset) {
 	return v;
 }
 
+/*!
+ * @param[in] n N2K message containing target daat
+ * @param[in] offset Starting offset within n2k_act_message.data
+ * @returns Signed 16-bit integer
+ */
 int16_t n2k_get_int16(const n2k_act_message *n, size_t offset) {
 	uint16_t u = n2k_get_uint16(n, offset);
 	int16_t v = (u & 0x7FFF);
@@ -24,10 +39,20 @@ int16_t n2k_get_int16(const n2k_act_message *n, size_t offset) {
 	return v;
 }
 
+/*!
+ * @param[in] n N2K message containing target daat
+ * @param[in] offset Starting offset within n2k_act_message.data
+ * @returns Unsigned 16-bit integer
+ */
 uint16_t n2k_get_uint16(const n2k_act_message *n, size_t offset) {
 	return n->data[offset] + (n->data[offset + 1] << 8);
 }
 
+/*!
+ * @param[in] n N2K message containing target daat
+ * @param[in] offset Starting offset within n2k_act_message.data
+ * @returns Signed 32-bit integer
+ */
 int32_t n2k_get_int32(const n2k_act_message *n, size_t offset) {
 	uint32_t u = n2k_get_uint32(n, offset);
 	int32_t v = (u & 0x7FFFFFFFUL);
@@ -37,12 +62,25 @@ int32_t n2k_get_int32(const n2k_act_message *n, size_t offset) {
 	return v;
 }
 
+/*!
+ * @param[in] n N2K message containing target daat
+ * @param[in] offset Starting offset within n2k_act_message.data
+ * @returns Unsigned 32-bit integer
+ */
 uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset) {
 	uint32_t v = n->data[offset] + (uint32_t)(n->data[offset + 1] << 8) + (uint32_t)(n->data[offset + 2] << 16) +
 	             (uint32_t)(n->data[offset + 3] << 24);
 	return v;
 }
 
+/*!
+ * @param[in] n Input message
+ * @param[out] seq Sequence number
+ * @param[out] yaw Device yaw, in degrees
+ * @param[out] pitch Device pitch, in degrees
+ * @param[out] roll Device roll, in degrees
+ * @returns True on success, false on error
+ */
 bool n2k_127257_values(const n2k_act_message *n, uint8_t *seq, double *yaw, double *pitch, double *roll) {
 	if (n->PGN != 127257 || !n->data || n->datalen < 7) { return false; }
 	if (seq) { *seq = n2k_get_uint8(n, 0); }
@@ -77,6 +115,12 @@ bool n2k_127257_values(const n2k_act_message *n, uint8_t *seq, double *yaw, doub
 	return success;
 }
 
+/*!
+ * @param[in] n Input message
+ * @param[out] lat GPS Latitude
+ * @param[out] lon GPS Longitude
+ * @returns True on success, false on error
+ */
 bool n2k_129025_values(const n2k_act_message *n, double *lat, double *lon) {
 	if (n->PGN != 129025 || !n->data || n->datalen < 8) { return false; }
 	if (lat) {
@@ -98,6 +142,14 @@ bool n2k_129025_values(const n2k_act_message *n, double *lat, double *lon) {
 	return !(isnan(*lat) || isnan(*lon));
 }
 
+/*!
+ * @param[in] n Input message
+ * @param[out] seq Sequence number
+ * @param[out] mag Orientation reference flag (2 bits)
+ * @param[out] course Device course, in degrees
+ * @param[out] speed Device speed in m/s
+ * @returns True on success, false on error
+ */
 bool n2k_129026_values(const n2k_act_message *n, uint8_t *seq, uint8_t *mag, double *course, double *speed) {
 	if (n->PGN != 129026 || !n->data || n->datalen < 8) { return false; }
 	if (seq) { *seq = n2k_get_uint8(n, 0); }
@@ -125,6 +177,14 @@ bool n2k_129026_values(const n2k_act_message *n, uint8_t *seq, uint8_t *mag, dou
 	return success;
 }
 
+/*!
+ * @param[in] n Input message
+ * @param[out] seq Sequence number
+ * @param[out] ref Reference frame flag (3 bits)
+ * @param[out] speed Wind speed in m/s
+ * @param[out] angle Wind direction, in degrees
+ * @returns True on success, false on error
+ */
 bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, double *speed, double *angle) {
 	if (n->PGN != 130306 || !n->data || n->datalen < 8) { return false; }
 
@@ -155,6 +215,9 @@ bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, dou
 	return success;
 }
 
+/*!
+ * @param[in] n Input message
+ */
 void n2k_127257_print(const n2k_act_message *n) {
 	if (!n) { return; }
 
@@ -167,6 +230,9 @@ void n2k_127257_print(const n2k_act_message *n) {
 	fprintf(stdout, "Pitch: %.3lf, Roll: %.3lf, Yaw: %.3lf. Seq. ID: %03d\n", pitch, roll, yaw, seq);
 }
 
+/*!
+ * @param[in] n Input message
+ */
 void n2k_129025_print(const n2k_act_message *n) {
 	double lat = 0;
 	double lon = 0;
@@ -175,6 +241,9 @@ void n2k_129025_print(const n2k_act_message *n) {
 	fprintf(stdout, "GPS Position: %lf, %lf\n", lat, lon);
 }
 
+/*!
+ * @param[in] n Input message
+ */
 void n2k_129026_print(const n2k_act_message *n) {
 	uint8_t seq = 0;
 	uint8_t magnetic = 0;
@@ -198,6 +267,9 @@ void n2k_129026_print(const n2k_act_message *n) {
 	fprintf(stdout, "Speed: %.2lf @ %.3lf degrees [%s]. Seq. ID %03d\n", speed, course, magStr, seq);
 }
 
+/*!
+ * @param[in] n Input message
+ */
 void n2k_130306_print(const n2k_act_message *n) {
 	uint8_t seq = 0;
 	double speed = 0;

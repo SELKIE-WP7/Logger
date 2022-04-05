@@ -66,6 +66,7 @@ float i2c_ads1015_pga_to_scale_factor(const uint16_t config) {
  * @param[in] devAddr I2C Address for an ADS1015 sensor
  * @param[in] mux ADS1015_CONFIG_MUX_ constant to select measurement to be performed
  * @param[in] pga ADS1015_CONFIG_PGA_ constant to determine measurement range
+ * @returns MUX voltage value
  */
 float i2c_ads1015_read_mux(const int busHandle, const int devAddr, const uint16_t mux, const uint16_t pga) {
 	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) { return NAN; }

@@ -20,6 +20,9 @@
  * Always outputs to stderr in addition to any configured log file.
  *
  * Cannot be silenced by runtime configuration.
+ *
+ * @param[in] s program_state, used for state and configuration details
+ * @param[in] format printf compatible format string
  */
 void log_error(const program_state *s, const char *format, ...) {
 	va_list args;
@@ -56,6 +59,9 @@ void log_error(const program_state *s, const char *format, ...) {
  * Always outputs to stderr in addition to any configured log file.
  *
  * Cannot be silenced by runtime configuration.
+ *
+ * @param[in] s program_state, used for state and configuration details
+ * @param[in] format printf compatible format string
  */
 void log_warning(const program_state *s, const char *format, ...) {
 	va_list args;
@@ -91,6 +97,10 @@ void log_warning(const program_state *s, const char *format, ...) {
  *
  * The level is compared to the current verbosity to determine if messages are
  * output to stdout, file, or both.
+ *
+ * @param[in] s program_state, used for state and configuration details
+ * @param[in] level Detail/Verbosity level for this message
+ * @param[in] format printf compatible format string
  */
 void log_info(const program_state *s, const int level, const char *format, ...) {
 	va_list args;
@@ -170,6 +180,10 @@ FILE *openSerialNumberedFile(const char *prefix, const char *extension, char **n
 	return NULL;
 }
 
+/*!
+ * Ensure dynamically allocated program_state members are freed.
+ * @param[in] s program_state to be destroyed
+ */
 void destroy_program_state(program_state *s) {
 	if (s->log) { fclose(s->log); }
 	s->log = NULL;

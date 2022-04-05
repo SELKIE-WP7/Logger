@@ -149,6 +149,7 @@ void ubx_print_hex(const ubx_message *msg) {
  *
  * @param[in] msg UBX Message to decode (must be NAV-PVT)
  * @param[out] out Pointer to output message (allocated by caller)
+ * @return True on success, false on error
  */
 bool ubx_decode_nav_pvt(const ubx_message *msg, ubx_nav_pvt *out) {
 	if (out == NULL || msg == NULL) { return false; }

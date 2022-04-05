@@ -14,6 +14,7 @@
  * @addtogroup SELKIELoggerNMEA
  * @{
  */
+//! Default serial buffer allocation size.
 #define NMEA_SERIAL_BUFF 1024
 
 //! Set up a connection to the specified port

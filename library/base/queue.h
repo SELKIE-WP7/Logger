@@ -17,28 +17,38 @@
  * @{
  */
 
+//! Each queue item is a message and pointer to the next queue entry, if any.
 typedef struct queueitem queueitem;
 
-//! Represent a simple FIFO message queue
-struct msgqueue {
-	queueitem *head; //!< Points to first message, or NULL if empty
+/*!
+ * @brief Represent a simple FIFO message queue
+ *
+ * Represents a queue of items starting at msgqueue.head, with the last item at or near msgqueue.tail.
+ *
+ * The queue is protected by the mutex at msgqueue.lock, and will only have
+ * items added and removed while msgqueue.valid remains true.
+ */
+typedef struct msgqueue {
+	queueitem *head;      //!< Points to first message, or NULL if empty
+	queueitem *tail;      //!< brief Tail entry hint
+	pthread_mutex_t lock; //!< Queue lock
+	bool valid;           //!< Queue status
+} msgqueue;
 
-	//! @brief Tail entry hint
-	queueitem *tail;
-	//! Queue lock
-	pthread_mutex_t lock;
-	//! Set in queue_init(), entries will only be added and removed while this remains
-	//! true
-	bool valid;
-};
-
-typedef struct msgqueue msgqueue;
-
-//! Each queue item is a message and pointer to the next queue entry, if any.
-//! @sa msg_t
+/*!
+ * @copybrief queueitem
+ *
+ * If *next is NULL, it will be assumed that this item is the end of the queue.
+ *
+ * Messages pointed to by queueitem.item "belong" to the queue until popped,
+ * when they are then the responsibility of queue_pop()'s caller. Messages
+ * pointed to by queueitem.item **must** be dynamically allocated.
+ *
+ * @sa msg_t
+ */
 struct queueitem {
-	msg_t *item;
-	queueitem *next;
+	msg_t *item;     //!< Queued message
+	queueitem *next; //!< Pointer to next item, or NULL for queue tail
 };
 
 //! Ensure queue structure is set to known good values and marked valid

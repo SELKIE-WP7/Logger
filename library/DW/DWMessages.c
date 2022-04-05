@@ -4,10 +4,18 @@
 #include "DWMessages.h"
 #include "DWTypes.h"
 
+/*!
+ * @param[in] in HXV data line
+ * @return Cyclic data word
+ */
 uint16_t dw_hxv_cycdat(const dw_hxv *in) {
 	return (in->data[0] << 8) + in->data[1];
 }
 
+/*!
+ * @param[in] in HXV data line
+ * @return Vertical displacement component in cm
+ */
 int16_t dw_hxv_vertical(const dw_hxv *in) {
 	// 12 bits, but stored left aligned in 2 and 3
 	// High byte goes left 4 (left 8 then right 4)
@@ -17,22 +25,45 @@ int16_t dw_hxv_vertical(const dw_hxv *in) {
 	return vert;
 }
 
+/*!
+ * @param[in] in HXV data line
+ * @return Northerly displacement component in cm
+ */
 int16_t dw_hxv_north(const dw_hxv *in) {
 	int16_t north = ((in->data[3] & 0x07) << 8) + in->data[4];
 	if (in->data[3] & 0x08) { north *= -1; }
 	return north;
 }
 
+/*!
+ * @param[in] in HXV data line
+ * @return Westerly displacement component in cm
+ */
 int16_t dw_hxv_west(const dw_hxv *in) {
 	int16_t west = ((in->data[5] & 0x7F) << 4) + ((in->data[6] & 0xF0) >> 4);
 	if (in->data[5] & 0x80) { west *= -1; }
 	return west;
 }
 
+/*!
+ * @param[in] in HXV data line
+ * @return HXV Line parity component
+ */
 uint16_t dw_hxv_parity(const dw_hxv *in) {
 	return ((in->data[6] & 0x0F) << 8) + in->data[7];
 }
 
+/*!
+ * Populate a dw_spectrum structure using the data from an array of cyclic
+ * data words.
+ *
+ * Calls dw_spectral_block() to fill data for each of the 4 frequency
+ * components contained within this set of data.
+ *
+ * @param[in] arr Cyclic data words
+ * @param[out] out Pointer to dw_spectrum structure to populate
+ * @return True on success, False on error
+ */
 bool dw_spectrum_from_array(const uint16_t *arr, dw_spectrum *out) {
 	if (arr == NULL || out == NULL) { return false; }
 
@@ -46,6 +77,15 @@ bool dw_spectrum_from_array(const uint16_t *arr, dw_spectrum *out) {
 	return false;
 }
 
+/*!
+ * Populate spectral parameters in a dw_spectrum structure for one of the four
+ * frequency components present in this block of cyclic data.
+ *
+ * @param[in] arr Cyclic data words
+ * @param[in] ix Component index to complete [0..3]
+ * @param[out] out Pointer to dw_spectrum structure to populate
+ * @return True on success, False on error
+ */
 bool dw_spectral_block(const uint16_t *arr, const int ix, dw_spectrum *out) {
 	if (ix < 0 || ix > 3) { return false; }
 
@@ -70,6 +110,14 @@ bool dw_spectral_block(const uint16_t *arr, const int ix, dw_spectrum *out) {
 	return true;
 }
 
+/*!
+ * Populate a dw_system structure using the data from an array of system
+ * data words.
+ *
+ * @param[in] arr System data words
+ * @param[out] out Pointer to dw_system structure to populate
+ * @return True on success, False on error
+ */
 bool dw_system_from_array(const uint16_t *arr, dw_system *out) {
 	if (arr == NULL || out == NULL) { return false; }
 

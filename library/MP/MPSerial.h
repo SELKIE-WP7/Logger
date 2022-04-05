@@ -16,6 +16,8 @@
  */
 
 #include "MPTypes.h"
+
+//! Default serial buffer allocation size
 #define MP_SERIAL_BUFF 4096
 
 //! Set up a connection to the specified port

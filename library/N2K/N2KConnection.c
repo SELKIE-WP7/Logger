@@ -8,15 +8,26 @@
 
 #include "SELKIELoggerBase.h"
 
+/*!
+ * Delegates to openSerialConnection() to open the serial device.
+ *
+ * @param[in] device Path to device to open
+ * @param[in] baud Baud rate to connect with (as integer)
+ * @returns Status of openSerialConnection() call
+ */
 int n2k_openConnection(const char *device, const int baud) {
 	if (device == NULL) { return -1; }
 	return openSerialConnection(device, baud);
 }
 
+/*!
+ * @param[in] handle File handle from n2k_openConnection()
+ */
 void n2k_closeConnection(int handle) {
 	errno = 0;
 	close(handle);
 }
+
 /*!
  * For single threaded development and testing, uses static variables rather
  * than requiring state to be tracked by caller.

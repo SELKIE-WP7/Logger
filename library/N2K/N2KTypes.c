@@ -4,6 +4,17 @@
 
 #include "N2KTypes.h"
 
+/*!
+ * Allocates an array of bytes and converts n2k_act_message into a
+ * transmittable series of bytes
+ *
+ * Array will need to be freed by caller
+ *
+ * @param[in] act n2k_act_message to be packed
+ * @param[out] out Pointer to array of bytes
+ * @param[out] len Will be set to message length after conversion
+ * @returns True on success, false on error
+ */
 bool n2k_act_to_bytes(const n2k_act_message *act, uint8_t **out, size_t *len) {
 	if (act == NULL || out == NULL || len == NULL) { return false; }
 
@@ -40,6 +51,17 @@ bool n2k_act_to_bytes(const n2k_act_message *act, uint8_t **out, size_t *len) {
 	return true;
 }
 
+/*!
+ *
+ * Will allocate an n2k_act_message for output, which must be freed by caller.
+ *
+ * @param[in] in Array of bytes
+ * @param[in] len Number of bytes available in array
+ * @param[out] msg Pointer to n2k_act_message pointer for output
+ * @param[out] pos Number of bytes consumed
+ * @param[in] debug Set true for more verbose output
+ * @returns True on success, false on error
+ */
 bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **msg, size_t *pos, bool debug) {
 	if (in == NULL || msg == NULL || len < 18 || pos == NULL) { return NULL; }
 
@@ -194,6 +216,10 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 	return true;
 }
 
+/*!
+ * @param[in] msg ntk_act_message input
+ * @returns Unsigned byte containing checksum value
+ */
 uint8_t n2k_act_checksum(const n2k_act_message *msg) {
 	uint8_t csum = ACT_N2K;
 	csum += msg->length;
@@ -216,6 +242,11 @@ uint8_t n2k_act_checksum(const n2k_act_message *msg) {
 	return 256 - csum;
 }
 
+/*!
+ * Prints message as a sequence of bytes in hexadecimal form.
+ *
+ * @param[in] msg n2k_act_message to be printed
+ */
 void n2k_act_print(const n2k_act_message *msg) {
 	uint8_t *tmp = NULL;
 	size_t len = 0;

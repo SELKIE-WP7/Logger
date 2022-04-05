@@ -38,7 +38,6 @@ bool queue_init(msgqueue *queue) {
  * Any remaining items are removed from the queue and destroyed.
  *
  * @param[in] queue Pointer to queue structure to be destroyed
- * @return True on success, false otherwise
  */
 void queue_destroy(msgqueue *queue) {
 	queue->valid = false;

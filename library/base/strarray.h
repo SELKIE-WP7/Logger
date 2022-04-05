@@ -19,6 +19,7 @@ typedef struct {
 	char *data;    //!< Character array, should be null terminated.
 } string;
 
+//! Array of strings
 typedef struct {
 	int entries;     //!< Maximum number of strings in array, set when calling sa_new()
 	string *strings; //!< Simple array of string structures.

@@ -6,6 +6,15 @@
 
 #include "SELKIELoggerBase.h"
 
+/*!
+ * Connects to the specified host and port, then configures it based on the configuration in an mqtt_queue_map instance.
+ * Sets mqtt_enqueue_messages as the callback for new messages and starts the mosquitto event loop.
+ *
+ * @param[in] host Hostname or IP address (as string)
+ * @param[in] port Port number
+ * @param[in] qm mqtt_queue_map instance to use for configuration
+ * @return Pointer to mqtt_conn structure on success, NULL on error
+ */
 mqtt_conn *mqtt_openConnection(const char *host, const int port, mqtt_queue_map *qm) {
 	if (host == NULL || qm == NULL || port < 0) { return NULL; }
 
@@ -38,12 +47,26 @@ mqtt_conn *mqtt_openConnection(const char *host, const int port, mqtt_queue_map 
 	return conn;
 }
 
+/*!
+ * Disconnects from server (if still connected), stops the mosquitto event loop
+ * and frees resources associated with the connection.
+ *
+ * @param[in,out] conn Connection to close out
+ */
 void mqtt_closeConnection(mqtt_conn *conn) {
 	mosquitto_disconnect(conn);
 	mosquitto_loop_stop(conn, true);
 	mosquitto_destroy(conn);
 }
 
+/*!
+ * Subscribes to all configured topics in an mqtt_queue_map using
+ * mosquitto_subscribe_multiple (if available) or by falling back to placing
+ * multiple individual subscription requests if not.
+ * @param[in] conn Pointer to MQTT Connection structure
+ * @param[in] qm Pointer to mqtt_queue_map
+ * @return True on success, false on error
+ */
 bool mqtt_subscribe_batch(mqtt_conn *conn, mqtt_queue_map *qm) {
 	if (conn == NULL || qm == NULL) { return false; }
 #if LIBMOSQUITTO_VERSION_NUMBER > 1006000
@@ -75,6 +98,21 @@ bool mqtt_subscribe_batch(mqtt_conn *conn, mqtt_queue_map *qm) {
 	return true;
 }
 
+/*!
+ * Registered with mosquitto as a message callback by mqtt_openConnection and
+ * called by the mosquitto event loop for every message matching our
+ * subscriptions.
+ *
+ * If mqtt_queue_map.dumpall is true, messages not matching a configured topic
+ * will be queued under SLCHAN_RAW as strings with the format "topic: payload".
+ * Otherwise they will be ignored.
+ *
+ * Zero length messages are never queued.
+ *
+ * @param[in] conn Pointer to MQTT Connection structure
+ * @param[in] userdat_qm mqtt_queue_map - passed as void pointer by mosquitto library
+ * @param[in] inmsg Incoming message
+ */
 void mqtt_enqueue_messages(mqtt_conn *conn, void *userdat_qm, const struct mosquitto_message *inmsg) {
 	mqtt_queue_map *qm = (mqtt_queue_map *)(userdat_qm);
 
@@ -119,6 +157,15 @@ void mqtt_enqueue_messages(mqtt_conn *conn, void *userdat_qm, const struct mosqu
 	return;
 }
 
+/*!
+ * Sends a keepalive request for all configured topics in the format required
+ * for Victron MQTT systems.
+ *
+ * @param[in] conn Pointer to MQTT Connection structure
+ * @param[in] qm Pointer to mqtt_queue_map
+ * @param[in] sysid System serial number
+ * @return True on success, false on error
+ */
 bool mqtt_victron_keepalive(mqtt_conn *conn, mqtt_queue_map *qm, char *sysid) {
 	if (sysid == NULL || qm == NULL || conn == NULL) { return false; }
 	// R/<sysid>/keepalive

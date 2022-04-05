@@ -9,7 +9,10 @@
 
 #ifndef F_VERSION_H
 #define F_VERSION_H
+//! Git version description
 #define GIT_VERSION_STRING "@VERSION_STRING@"
+//! Git branch name
 #define GIT_BRANCH "@GIT_BRANCH@"
+//! CMake Project Version
 #define PROJECT_VERSION "@PROJECT_VERSION@"
 #endif

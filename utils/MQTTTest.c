@@ -23,7 +23,7 @@ bool shutdown = false;
 
 /*!
  * Signal handler - sets shutdown flag
- *
+ * @internal
  * @param[in] signnum Signal number (ignored)
  */
 void signalShutdown(int signnum __attribute__((unused))) {

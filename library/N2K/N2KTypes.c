@@ -80,22 +80,21 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 		 * the end of the search (len-18), so the caller knows what can
 		 * be discarded.
 		 */
-		if (debug) {
-			fprintf(stderr, "N2K: No start marker found\n");
-		}
+		if (debug) { fprintf(stderr, "N2K: No start marker found\n"); }
 		return false;
 	}
 	if ((len - start) < in[start + 3]) {
 		// Message claims to be larger than available data, so leave
 		// (*pos) where it is and return false until we get more data
-		if (debug) {
-			fprintf(stderr, "N2K: Insufficient data\n");
-		}
+		if (debug) { fprintf(stderr, "N2K: Insufficient data\n"); }
 		return false;
 	}
 
 	(*msg) = calloc(1, sizeof(n2k_act_message));
-	if ((*msg) == NULL) { perror("n2k_act_from_bytes"); return false; }
+	if ((*msg) == NULL) {
+		perror("n2k_act_from_bytes");
+		return false;
+	}
 
 	(*msg)->length = in[start + 3];
 	(*msg)->priority = in[start + 4];
@@ -118,9 +117,7 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 		free(*msg);
 		(*msg) = NULL;
 		// Don't update *pos
-		if (debug) {
-			fprintf(stderr, "N2K: Insufficient data to read in message content\n");
-		}
+		if (debug) { fprintf(stderr, "N2K: Insufficient data to read in message content\n"); }
 		return false;
 	}
 
@@ -148,9 +145,7 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 				free((*msg)->data);
 				free(*msg);
 				(*msg) = NULL;
-				if (debug) {
-					fprintf(stderr, "N2K: Premature Termination\n");
-				}
+				if (debug) { fprintf(stderr, "N2K: Premature Termination\n"); }
 				return false;
 			} else if (next == ACT_SOT) {
 				// This....probably shouldn't happen.
@@ -159,9 +154,7 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 				free((*msg)->data);
 				free(*msg);
 				(*msg) = NULL;
-				if (debug) {
-					fprintf(stderr, "N2K: Unexpected start of message marker\n");
-				}
+				if (debug) { fprintf(stderr, "N2K: Unexpected start of message marker\n"); }
 				return false;
 			} else {
 				// Any other ESC + character sequence here is invalid
@@ -181,9 +174,7 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 			free((*msg)->data);
 			free(*msg);
 			(*msg) = NULL;
-			if (debug) {
-				fprintf(stderr, "N2K: Out of data while parsing\n");
-			}
+			if (debug) { fprintf(stderr, "N2K: Out of data while parsing\n"); }
 			return false;
 		}
 	}

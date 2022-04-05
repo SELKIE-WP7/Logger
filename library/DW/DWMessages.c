@@ -47,6 +47,8 @@ bool dw_spectrum_from_array(const uint16_t *arr, dw_spectrum *out) {
 }
 
 bool dw_spectral_block(const uint16_t *arr, const int ix, dw_spectrum *out) {
+	if (ix < 0 || ix > 3) { return false; }
+
 	out->frequencyBin[ix] = (arr[2 + 4 * ix] & 0x3F00) >> 8;
 	if (out->frequencyBin[ix] > 63) { return false; }
 

@@ -46,6 +46,9 @@ install(TARGETS ExtractSource RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPON
 add_executable(DWRead DWRead.c)
 target_link_libraries(DWRead PUBLIC SELKIELoggerBase SELKIELoggerDW)
 install(TARGETS DWRead RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion) # In the absence of a better group
+if (CODE_COVERAGE)
+	target_code_coverage(DWRead AUTO ALL ARGS -x ${PROJECT_SOURCE_DIR}/tests/DWTestSample.hxv COVERAGE_TARGET_NAME DWReadTest)
+endif()
 
 add_executable(MQTTTest MQTTTest.c)
 target_link_libraries(MQTTTest PUBLIC SELKIELoggerBase SELKIELoggerMQTT)

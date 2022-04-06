@@ -15,7 +15,7 @@ function(instrumented testname command)
 		add_test(NAME MemCheck:${testname} COMMAND ${vgcomm})
 	endif()
 	if (CODE_COVERAGE)
-		target_code_coverage(${testname})
+		target_code_coverage(${testname} AUTO ALL ARGS ${ARGN})
 	endif()
 endfunction(instrumented)
 
@@ -37,11 +37,11 @@ set_property(TEST MPMessagesFromFile PROPERTY PASS_REGULAR_EXPRESSION "90 messag
 
 add_executable(QueueTest QueueTest.c)
 target_link_libraries(QueueTest PUBLIC SELKIELoggerBase)
-add_test(NAME QueueTest COMMAND QueueTest)
+instrumented(QueueTest QueueTest)
 
 add_executable(SATests SATests.c)
 target_link_libraries(SATests PUBLIC SELKIELoggerBase)
-add_test(NAME SATests COMMAND SATests)
+instrumented(SATests SATests)
 
 add_executable(MPTests MPTests.c)
 target_link_libraries(MPTests PUBLIC SELKIELoggerBase SELKIELoggerMP)

@@ -42,6 +42,9 @@ install(TARGETS ExtractSatInfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPO
 add_executable(ExtractSource ExtractSource.c)
 target_link_libraries(ExtractSource PUBLIC SELKIELoggerBase SELKIELoggerMP)
 install(TARGETS ExtractSource RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
+if (CODE_COVERAGE)
+	target_code_coverage(ExtractSource AUTO ALL ARGS -r -S 0x30 -f -o ${PROJECT_BINARY_DIR}/tests/mpTestSampleExtracted.dat  ${PROJECT_SOURCE_DIR}/tests/mpTestSample.dat  COVERAGE_TARGET_NAME ExtractSourceTest)
+endif()
 
 add_executable(DWRead DWRead.c)
 target_link_libraries(DWRead PUBLIC SELKIELoggerBase SELKIELoggerDW)

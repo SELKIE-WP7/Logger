@@ -4,6 +4,22 @@
 
 #include "DWTypes.h"
 
+/*! @file
+ *
+ * @brief Test conversion of hexadecimal character pairs to integers
+ *
+ * @test Pass a selection of known strings to hexpair_to_int() and check that the correct value is
+ * returned
+ *
+ * @ingroup testing
+ */
+
+/*!
+ * Confirm characters passed as input convert to target value.
+ * @param[in] in Hexadecimal character pair
+ * @param[in] target Target integer value
+ * @returns True on success, false on failure
+ */
 bool test(const char *in, const uint8_t target) {
 	uint8_t val = 0;
 	bool res = hexpair_to_uint(in, &val);
@@ -22,6 +38,13 @@ bool test(const char *in, const uint8_t target) {
 	return false;
 }
 
+/*!
+ * Test hexpair_to_uint() for CTest
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns 1 on error, otherwise 0
+ */
 int main(int argc, char *argv[]) {
 	const char *ts1 = "00";
 	const char *ts2 = "01";

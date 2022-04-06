@@ -6,6 +6,21 @@
 #include "DWMessages.h"
 #include "DWTypes.h"
 
+/*! @file
+ *
+ * @brief Test conversion of HXV format data
+ *
+ * @test Pass example HXV strings to dw_string_hxv() and check for failure
+ *
+ * @ingroup testing
+ */
+
+/*!
+ * Convert and print HXV data
+ *
+ * @param[in] in HXV data as string
+ * @returns True on success, false on failure
+ */
 bool test(const char *in) {
 	dw_hxv thxv = {0};
 	size_t slen = strlen(in);
@@ -25,6 +40,14 @@ bool test(const char *in) {
 	return rv;
 }
 
+/*!
+ * Test dw_string_hxv() for CTest
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns 1 on error, otherwise 0
+ *
+ */
 int main(int argc, char *argv[]) {
 	const char *l1 = "0618,B34D,8EE9,2DE4,2F4C\r";
 	const char *l2 = "0424,4CBA,2FC8,2F84,F09E\r";

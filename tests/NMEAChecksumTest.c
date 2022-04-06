@@ -8,13 +8,19 @@
  *
  * @brief Test NMEA Checksum functions
  *
- * Checks that the checksum functions correctly recognise valid and invalid
- * checksums, and that updating an invalid message checksum results in a new
- * and correct checksum.
- *
- * Sample values used have been verified against hardware results.
+ * @test Check that correct and incorrect NMEA checksums are recognised, and
+ * that incorrect checksums can be corrected. Sample values used have been
+ * verified against hardware results.
  *
  * @ingroup testing
+ */
+
+/*!
+ * Check NMEA message checksumming
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns 0 (Pass), -1 (Fail)
  */
 int main(int argc, char *argv[]) {
 	bool passed = true;

@@ -7,19 +7,22 @@
 
 /*! @file UBXMessagesFromFile.c
  *
- * @brief Test reading from a file
+ * @brief Test reading u-Blox GPS messages from a file
  *
+ * @test Read supplied u-Blox GPS messages and output summary information.
+ *
+ * @ingroup testing
+ */
+
+/*!
  * Read data from file until end of file is reached, outputting total number of
  * entries read.
  *
- * Return codes:
- * - 0 for tests passed
- * - -1 for tests failed
- * - -2 for a failure to run the test (system error, unexpected condition etc.)
- *
  * Exact outputs dependent on supplied test data
  *
- * @ingroup testing
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns 0 (Pass), -1 (Fail), -2 (Failed to run / Error)
  */
 int main(int argc, char *argv[]) {
 	if (argc < 2) {

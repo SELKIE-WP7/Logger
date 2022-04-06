@@ -7,7 +7,7 @@
  *
  * @brief Basic Queue testing
  *
- * Creates a queue and several messages, adding and removing them in different
+ * @test Creates a queue and several messages, adding and removing them in different
  * combinations.  The queue length is verified at various points, and messages
  * removed from the queue are checked to ensure ordering is maintained.
  *
@@ -18,13 +18,21 @@
  *
  * @ingroup testing
  */
+
+/*!
+ * Initialise, fill, drain, and destroy queue instance.
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns 0 (Pass), -1 (Fail)
+ */
 int main(int argc, char *argv[]) {
 	msgqueue QT = {0};
 
 	if (!queue_init(&QT)) {
 		fprintf(stderr, "Failed to initialise queue\n");
 		perror("queue_init");
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	int count = queue_count(&QT);
@@ -33,27 +41,27 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Incorrect item count for empty queue (expected 0, got %d)\n",
 		        count);
 		queue_destroy(&QT);
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	fprintf(stdout, "Push initial message...\n");
 	if (!queue_push(&QT, msg_new_float(1, 5, 13.0))) {
 		fprintf(stderr, "Unable to push item to queue\n");
 		perror("queue_push");
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	count = queue_count(&QT);
 	if (count != 1) {
 		fprintf(stderr, "Incorrect item count (expected 1, got %d)\n", count);
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	msg_t *out = queue_pop(&QT);
 	if (out == NULL || out->data.value != 13.0) {
 		fprintf(stderr, "Failed to retrieve initial test message\n.");
 		perror("queue_pop");
-		return EXIT_FAILURE;
+		return -1;
 	}
 	msg_destroy(out);
 	free(out);
@@ -64,40 +72,40 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Incorrect item count for empty queue (expected 0, got %d)\n",
 		        count);
 		queue_destroy(&QT);
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	fprintf(stdout, "Push sequence of messages...\n");
 	if (!queue_push(&QT, msg_new_float(1, 5, 1.0))) {
 		fprintf(stderr, "Unable to push item to queue\n");
 		perror("queue_push");
-		return EXIT_FAILURE;
+		return -1;
 	}
 	if (!queue_push(&QT, msg_new_float(1, 5, 2.0))) {
 		fprintf(stderr, "Unable to push item to queue\n");
 		perror("queue_push");
-		return EXIT_FAILURE;
+		return -1;
 	}
 	if (!queue_push(&QT, msg_new_float(1, 5, 3.0))) {
 		fprintf(stderr, "Unable to push item to queue\n");
 		perror("queue_push");
-		return EXIT_FAILURE;
+		return -1;
 	}
 	if (!queue_push(&QT, msg_new_float(1, 5, 4.0))) {
 		fprintf(stderr, "Unable to push item to queue\n");
 		perror("queue_push");
-		return EXIT_FAILURE;
+		return -1;
 	}
 	if (!queue_push(&QT, msg_new_float(1, 5, 5.0))) {
 		fprintf(stderr, "Unable to push item to queue\n");
 		perror("queue_push");
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	count = queue_count(&QT);
 	if (count != 5) {
 		fprintf(stderr, "Incorrect item count (expected 5, got %d)\n", count);
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	while (count--) {
@@ -106,7 +114,7 @@ int main(int argc, char *argv[]) {
 			fprintf(stderr, "Messages out of order? (Expected value %d, got %.0f)\n",
 			        (5 - count), item->data.value);
 			queue_destroy(&QT);
-			return EXIT_FAILURE;
+			return -1;
 		}
 		msg_destroy(item);
 		free(item);
@@ -115,12 +123,12 @@ int main(int argc, char *argv[]) {
 	count = queue_count(&QT);
 	if (count != 0) {
 		fprintf(stderr, "Incorrect item count (expected 0, got %d)\n", count);
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	if (!queue_push(&QT, msg_new_string(1, 5, 20, "Test Message - 1234"))) {
 		fprintf(stderr, "Unable to push string message to queue");
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	out = queue_pop(&QT);
@@ -136,8 +144,8 @@ int main(int argc, char *argv[]) {
 		        "Incorrect item count for destroyed queue (expected -1 [Error], "
 		        "got %d)\n",
 		        count);
-		return EXIT_FAILURE;
+		return -1;
 	}
 
-	return EXIT_SUCCESS;
+	return 0;
 }

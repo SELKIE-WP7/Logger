@@ -11,16 +11,17 @@
  *
  * @brief Test message creation and destruction
  *
- * This script creates a variety of msg_t objects with different types and values, dumps
+ * @test Create a variety of msg_t objects with different types and values, dump
  * them to file and then recreates them.
- *
- * Return codes:
- *
- * -  0 for tests passed
- * - -1 for tests failed
- * - -2 for a failure to run the test (system error, unexpected condition etc.)
- *
  * @ingroup testing
+ */
+
+/*!
+ * Tests different creation, reading and writing of msg_t structures.
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Arguments
+ * @returns 0 (Pass), -1 (Fail), -2 (Failed to run / Error)
  */
 int main(int argc, char *argv[]) {
 	msg_t *msn = msg_new_string(SLSOURCE_TEST1, SLCHAN_NAME, 22, "Software Test Source 1");

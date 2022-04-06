@@ -222,5 +222,5 @@ int main(int argc, char *argv[]) {
 	fclose(inFile);
 	free(inFileName);
 	destroy_program_state(&state);
-	return 1;
+	return 0;
 }

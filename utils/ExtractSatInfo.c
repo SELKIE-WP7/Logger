@@ -34,22 +34,19 @@ int main(int argc, char *argv[]) {
 	bool clobberOutput = false;
 
 	char *usage =
-		"Usage: %1$s [-v] [-q] [-f] [-z|-Z]  [-o outfile] datfile\n"
+		"Usage: %1$s [-v] [-q] [-f] [-Z]  [-o outfile] DATFILE\n"
 		"\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
 		"\t-f\tOverwrite existing output files\n"
-		"\t-z\tEnable gzipped output\n"
 		"\t-Z\tDisable gzipped output\n"
 		"\t-o\tWrite output to named file\n"
 		"\nVersion: " GIT_VERSION_STRING "\n"
-		"Default options equivalent to:\n"
-		"\t%1$s -z datafile\n"
 		"Output file name will be generated based on input file name and compression flags, unless set by -o option\n";
 
 	opterr = 0; // Handle errors ourselves
 	int go = 0;
 	bool doUsage = false;
-	while ((go = getopt(argc, argv, "vqfzZo:")) != -1) {
+	while ((go = getopt(argc, argv, "vqfZo:")) != -1) {
 		switch (go) {
 			case 'v':
 				state.verbose++;
@@ -59,9 +56,6 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'f':
 				clobberOutput = true;
-				break;
-			case 'z':
-				doGZ = true;
 				break;
 			case 'Z':
 				doGZ = false;

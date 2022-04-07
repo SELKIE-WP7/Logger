@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 	bool raw = false;
 
 	char *usage =
-		"Usage: %1$s [-v] [-q] [-f] [-r] [-o outfile] -S source [-T type [-T type ...]] datfile\n"
+		"Usage: %1$s [-v] [-q] [-f] [-r] [-o outfile] -S source [-C channel [-C channel ...]] DATFILE\n"
 		"\t-v\tIncrease verbosity\n"
 		"\t-q\tDecrease verbosity\n"
 		"\t-f\tOverwrite existing output files\n"
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 	bool doUsage = false;
 	uint8_t tmp = 0;
 	uint8_t typeCount = 0;
-	while ((go = getopt(argc, argv, "vqfro:S:T:")) != -1) {
+	while ((go = getopt(argc, argv, "vqfro:S:C:")) != -1) {
 		switch (go) {
 			case 'v':
 				state.verbose++;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 					doUsage = true;
 				}
 				break;
-			case 'T':
+			case 'C':
 				tmp = strtol(optarg, NULL, 0);
 				if (tmp < 1 || tmp >= 128) {
 					log_error(&state, "Invalid message type requested (%s)",

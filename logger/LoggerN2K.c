@@ -138,6 +138,15 @@ void *n2k_logging(void *ptargs) {
 			usleep(SERIAL_SLEEP);
 		}
 		if (out.data) { free(out.data); }
+
+		if (n2k_hw == 1024) {
+			log_error(args->pstate, "[N2K:%s] Buffer full", args->tag);
+		}
+
+		if (n2k_hw == 1024 && n2k_index == 0) {
+			log_error(args->pstate, "[N2K:%s] Ignoring first 100 bytes", args->tag);
+			n2k_index += 100; // Leave memory juggling to the other functions
+		}
 	}
 	free(buf);
 	log_info(args->pstate, 1, "[N2K:%s] Logging thread exiting", args->tag);

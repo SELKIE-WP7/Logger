@@ -158,6 +158,7 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 				return false;
 			} else {
 				// Any other ESC + character sequence here is invalid
+				(*pos) = (start + off);
 				free((*msg)->data);
 				free(*msg);
 				(*msg) = NULL;

@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -154,7 +155,7 @@ void ubx_print_hex(const ubx_message *msg) {
 bool ubx_decode_nav_pvt(const ubx_message *msg, ubx_nav_pvt *out) {
 	if (out == NULL || msg == NULL) { return false; }
 
-	if (msg->msgClass != UBXNAV || msg->msgID != 0x07 || msg->length != 92) { return false; }
+	if (msg->msgClass != UBXNAV || msg->msgID != 0x07) { return false; }
 
 	const uint8_t *d = msg->data;
 	out->tow = d[0] + (d[1] << 8) + (d[2] << 16) + (d[3] << 24);
@@ -188,8 +189,14 @@ bool ubx_decode_nav_pvt(const ubx_message *msg, ubx_nav_pvt *out) {
 	out->headingAcc = ((int32_t)(d[72] + (d[73] << 8) + (d[74] << 16) + (d[75] << 24))) * 1E-5;
 	out->pDOP = d[76] + (d[77] << 8);
 	out->pvtFlags = d[78];
-	out->vehicleHeading = ((int32_t)(d[84] + (d[85] << 8) + (d[86] << 16) + (d[87] << 24))) * 1E-5;
-	out->magneticDeclination = ((int32_t)(d[88] + (d[89] << 8))) * 1E-2;
-	out->magDecAcc = ((int32_t)(d[90] + (d[91] << 8) + (d[92] << 16) + (d[93] << 24))) * 1E-2;
+	if (msg->length == 92) {
+		out->vehicleHeading = ((int32_t)(d[84] + (d[85] << 8) + (d[86] << 16) + (d[87] << 24))) * 1E-5;
+		out->magneticDeclination = ((int32_t)(d[88] + (d[89] << 8))) * 1E-2;
+		out->magDecAcc = ((int32_t)(d[90] + (d[91] << 8) + (d[92] << 16) + (d[93] << 24))) * 1E-2;
+	} else {
+		out->vehicleHeading = NAN;
+		out->magneticDeclination = NAN;
+		out->magDecAcc = NAN;
+	}
 	return true;
 }

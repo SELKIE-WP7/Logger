@@ -70,7 +70,7 @@ bool ubx_setMessageRate(const int handle, const uint8_t msgClass, const uint8_t 
 				       0x00, // Disable on I2C
 				       rate, // Every "rate" updates on UART1
 				       0x00, // Disable UART 2
-				       0x00, // Disable on USB direct
+				       rate, // Also enable on USB direct
 				       0x00, // Disable on SPI
 				       0x00  // Disable on port 5
 			       },

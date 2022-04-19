@@ -954,7 +954,7 @@ bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS,
 	for (int s = 0; s < 128; s++) {
 		for (int c = 0; c < 128; c++) {
 			if (stats[s][c].count > 0) {
-				fprintf(stateFile, "0x%02x,0x%02x,%u,%u,\"%s\"\n", s, c,
+				fprintf(stateFile, "0x%02x,0x%02x,%u,%u,\'%s\'\n", s, c,
 				        stats[s][c].count, stats[s][c].lastTimestamp,
 				        msg_data_to_string(stats[s][c].lastMessage));
 			}

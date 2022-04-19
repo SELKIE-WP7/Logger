@@ -80,6 +80,9 @@ char *msg_to_string(const msg_t *msg);
 //! Generate string representation of message data
 char *msg_data_to_string(const msg_t *msg);
 
+//! Convert numerical array to string
+char *msg_data_narr_to_string(const msg_t *msg);
+
 //! Destroy a message
 void msg_destroy(msg_t *msg);
 //! @}

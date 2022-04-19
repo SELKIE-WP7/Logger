@@ -73,7 +73,7 @@ def getLocatorValue(state, locator):
         if locator.index is None:
             return float(val)
         else:
-            return float(val.split(",")[locator.index - 1])
+            return float(val.split("/")[locator.index - 1])
     except:
         return float("NaN")
 

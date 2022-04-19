@@ -213,7 +213,8 @@ char *msg_data_to_string(const msg_t *msg) {
 			rv = asprintf(&out, "[Binary data, %zd bytes]", msg->length);
 			break;
 		case MSG_NUMARRAY:
-			rv = asprintf(&out, "[Numeric array, %zd entries]", msg->length);
+			out = msg_data_narr_to_string(msg);
+			if (out == NULL) { out = strdup("[Numeric array - error converting to string]"); }
 			break;
 		case MSG_ERROR:
 			out = strdup("[Message flagged as error]");
@@ -227,6 +228,34 @@ char *msg_data_to_string(const msg_t *msg) {
 		if (out) { free(out); }
 		return NULL;
 	}
+	return out;
+}
+
+/*!
+ * Generate string for numeric arrays
+ *
+ * Each value in the array is separated by a forward slash (/), to avoid issues
+ * when using in CSV outputs.
+ *
+ * Allocated character array must be freed by the caller.
+ *
+ * @param[in] msg Message containing data to be represented
+ * @returns Pointer to string, or NULL
+ */
+char *msg_data_narr_to_string(const msg_t *msg) {
+	const size_t alen = 250;
+	char *out = calloc(alen, sizeof(char));
+	if (out == NULL) { return NULL; }
+	size_t pos = 0;
+	for (int i = 0; i < msg->length; i++) {
+		int l = snprintf(&(out[pos]), (alen - pos), "%.4f/", msg->data.farray[i]);
+		if (l < 0) {
+			free(out);
+			return NULL;
+		}
+		pos += l;
+	}
+	out[pos - 1] = '\0';
 	return out;
 }
 

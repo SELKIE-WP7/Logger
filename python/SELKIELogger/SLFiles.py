@@ -382,6 +382,7 @@ class StateFile:
                 header=None,
                 names=cols,
                 index_col=["Source", "Channel"],
+                quotechar="'",
                 converters={x: lambda z: int(z, base=0) for x in cols if x != "Value"},
             )
         self._stats["SecondsAgo"] = (self._stats["Time"] - self._ts) / 1000

@@ -1,6 +1,6 @@
 # SLExtractGUI {#SLExtractGUI}
 
-This provides a more friendly interface to [SLExtract](SLExtract.md), but with the same features.
+This provides a more friendly interface to [SLExtract](@ref SLExtract), but with the same features.
 
 ![Screenshot showing example SLExtractGUI window](SLExtractGUI.png)
 

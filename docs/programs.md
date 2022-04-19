@@ -1,28 +1,28 @@
 # User facing programs and utilities
 
 ## Core data logger tools
-- [Logger](manual/Logger.md)
-- [SLGPSWatch](manual/SLGPSWatch.md)
+- [Logger](@ref Logger)
+- [SLGPSWatch](@ref SLGPSWatch)
 
 ## Data processing and conversion
 - [SLConvert](@ref SLConvert) and [SLConvertGUI](@ref SLConvertGUI)
 - [SLExtract](@ref SLExtract) and [SLExtractGUI](@ref SLExtractGUI)
 
-- [SLDump](manual/SLDump.md)
-- [SLClassify](manual/SLClassify.md)
-- [SLView](manual/SLView.md)
+- [SLDump](@ref SLDump)
+- [SLClassify](@ref SLClassify)
+- [SLView](@ref SLView)
 
-- [ExtractSatInfo](manual/ExtractSatInfo.md)
-- [ExtractSource](manual/ExtractSource.md)
+- [ExtractSatInfo](@ref ExtractSatInfo)
+- [ExtractSource](@ref ExtractSource)
 
-- [dat2csv](manual/dat2csv.md)
+- [dat2csv](@ref dat2csv)
 
 ### N2K specific tools
-- [N2KRead](manual/N2KRead.md)
-- [N2KClassify](manual/N2KClassify.md)
+- [N2KRead](@ref N2KRead)
+- [N2KClassify](@ref N2KClassify)
 
 ### Datawell specific tools
-- [DWRead](manual/DWRead.md)
+- [DWRead](@ref DWRead)
 
 ## Test and debugging tools
 - [PowerHatRead](@ref PowerHatRead)

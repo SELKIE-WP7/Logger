@@ -1,6 +1,6 @@
 # SLConvertGUI {#SLConvertGUI}
 
-This provides a more friendly interface to [SLConvert](SLConvert.md), but with the same features. Data processing still takes place as described in the relevant section of the [SLConvert](@ref SLConvert) reference page.
+This provides a more friendly interface to [SLConvert](@ref SLConvert), but with the same features. Data processing still takes place as described in the relevant section of the [SLConvert](@ref SLConvert) reference page.
 
 ![Screenshot showing example SLConvertGUI window](SLConvertGUI.png)
 
@@ -39,7 +39,7 @@ The average value is a simple mean over any valid values (discarding blanks and 
 
 This option is useful to align values at higher input rates to a common rate, with most output values only representing a single input sample.
 
-Custom values may be typed as a value and unit suffix, using the frequency strings described in the Pandas [DateOffset](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) documentation. See the [SLConvert](SLConvert.md) page for more details.
+Custom values may be typed as a value and unit suffix, using the frequency strings described in the Pandas [DateOffset](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) documentation. See the [SLConvert](@ref SLConvert) page for more details.
 
 ![Screenshot showing example resampling intervals](SLConvertGUI-resample.png)
 

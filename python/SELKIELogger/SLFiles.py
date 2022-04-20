@@ -133,7 +133,7 @@ class DatFile:
                             [
                                 f"Longitude:0x{src:02x}",
                                 f"Latitude:0x{src:02x}",
-                                f"Height:0c{src:02x}",
+                                f"Height:0x{src:02x}",
                                 f"HAcc:0x{src:02x}",
                                 f"VAcc:0x{src:02x}",
                             ],
@@ -152,7 +152,7 @@ class DatFile:
                             [
                                 f"Velocity_N:0x{src:02x}",
                                 f"Velocity_E:0x{src:02x}",
-                                f"Velocity_D:0c{src:02x}",
+                                f"Velocity_D:0x{src:02x}",
                                 f"SpeecAcc:0x{src:02x}",
                                 f"Heading:0x{src:02x}",
                                 f"HeadAcc:0x{src:02x}",
@@ -409,7 +409,9 @@ class StateFile:
         if self._stats is None:
             self.parse()
         try:
-            return self.to_clocktime(self._stats.loc[(source, 0x00):(source, 0xFF)].Time.max())
+            return self.to_clocktime(
+                self._stats.loc[(source, 0x00):(source, 0xFF)].Time.max()
+            )
         except KeyError:
             return None
 

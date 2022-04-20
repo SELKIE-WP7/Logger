@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
 		switch (go) {
 			case 'v':
 				state.verbose++;
+				break;
 			case '?':
 				log_error(&state, "Unknown option `-%c'", optopt);
 				doUsage = true;
@@ -94,5 +95,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	log_info(&state, 1, "%d messages processed", msgCount);
+	free(inFileName);
+	fclose(inFile);
 	return 0;
 }

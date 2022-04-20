@@ -178,7 +178,11 @@ char *msg_to_string(const msg_t *msg) {
 	if (msg == NULL) { return NULL; }
 
 	char *out = NULL;
-	if (asprintf(&out, "0x%02x:0x%02x %s", msg->source, msg->type, msg_data_to_string(msg)) >= 0) { return out; }
+	char *dstr = msg_data_to_string(msg);
+	int ar = asprintf(&out, "0x%02x:0x%02x %s", msg->source, msg->type, dstr);
+	free(dstr);
+
+	if (ar >= 0) { return out; }
 
 	return NULL;
 }

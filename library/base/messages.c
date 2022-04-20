@@ -211,7 +211,8 @@ char *msg_data_to_string(const msg_t *msg) {
 			rv = asprintf(&out, "%*s", (int)msg->data.string.length, msg->data.string.data);
 			break;
 		case MSG_STRARRAY:
-			rv = asprintf(&out, "[String array, %zd entries]", msg->length);
+			out = msg_data_sarr_to_string(msg);
+			if (out == NULL) { out = strdup("[String array - error converting to string]"); }
 			break;
 		case MSG_BYTES:
 			rv = asprintf(&out, "[Binary data, %zd bytes]", msg->length);
@@ -253,6 +254,46 @@ char *msg_data_narr_to_string(const msg_t *msg) {
 	size_t pos = 0;
 	for (int i = 0; i < msg->length; i++) {
 		int l = snprintf(&(out[pos]), (alen - pos), "%.4f/", msg->data.farray[i]);
+		if (l < 0) {
+			free(out);
+			return NULL;
+		}
+		pos += l;
+	}
+	out[pos - 1] = '\0';
+	return out;
+}
+
+/*!
+ * Generate string for string arrays
+ *
+ * Each value in the array is separated by a forward slash (/), to avoid issues
+ * when using in CSV outputs.
+ *
+ * Allocated character array must be freed by the caller.
+ *
+ * @param[in] msg Message containing data to be represented
+ * @returns Pointer to string, or NULL
+ */
+char *msg_data_sarr_to_string(const msg_t *msg) {
+	size_t len = 0;
+	for (int i = 0; i < msg->data.names.entries; i++) {
+		size_t l = msg->data.names.strings[i].length;
+		if ((l == 0) || (msg->data.names.strings[i].data == NULL)) {
+			len += 2;
+		} else {
+			len += msg->data.names.strings[i].length + 1;
+		}
+	}
+	char *out = calloc(len, sizeof(char));
+	size_t pos = 0;
+	for (int i = 0; i < msg->data.names.entries; i++) {
+		int l = 0;
+		if ((msg->data.names.strings[i].length == 0) || (msg->data.names.strings[i].data == NULL)) {
+			l = snprintf(&(out[pos]), (len - pos), "-/");
+		} else {
+			l = snprintf(&(out[pos]), (len - pos), "%s/", msg->data.names.strings[i].data);
+		}
 		if (l < 0) {
 			free(out);
 			return NULL;

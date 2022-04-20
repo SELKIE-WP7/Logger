@@ -83,6 +83,9 @@ char *msg_data_to_string(const msg_t *msg);
 //! Convert numerical array to string
 char *msg_data_narr_to_string(const msg_t *msg);
 
+//! Represent string array as single string
+char *msg_data_sarr_to_string(const msg_t *msg);
+
 //! Destroy a message
 void msg_destroy(msg_t *msg);
 //! @}

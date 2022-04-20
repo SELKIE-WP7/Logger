@@ -263,18 +263,19 @@ string *str_duplicate(const string *src) {
  */
 bool str_update(string *str, const size_t len, const char *src) {
 	str_destroy(str);
-	if (len == 0) {
+	if (len == 0 || src == NULL) {
 		str->data = NULL;
 		str->length = 0;
 		return true;
 	}
-	str->length = len + 1;
+	size_t checklen = strnlen(src, len);
+	str->length = checklen + 1;
 	str->data = malloc(str->length);
 	if (str->data == NULL) {
 		str->length = 0;
 		return false;
 	}
-	strncpy(str->data, src, str->length);
+	strncpy(str->data, src, checklen);
 	str->data[str->length - 1] = 0;
 	str->length = strlen(str->data);
 	return true;

@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
+
+## @file
+
 import msgpack
 from SELKIELogger.scripts import log
 from SELKIELogger.SLMessages import SLMessageSink
 
 
 def process_arguments():
+    """!
+    Handle command line arguments
+    @returns Namespace from parse_args()
+    """
     import argparse
 
     options = argparse.ArgumentParser(
@@ -24,16 +31,30 @@ def process_arguments():
 
 
 class ProcessedRecords:
+    """! Represent record statistics"""
+
+    ## Explicitly define members
     __slots__ = ["classes", "processed", "SourceMap"]
 
     def __init__(self):
+        """! Initialise class members"""
+
+        ## Specific data sources for further classification
         SourceTypes = ["GPS", "NMEA", "MP"]
+        ## Classification dictionary for each source type
         self.classes = {x: {} for x in SourceTypes}
+        ## Count of processed messages for each source type
         self.processed = {x: 0 for x in SourceTypes}
+        ## SourceMap extracted from input file
         self.SourceMap = None
 
 
 def classify_messages(file):
+    """!
+    Read file and then classify/count messsages
+    @param file File to be processed
+    @returns ProcessedRecords() instance
+    """
     unpacker = msgpack.Unpacker(file, unicode_errors="ignore")
     out = SLMessageSink(msglogger=log)
 
@@ -107,6 +128,11 @@ def classify_messages(file):
 
 
 def print_classifications(res):
+    """!
+    Print results to standard output
+    @param res ProcessedRecords() instance
+    @returns None
+    """
     print("======= Messages Seen =======")
     print(f"Total processed:\t{res.processed['MP']:d}")
     print(f"By Source and Type:")
@@ -129,6 +155,10 @@ def print_classifications(res):
 
 
 def SLClassify():
+    """!
+    SLClassify: Script Entry Point
+    @returns None
+    """
     args = process_arguments()
     inFile = open(args.file, "rb")
     res = classify_messages(inFile)

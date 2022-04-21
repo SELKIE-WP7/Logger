@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+## @file
+
 import pandas as pd
 
 from numpy import sin, cos, sqrt, arcsin, power, deg2rad, isnan
@@ -12,29 +15,59 @@ from SELKIELogger.PushoverClient import PushoverClient
 
 
 class LocatorSpec:
+    """!
+    LocatorSpec: String representation of location monitoring settings
+    """
+
     def __init__(self, s):
-        # Spec: latChan,lonChan,refLat,refLon,distance
-        # ChannelSpec: source:type[:index]
+        """!
+        Split string into components defining location warning settings.
+        Values are validated to the extent possible without device
+        and source specific information
+        String is a set of colon separated values in this order:
+         - Latitude ChannelSpec()
+         - Longitude ChannelSpec()
+         - Reference Latitude
+         - Reference Longitude
+         - Warning threshold distance (m)
+         - [Optional] Name
+        @param s String in required format.
+        """
         parts = s.split(",")
         if len(parts) < 5 or len(parts) > 6:
             raise ValueError("Invalid locator specification")
 
+        ## ChannelSpec() identifying source of latitude data
         self.latChan = ChannelSpec(parts[0])
+
+        ## ChannelSpec() identifying source of longitude data
         self.lonChan = ChannelSpec(parts[1])
+
+        ## Reference latitude (decimal degrees)
         self.refLat = float(parts[2])
+
+        ## Reference longitude (decimal degrees)
         self.refLon = float(parts[3])
+
+        ## Warning Distance (m)
         self.threshold = float(parts[4])
 
         if len(parts) == 6:
+            ## Name for this locator (used in reporting)
             self.name = parts[5]
         else:
             self.name = f"{self.latChan}/{self.lonChan}"
 
     def __str__(self):
+        """! @returns Correctly formatted string"""
         return f"{self.latChan},{self.lonChan},{self.refLat},{self.refLon},{self.threshold},{self.name}"
 
 
 def process_arguments():
+    """!
+    Handle command line arguments
+    @returns Namespace from parse_args()
+    """
     import argparse
 
     options = argparse.ArgumentParser(
@@ -68,6 +101,12 @@ def process_arguments():
 
 
 def getLocatorValue(state, locator):
+    """!
+    Extract value from `state` corresponding to the ChannelSpec() in `locator`
+    @param state Dataframe containing StateFile data
+    @param locator ChannelSpec() to look up
+    @returns floating point value, or NaN if not found
+    """
     try:
         val = state.loc[(locator.source, locator.channel)].Value
         if locator.index is None:
@@ -79,10 +118,18 @@ def getLocatorValue(state, locator):
 
 
 def haversine(lat1, lon1, lat2, lon2):
-    # 2 * r, for r = WGS84 semi-major axis
+    """!
+    Haversine distance formula, from Wikipedia
+    @param lat1 Latitude 1 (decimal degrees)
+    @param lon1 Longitude 1 (decimal degrees)
+    @param lat2 Latitude 2 (decimal degrees)
+    @param lon2 Latitude 2 (decimal degrees)
+    @returns Distance from 1 -> 2 in metres
+    """
     hdLat = (deg2rad(lat2) - deg2rad(lat1)) / 2
     hdLon = (deg2rad(lon2) - deg2rad(lon1)) / 2
 
+    # 2 * r, for r = WGS84 semi-major axis
     return (
         2
         * 6378137
@@ -93,6 +140,19 @@ def haversine(lat1, lon1, lat2, lon2):
 
 
 def checkLocator(s, l):
+    """!
+    Check whether locator given in `l` is within warning threshold or not,
+    based on the data in `s`
+
+    In returned tuple, `alert` is True if position is unknown or further from
+    the reference position than the warning threshold distance. The distance
+    from the reference point in metres is returned along with the current
+    position in decimal degrees.
+
+    @param s State dataframe
+    @param l LocatorSpec()
+    @returns Tuple of form (alert, distance, (lat, lon))
+    """
     curLat = getLocatorValue(s, l.latChan)
     curLon = getLocatorValue(s, l.lonChan)
     if isnan(curLat) or isnan(curLon):
@@ -113,6 +173,13 @@ def checkLocator(s, l):
 
 
 def generateWarningMessage(states):
+    """!
+    Iterates over `states` - an array of tuples from checkLocator - and
+    generates a suitable warning message as a string.
+
+    @param states Array of tuples from checkLocation()
+    @returns Warning/Information message as string
+    """
     message = "At least one GPS input has moved beyond configured limits:\n"
     for s in states:
         if isnan(s[2]):
@@ -139,6 +206,10 @@ def generateWarningMessage(states):
 
 
 def SLGPSWatch():
+    """!
+    SLGPSWatch: Script entry point.
+    @returns Exit status (0 on success)
+    """
     args = process_arguments()
     if args.verbose > 1:
         log.setLevel(log.DEBUG)

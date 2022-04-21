@@ -1,15 +1,30 @@
 import logging
 
+## @file
+
 
 class ChannelSpec:
+    """! ChannelSpec: Specify a data channel with a formatted string"""
+
     def __init__(self, s):
+        """!
+        Split string into source, channel, and optionally array index
+        components. Values are validated to the extent possible without device
+        and source specific information
+        @param s String in format 'source:channel[:index]'
+        """
         parts = s.split(":")
         l = len(parts)
         if l < 2 or l > 3:
             raise ValueError("Invalid channel specification")
+
+        ## Selected source ID
         self.source = int(parts[0], base=0)
+
+        ## Selected channel ID
         self.channel = int(parts[1], base=0)
         if l == 3:
+            ## Selected array index (optional)
             self.index = int(parts[2], base=0)
         else:
             self.index = None
@@ -24,6 +39,7 @@ class ChannelSpec:
             raise ValueError("Invalid channel specification (bad index)")
 
     def __str__(self):
+        """! @returns Correctly formatted string"""
         if self.index is None:
             return f"0x{self.source:02x}:0x{self.channel:02x}"
         else:
@@ -32,6 +48,12 @@ class ChannelSpec:
 
 # Put general logging configuration in one place
 def setupLogging():
+    """!
+    Configure custom logging instance, using the functions from the rich
+    package if it is available and falling back to standard definitions
+    otherwise.
+    @returns Custom logger object, with some module items added for convenience.
+    """
     log = logging.getLogger("")
     try:
         from rich.logging import RichHandler
@@ -59,5 +81,5 @@ def setupLogging():
     return log
 
 
-# Expose a configured logger as "log"
+## Expose a configured logger as "log"
 log = setupLogging()

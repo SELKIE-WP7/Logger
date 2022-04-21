@@ -52,62 +52,6 @@ def process_arguments():
     return options.parse_args()
 
 
-def haversine(lat1, lon1, lat2, lon2):
-    """!
-    Haversine distance formula, from Wikipedia
-    @param lat1 Latitude 1 (decimal degrees)
-    @param lon1 Longitude 1 (decimal degrees)
-    @param lat2 Latitude 2 (decimal degrees)
-    @param lon2 Latitude 2 (decimal degrees)
-    @returns Distance from 1 -> 2 in metres
-    """
-    hdLat = (deg2rad(lat2) - deg2rad(lat1)) / 2
-    hdLon = (deg2rad(lon2) - deg2rad(lon1)) / 2
-
-    # 2 * r, for r = WGS84 semi-major axis
-    return (
-        2
-        * 6378137
-        * arcsin(
-            sqrt(power(sin(hdLat), 2) + cos(lat1) * cos(lat2) * power(sin(hdLon), 2))
-        )
-    )
-
-
-def checkLocator(s, l):
-    """!
-    Check whether locator given in `l` is within warning threshold or not,
-    based on the data in `s`
-
-    In returned tuple, `alert` is True if position is unknown or further from
-    the reference position than the warning threshold distance. The distance
-    from the reference point in metres is returned along with the current
-    position in decimal degrees.
-
-    @param s State dataframe
-    @param l LocatorSpec()
-    @returns Tuple of form (alert, distance, (lat, lon))
-    """
-    curLat = l.latChan.getValue(s)
-    curLon = l.lonChan.getValue(s)
-
-    if isnan(curLat) or isnan(curLon):
-        log.warning(f"{l.name} has invalid coordinates")
-        return (True, float("nan"), (curLat, curLon))
-
-    d = haversine(curLat, curLon, l.refLat, l.refLon)
-    log.info(
-        f"{l.name}:\t {curLat:.5f},{curLon:.5f} \t--\t {l.refLat:.5f},{l.refLon:.5f} \t--\t {d:.2f}"
-    )
-    if d > l.threshold:
-        log.warning(f"{l.name} is {d - l.threshold:.0f}m outside threshold")
-        log.info(
-            f"{l.name} is {d:.1f}m from reference point, with a {l.threshold:.1f}m radius set"
-        )
-        return (True, d, (curLat, curLon))
-    return (False, d, (curLat, curLon))
-
-
 def generateWarningMessage(states):
     """!
     Iterates over `states` - an array of tuples from checkLocator - and
@@ -165,7 +109,19 @@ def SLGPSWatch():
         anyFlagged = False
         for l in args.locator:
             locator = LocatorSpec(l)
-            flagged, distance, coords = checkLocator(ds, locator)
+            flagged, distance, coords = locator.check(ds)
+            # Locator(ds, locator)
+            log.info(
+                f"{locator.name}:\t {coords[0]:.5f},{coords[1]:.5f} \t--\t {locator.refLat:.5f},{locator.refLon:.5f} \t--\t {distance:.2f}"
+            )
+            if distance > locator.threshold:
+                log.warning(
+                    f"{locator.name} is {distance - locator.threshold:.0f}m outside threshold"
+                )
+                log.info(
+                    f"{locator.name} is {distance:.1f}m from reference point, with a {locator.threshold:.1f}m radius set"
+                )
+
             states.append((locator, flagged, distance, coords))
             if flagged:
                 anyFlagged = True

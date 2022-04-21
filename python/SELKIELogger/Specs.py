@@ -1,5 +1,7 @@
 ## @file
 
+from numpy import sin, cos, sqrt, arcsin, power, deg2rad, isnan
+
 
 class ChannelSpec:
     """! ChannelSpec: Specify a data channel with a formatted string"""
@@ -106,6 +108,55 @@ class LocatorSpec:
             self.name = parts[5]
         else:
             self.name = f"{self.latChan}/{self.lonChan}"
+
+    @staticmethod
+    def haversine(lat1, lon1, lat2, lon2):
+        """!
+        Haversine distance formula, from Wikipedia
+        @param lat1 Latitude 1 (decimal degrees)
+        @param lon1 Longitude 1 (decimal degrees)
+        @param lat2 Latitude 2 (decimal degrees)
+        @param lon2 Latitude 2 (decimal degrees)
+        @returns Distance from 1 -> 2 in metres
+        """
+        hdLat = (deg2rad(lat2) - deg2rad(lat1)) / 2
+        hdLon = (deg2rad(lon2) - deg2rad(lon1)) / 2
+
+        # 2 * r, for r = WGS84 semi-major axis
+        return (
+            2
+            * 6378137
+            * arcsin(
+                sqrt(
+                    power(sin(hdLat), 2) + cos(lat1) * cos(lat2) * power(sin(hdLon), 2)
+                )
+            )
+        )
+
+    def check(self, s):
+        """!
+        Check whether locator is within warning threshold or not, based on the
+        data in `s`
+
+        In returned tuple, `alert` is True if position is unknown or further from
+        the reference position than the warning threshold distance. The distance
+        from the reference point in metres is returned along with the current
+        position in decimal degrees.
+
+        @param s State dataframe
+        @returns Tuple of form (alert, distance, (lat, lon))
+        """
+        curLat = self.latChan.getValue(s)
+        curLon = self.lonChan.getValue(s)
+
+        if isnan(curLat) or isnan(curLon):
+            log.warning(f"{l.name} has invalid coordinates")
+            return (True, float("nan"), (curLat, curLon))
+
+        d = self.haversine(curLat, curLon, self.refLat, self.refLon)
+        if d > self.threshold:
+            return (True, d, (curLat, curLon))
+        return (False, d, (curLat, curLon))
 
     def __str__(self):
         """! @returns Correctly formatted string"""

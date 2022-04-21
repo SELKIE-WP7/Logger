@@ -539,8 +539,8 @@ class SLMessageSink:
             try:
                 message = SLMessage.unpack(message)
             except ValueError:
-                self._log.info("Bad message encountered, skipping")
-                self._log.debug(message)
+                self._log.warning("Bad message encountered, skipping")
+                self._log.debug(repr(message))
                 return
 
         if not self._sm.SourceExists(message.SourceID):

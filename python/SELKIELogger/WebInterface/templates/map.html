@@ -5,7 +5,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
 integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
 crossorigin=""/>
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" crossorigin="" />
 {%endblock %}
 
 {% block title %}{{super()}} - GPS Map{% endblock %}
@@ -35,6 +36,7 @@ crossorigin=""/>
  <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
    integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
    crossorigin=""></script>
+ <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" crossorigin=""></script>
 <script>
 	var map = L.map('map').setView([{{g.pos[0]}}, {{g.pos[1]}}], 13);
 	tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -45,24 +47,39 @@ crossorigin=""/>
 	L.control.scale({imperial: true, metric: true}).addTo(map);
 
 	function addRefLoc(ll, radius, name) {
-		var circle = L.circle(ll, {
-			color: 'red',
-			fillColor: '#f03',
-			fillOpacity: 0.1,
+		circle = L.circle(ll, {
+			color: '#000000',
+			weight: 1,
+			fillColor: '#009900',
+			fillOpacity: 0.0,
 			radius: radius
-		}).addTo(map).bindPopup('Warning threshold: ' + name);
+		}).addTo(map).bindPopup('Allowed area: ' + name);
 	}
+
+	cg = L.markerClusterGroup();
 
 	function addLoc(ll, name) {
-		L.marker(ll, {
+		cg.addLayer(L.marker(ll, {
 			title: name
-		}).addTo(map).bindPopup("Last reported position: " + name);
+		}).bindPopup("Last reported position: " + name));
 	}
 
-{% for m in g.markers %}
-	addRefLoc([{{m[1].refLat}}, {{m[1].refLon}}], {{m[1].threshold}}, "{{m[1].name}}");
-	addLoc([{{m[0][2][0]}}, {{m[0][2][1]}}], "{{m[1].name}}");
-{% endfor %}
+	{% for m in g.markers %}
+		addRefLoc([{{m[1].refLat}}, {{m[1].refLon}}], {{m[1].threshold}}, "{{m[1].name}}");
+		addLoc([{{m[0][2][0]}}, {{m[0][2][1]}}], "{{m[1].name}}");
+	{% endfor %}
+
+	map.addLayer(cg);
+
+{% if g.markers %}
+	map.fitBounds([
+	{% for m in g.markers %}
+			[{{m[0][2][0]}}, {{m[0][2][1]}}],
+	{% endfor %}
+		], {maxZoom: 13});
+
+{% endif %}
+
 
 </script>
 {% endblock %}

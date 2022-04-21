@@ -378,8 +378,9 @@ class DatFile:
         @param chunkSize Yield records after this many timestamps
         @returns List of tuples containing timestamp and dictionary of records
         """
-        if self._records and not force:
-            return self._records
+        if self._records:
+            log.error("Some records already cached - discarding")
+            del self._records
 
         fields = self.prepConverters(includeTS=includeTS, force=force)
         log.debug(fields)

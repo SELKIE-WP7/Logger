@@ -196,7 +196,10 @@ def show_map():
         alat.extend([c[2][0]])
         alon.extend([c[2][1]])
     g.markers = ml
-    g.pos = [sum(alat) / len(alat), sum(alon) / len(alon)]
+    if (len(alat) > 0) and (len(alon) > 0):
+        g.pos = [sum(alat) / len(alat), sum(alon) / len(alon)]
+    else:
+        g.pos = [51.62007, -3.8761]
     return render_template("map.html")
 
 

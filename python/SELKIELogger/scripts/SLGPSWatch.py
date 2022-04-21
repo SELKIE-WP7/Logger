@@ -62,6 +62,10 @@ class LocatorSpec:
         """! @returns Correctly formatted string"""
         return f"{self.latChan},{self.lonChan},{self.refLat},{self.refLon},{self.threshold},{self.name}"
 
+    def __repr__(self):
+        """! @returns Parseable representation"""
+        return f"LocatorSpec('{self.__str__():s}')"
+
 
 def process_arguments():
     """!

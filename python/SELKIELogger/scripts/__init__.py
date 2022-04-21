@@ -45,6 +45,10 @@ class ChannelSpec:
         else:
             return f"0x{self.source:02x}:0x{self.channel:02x}:0x{self.index:02x}"
 
+    def __repr__(self):
+        """! @returns Parseable representation"""
+        return f"ChannelSpec('{self.__str__():s}')"
+
 
 # Put general logging configuration in one place
 def setupLogging():

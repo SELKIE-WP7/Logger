@@ -10,3 +10,4 @@ SELKIELogger.WebInterface - Flask based UI for deployment on a device running th
 """
 
 from . import SLMessages
+from . import SLFiles

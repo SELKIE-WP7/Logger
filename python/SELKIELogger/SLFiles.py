@@ -43,7 +43,7 @@ class VarFile:
         out.Process(SLMessage(0, 0, "Logger").pack())
         out.Process(SLMessage(1, 0, "SLPython").pack())
         for msg in unpacker:
-            log.debug(msg)
+            log.log(5, msg)
             msg = out.Process(msg, output="raw")
         self._sm = out.SourceMap()
         return self._sm

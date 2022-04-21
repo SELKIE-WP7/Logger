@@ -52,23 +52,6 @@ def process_arguments():
     return options.parse_args()
 
 
-def getLocatorValue(state, locator):
-    """!
-    Extract value from `state` corresponding to the ChannelSpec() in `locator`
-    @param state Dataframe containing StateFile data
-    @param locator ChannelSpec() to look up
-    @returns floating point value, or NaN if not found
-    """
-    try:
-        val = state.loc[(locator.source, locator.channel)].Value
-        if locator.index is None:
-            return float(val)
-        else:
-            return float(val.split("/")[locator.index - 1])
-    except:
-        return float("NaN")
-
-
 def haversine(lat1, lon1, lat2, lon2):
     """!
     Haversine distance formula, from Wikipedia
@@ -105,8 +88,9 @@ def checkLocator(s, l):
     @param l LocatorSpec()
     @returns Tuple of form (alert, distance, (lat, lon))
     """
-    curLat = getLocatorValue(s, l.latChan)
-    curLon = getLocatorValue(s, l.lonChan)
+    curLat = l.latChan.getValue(s)
+    curLon = l.lonChan.getValue(s)
+
     if isnan(curLat) or isnan(curLon):
         log.warning(f"{l.name} has invalid coordinates")
         return (True, float("nan"), (curLat, curLon))

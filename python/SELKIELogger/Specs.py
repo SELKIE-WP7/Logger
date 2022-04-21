@@ -36,6 +36,21 @@ class ChannelSpec:
         if not self.index is None and self.index < 0:
             raise ValueError("Invalid channel specification (bad index)")
 
+    def getValue(self, state):
+        """!
+        Extract value from `state` corresponding to this Spec.
+        @param state Dataframe containing StateFile data
+        @returns floating point value, or NaN if not found
+        """
+        try:
+            val = state.loc[(self.source, self.channel)].Value
+            if self.index is None:
+                return float(val)
+            else:
+                return float(val.split("/")[self.index - 1])
+        except:
+            return float("NaN")
+
     def __str__(self):
         """! @returns Correctly formatted string"""
         if self.index is None:

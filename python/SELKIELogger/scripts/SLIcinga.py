@@ -1,8 +1,9 @@
 from time import time
 from sys import exit
 
-from SELKIELogger.scripts import ChannelSpec
+from SELKIELogger.Specs import ChannelSpec
 from SELKIELogger.SLFiles import StateFile
+
 
 def process_arguments():
     import argparse
@@ -37,15 +38,17 @@ def process_arguments():
 
     return options.parse_args()
 
+
 def SLIcinga():
     args = process_arguments()
     sf = StateFile(args.file)
     stats = sf.parse()
 
     exitStatus = 0
+
     def updateWarnings(x, y):
         if x > args.timeout:
-           return 2 
+            return 2
         elif x > args.warning:
             return 1
         elif x < 0:
@@ -97,6 +100,7 @@ def SLIcinga():
         exitStatus = updateWarnings(lmd, exitStatus)
 
     exit(exitStatus)
+
 
 if __name__ == "__main__":
     SLIcinga()

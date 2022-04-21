@@ -1,0 +1,68 @@
+{% extends "selkie_base.html" %}
+
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+crossorigin=""/>
+
+{%endblock %}
+
+{% block title %}{{super()}} - GPS Map{% endblock %}
+
+{% block page_content %}
+	<h3>Latest GPS information:</h3>
+	<div id="map" class="center-block" style="min-height: 300px; height: 50vh; max-width: 90vw; border: 1px black solid;"></div>
+	<table class="table table-bordered table-responsive ">
+		<thead>
+			<tr><th>State</th><th>Name</th><th>Current Position</th><th>Reference Position</th><th>Distance (Threshold)</th></tr>
+		</thead>
+		<tbody>
+{% for m in g.markers %}
+			<tr class="{{ 'danger' if m[0][0] else '' }}">
+				<td>{{ 'Alarm' if m[0][0] else 'OK' }}</td>
+				<td>{{m[1].name}}</td>
+				<td>({{m[0][2][0]}},{{m[0][2][1]}})</td>
+				<td>({{m[1].refLat}},{{m[1].refLon}})</td>
+				<td>{{m[0][1]|round|int}}m ({{m[1].threshold|round|int}}m)</td>
+			</tr>
+{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}
+
+{% block scripts %}
+ <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+   integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+   crossorigin=""></script>
+<script>
+	var map = L.map('map').setView([{{g.pos[0]}}, {{g.pos[1]}}], 15);
+	tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+		attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+		}).addTo(map);
+
+	L.control.scale({imperial: true, metric: true}).addTo(map);
+
+	function addRefLoc(ll, radius, name) {
+		var circle = L.circle(ll, {
+			color: 'red',
+			fillColor: '#f03',
+			fillOpacity: 0.1,
+			radius: radius
+		}).addTo(map).bindPopup('Warning threshold: ' + name);
+	}
+
+	function addLoc(ll, name) {
+		L.marker(ll, {
+			title: name
+		}).addTo(map).bindPopup("Last reported position: " + name);
+	}
+
+{% for m in g.markers %}
+	addRefLoc([{{m[1].refLat}}, {{m[1].refLon}}], {{m[1].threshold}}, "{{m[1].name}}");
+	addLoc([{{m[0][2][0]}}, {{m[0][2][1]}}], "{{m[1].name}}");
+{% endfor %}
+
+</script>
+{% endblock %}

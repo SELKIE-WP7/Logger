@@ -12,6 +12,8 @@ from flask import (
     g,
 )
 
+from SELKIELogger.Specs import LocatorSpec
+
 pages = Blueprint("pages", __name__)
 
 
@@ -136,10 +138,22 @@ def download_file(fileName, fileFormat="raw"):
 def show_state():
     from ..SLFiles import StateFile
 
-    sf = StateFile(
-        os.path.join(current_app.config["DATA_PATH"], current_app.config["STATE_NAME"])
-    )
-    stats = sf.parse()
+    try:
+        sf = StateFile(
+            os.path.join(
+                current_app.config["DATA_PATH"], current_app.config["STATE_NAME"]
+            )
+        )
+        stats = sf.parse()
+    except FileNotFoundError as e:
+        flash("State file missing or inaccessible", "danger")
+        current_app.logger.error(f"Unable to load state file: {str(e)}")
+        return redirect(url_for(".index"), 303)
+    except Exception as e:
+        flash("Error processing state file - unable to parse data", "danger")
+        current_app.logger.error(f"Unable to process state file: {str(e)}")
+        return redirect(url_for(".index"), 303)
+
     g.sourcemap = sf._vf
     g.stats = stats.to_records()
     g.lastTS = sf.timestamp()
@@ -148,6 +162,42 @@ def show_state():
     g.ext_url = get_url()
     g.name = current_app.config["DEVICE_NAME"]
     return render_template("state.html")
+
+
+@pages.route("/map/")
+def show_map():
+    g.ip = get_ip()
+    g.ext_url = get_url()
+    g.name = current_app.config["DEVICE_NAME"]
+
+    from ..SLFiles import StateFile
+
+    try:
+        sf = StateFile(
+            os.path.join(
+                current_app.config["DATA_PATH"], current_app.config["STATE_NAME"]
+            )
+        )
+        stats = sf.parse()
+    except Exception as e:
+        flash("Unable to load state data: No live positions available", "warning")
+        current_app.logger.error(f"Unable to load state data: {str(e)}")
+        return render_template("map.html")
+
+    ## Extract GPS markers and display
+    markers = current_app.config.get("GPS_LOCATORS", [])
+    ml = []
+    alat = []
+    alon = []
+    for m in markers:
+        m = LocatorSpec(m)
+        c = m.check(stats)
+        ml.extend([[c, m]])
+        alat.extend([c[2][0]])
+        alon.extend([c[2][1]])
+    g.markers = ml
+    g.pos = [sum(alat) / len(alat), sum(alon) / len(alon)]
+    return render_template("map.html")
 
 
 def get_run_files():

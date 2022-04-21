@@ -1,12 +1,21 @@
 import http.client, urllib
 
+## @file
+
 
 class PushoverClient:
-    def __init__(self, config=None):
-        if config is None:
-            config = "/etc/pushover/pushover-config"
+    """!A very simple Pushover client.
+    Will attempt to read the default configuration file from pushover-bash script.
+    """
 
-        self.config = {}
+    def __init__(self, config=None):
+        """! Create PushoverClient instance
+        @param[in] config Configuration file to use instead of default
+        """
+        if config is None:
+            config = "/etc/pushover/pushover-config"  ## Default file path
+
+        self.config = {}  ## Dictionary of configuration options from file
         with open(config, "r") as cfile:
             for line in cfile:
                 key, value = line.split("=")
@@ -14,6 +23,11 @@ class PushoverClient:
                 self.config[key] = value.strip()
 
     def sendMessage(self, message, title=None):
+        """!Send specified message via Pushover, optionally customising title.
+        @param[in] message Message text
+        @param[in] title If set, override message title from configuration file
+        @returns None
+        """
         if title is None:
             title = self.config.get("title", "SELKIELogger")
 

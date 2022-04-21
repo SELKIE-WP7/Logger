@@ -6,6 +6,9 @@ import numpy as np
 
 from .SLMessages import IDs, SLMessage, SLMessageSink
 
+## @file
+
+## File wide logger instance
 log = logging.getLogger(__name__)
 
 
@@ -13,10 +16,21 @@ class VarFile:
     """! Represent a channel mapping (.var) file, caching information as necessary"""
 
     def __init__(self, filename):
+        """!
+        Create VarFile instance. Does not open or parse file.
+        @param filename File name and path
+        """
+        ## File name and path
         self._fn = filename
+        ## Source/Channel Map
         self._sm = None
 
     def getSourceMap(self, force=False):
+        """!
+        Get source/channel map from file, or return from cache if available.
+        @param force Read file again, even if source map exists
+        @returns SLSourceMap instance
+        """
         if self._sm and not force:
             log.debug("Returning cached SourceMap")
             return self._sm
@@ -35,6 +49,14 @@ class VarFile:
         return self._sm
 
     def printSourceMap(self, fancy=True):
+        """!
+        Print a source/channel map, optionally using the tools provided in the "rich" package to provide a prettier output.
+
+        Falls back to standard print output if `fancy` is False or if the rich package is not installed.
+
+        @param fancy Enable/disable use of rich features.
+        @returns None
+        """
         try:
             from rich.console import Console
             from rich.table import Table
@@ -63,20 +85,46 @@ class VarFile:
 
 
 class DatFile:
+    """!
+    Represent a SELKIELogger data file and associated common operations.
+    """
+
     def __init__(self, filename, pcs=IDs.SLSOURCE_TIMER):
+        """!
+        Create DatFile instance. Does not open or parse file.
+        @param filename File name and path
+        @param pcs Primary Clock Source (Source ID)
+        """
+
+        ## File name and path
         self._fn = filename
+        ## Cached conversion functions
         self._fields = None
+        ## Primary Clock Source ID
         self._pcs = pcs
+        ## Source/Channel Map
         self._sm = None
+        ## File data records (once parsed)
         self._records = None
 
     def addSourceMap(self, sm):
+        """!
+        Associate an SLChannelMap instance with this file. Used to map source
+        and channel IDs to names.
+        @param sm SLChannelMap (see VarFile.getSourceMap)
+        @returns None
+        """
         if self._sm:
             log.warning("Overriding existing source map")
         self._sm = sm
 
     @staticmethod
     def tryParse(value):
+        """!
+        Attempt to convert value to float. If unsuccessful, parse as JSON and attempt to return a float from either a) the sole value within the object or b) the data associated with a key named "value".
+        @param value Input value
+        @returns Floating point value or np.nan on failure
+        """
         try:
             x = float(value)
             return x
@@ -95,6 +143,27 @@ class DatFile:
             return np.nan
 
     def prepConverters(self, force=False, includeTS=False):
+        """!
+        Generate and cache functions to convert each channel into defined
+        fields and corresponding field names suitable for creating a DataFrame
+        later.
+
+        Names and functions are returned as a collection keyed by source and
+        channel. As each message may produce multiple message, names and
+        functions are each returned as lists containing a minimum of one entry.
+
+        ```.py
+        fields = x.prepConverters()
+        names, funcs = fields[source][channel]
+        out = {}
+        out[names[0]] = funcs[0](input)
+        ```
+        Where input is an input SLMessage
+
+        @param force Regenerate fields rather than using cached values
+        @param includeTS Retain timestamp field as data column as well as index
+        @returns Collection of conversion functions and field names
+        """
         if self._fields and not force:
             log.debug("Returning cached converters")
             return self._fields
@@ -239,6 +308,15 @@ class DatFile:
         return self._fields
 
     def buildRecord(self, msgStack):
+        """!
+        Convert a group (stack) of messages into a single record, keyed by field names.
+
+        Field values default to None, and in the event that multiple values for
+        a single field are received, the last value received will be stored.
+
+        @param msgStack Group of messages received for a specific interval
+        @returns Record/dictionary of values keyed by field name
+        """
         record = {}
         for sid, channels in self._fields.items():
             for cid, converter in channels.items():
@@ -257,6 +335,19 @@ class DatFile:
         return record
 
     def messages(self, source=None, channel=None):
+        """!
+        Process data file and yield messages, optionally restricted to those
+        matching a specific source and/or channel ID.
+
+        * x.messages() - Yields all messages
+        * x.messages(source=0x10) - Yields all messages from source 0x10 (GPS0)
+        * x.messages(channel=0x03) - Yields all channel 3 (raw) messages from any source
+        * x.messages(0x10, 0x03) - Yield all channel 3 messages from source 0x10
+
+        @param source Optional: Source ID to match
+        @param channel Optional: Channel ID to match
+        @returns Yields messages in file order
+        """
         datFile = open(self._fn, "rb")
         unpacker = msgpack.Unpacker(datFile, unicode_errors="ignore")
         sink = SLMessageSink(msglogger=log.getChild("Data"))
@@ -280,6 +371,13 @@ class DatFile:
         datFile.close()
 
     def processMessages(self, includeTS=False, force=False, chunkSize=100000):
+        """!
+        Process messages and return. Will yield data in chunks.
+        @param includeTS Passed to prepConverters()
+        @param force Passed to prepConverters()
+        @param chunkSize Yield records after this many timestamps
+        @returns List of tuples containing timestamp and dictionary of records
+        """
         if self._records and not force:
             return self._records
 
@@ -326,6 +424,14 @@ class DatFile:
         )
 
     def yieldDataFrame(self, dropna=False, resample=None):
+        """!
+        Process file and yield results as dataframes that can be merged later.
+
+        Optionally drop empty records and perform naive averaging over a given resample interval.
+        @param dropna Drop rows consisting entirely of NaN/None vales
+        @param resample Resampling interval
+        @returns pandas.DataFrame representing a chunk of file data
+        """
         count = 0
         for chunk in self.processMessages():
             ndf = pd.DataFrame(data=[x[1] for x in chunk], index=[x[0] for x in chunk])
@@ -346,6 +452,13 @@ class DatFile:
             yield ndf
 
     def asDataFrame(self, dropna=False, resample=None):
+        """!
+        Wrapper around yieldDataFrame.
+        Processes all records and merges them into a single frame.
+        @param dropna Drop empty records. @see yieldDataFrame()
+        @param resample Resampling interval. @see yieldDataFrame()
+        @returns pandas.DataFrame containing file data
+        """
         df = None
         for ndf in self.yieldDataFrame(dropna, resample):
             count = len(ndf)
@@ -366,13 +479,27 @@ class StateFile:
     """! Represent a logger state file, caching information as necessary"""
 
     def __init__(self, filename):
+        """!
+        Create new object. File is not opened or parsed until requested.
+        @param filename Path to state file to be read
+        """
+        ## File name (and path, if required) for this instance
         self._fn = filename
+
+        ## SourceMap
         self._sm = None
+        ## Last known timestamp
         self._ts = None
+        ## Channel mapping file / VarFile associated with this state file
         self._vf = None
+        ## Source/Channel statistics
         self._stats = None
 
     def parse(self):
+        """!
+        Read file and extract data
+        @returns Channel statistics (also stored in _stats)
+        """
         with open(self._fn) as sf:
             self._ts = int(sf.readline())
             self._vf = VarFile(sf.readline().strip()).getSourceMap()
@@ -394,11 +521,23 @@ class StateFile:
         return self._stats
 
     def sources(self):
+        """!
+        Retrieve list of sources referenced in this state file, parsing file if necessary
+        @returns Sorted set of source IDs
+        """
         if self._stats is None:
             self.parse()
         return sorted(set(self._stats.index.get_level_values(0)))
 
     def channels(self, source):
+        """!
+        Extract all channels referenced in this state file for a specific source ID.
+
+        Will parse the state file if required.
+
+        @param source Source ID to extract
+        @returns Sorted set of channel IDs
+        """
         if self._stats is None:
             self.parse()
         return sorted(
@@ -406,6 +545,15 @@ class StateFile:
         )
 
     def last_source_message(self, source):
+        """!
+        Find most recent message received from a given source and convert to a
+        clocktime value.
+
+        Will parse the state file if required.
+
+        @param source Source ID to check
+        @returns clocktime, or None on error.
+        """
         if self._stats is None:
             self.parse()
         try:
@@ -416,6 +564,16 @@ class StateFile:
             return None
 
     def last_channel_message(self, source, channel):
+        """!
+        Find most recent message received from a channel (specified by source
+        and channel IDs) and convert to a clocktime value.
+
+        Will parse the state file if required.
+
+        @param source Source ID to be checked
+        @param channel Channel ID to be checked
+        @returns clocktime, or None on error.
+        """
         if self._stats is None:
             self.parse()
         try:
@@ -424,11 +582,24 @@ class StateFile:
             return None
 
     def timestamp(self):
+        """!
+        Return latest timestamp from state file, parsing file if required.
+        @returns Latest logger timestamp value (ms)
+        """
         if self._ts is None:
             self.parse()
         return self._ts
 
     def to_clocktime(self, timestamp):
+        """!
+        Convert logger timestamp to real date/time
+
+        Assumes that the most recent message was received at the file's
+        modification time and uses this as an offset.
+
+        @param timestamp Value to be converted
+        @returns Pandas DateTime object
+        """
         if timestamp is None:
             return None
         if self._ts is None:

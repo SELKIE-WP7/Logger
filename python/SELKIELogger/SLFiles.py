@@ -196,6 +196,10 @@ class DatFile:
                             [lambda x: x.Data],
                         ]
                         cid += 1
+                    elif cid in [IDs.SLCHAN_NAME, IDs.SLCHAN_MAP, IDs.SLCHAN_RAW]:
+                        # Don't include in frame outputs
+                        cid += 1
+                        continue
                     elif cid == 4:
                         # Position
                         fields[src][cid] = [

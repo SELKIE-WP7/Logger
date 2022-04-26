@@ -311,6 +311,11 @@ class DatFile:
                         f"No conversion routine known for source 0x{src:02x} ({self._sm[src]})"
                     )
         self._fields = fields
+        self._columnList = []
+        for _, channels in self._fields.items():
+            for _, c in channels.items():
+                self._columnList.extend(c[0])
+
         return self._fields
 
     def buildRecord(self, msgStack):
@@ -453,6 +458,9 @@ class DatFile:
             for x in ndf.columns:
                 if pd.api.types.is_numeric_dtype(ndf[x].dtype):
                     ndf[x] = ndf[x].astype(pd.SparseDtype(ndf[x].dtype, np.nan))
+
+            ndf = ndf.reindex(columns=self._columnList, copy=False)
+
             if dropna:
                 ndf.dropna(how="all", inplace=True)
             ndf.index.name = "Timestamp"

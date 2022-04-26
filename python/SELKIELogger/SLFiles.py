@@ -288,10 +288,12 @@ class DatFile:
                     if cid in [IDs.SLCHAN_NAME, IDs.SLCHAN_MAP]:  # , IDs.SLCHAN_RAW]:
                         cid += 1
                         continue
-                    elif chan == "":
+                    elif chan == "" or chan == "-":
                         cid += 1
                         continue
-                    elif chan == "Raw Data":
+                    elif chan == "Raw Data" or (
+                        cid == IDs.SLCHAN_RAW and chan.lower().startswith("raw")
+                    ):
                         cid += 1
                         continue
                     elif cid == IDs.SLCHAN_TSTAMP:

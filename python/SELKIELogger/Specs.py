@@ -2,6 +2,10 @@
 
 from numpy import sin, cos, sqrt, arcsin, power, deg2rad, isnan
 
+import logging
+
+log = logging.getLogger(__name__)
+
 
 class ChannelSpec:
     """! ChannelSpec: Specify a data channel with a formatted string"""

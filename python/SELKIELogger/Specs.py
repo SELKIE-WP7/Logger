@@ -154,7 +154,7 @@ class LocatorSpec:
         curLon = self.lonChan.getValue(s)
 
         if isnan(curLat) or isnan(curLon):
-            log.warning(f"{l.name} has invalid coordinates")
+            log.warning(f"{self.name} has invalid coordinates")
             return (True, float("nan"), (curLat, curLon))
 
         d = self.haversine(curLat, curLon, self.refLat, self.refLon)

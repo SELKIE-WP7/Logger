@@ -947,7 +947,10 @@ void destroy_global_opts(struct global_opts *go) {
  * @return False if unable to create state file, True otherwise
  */
 bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS, char *vFName) {
-	FILE *stateFile = fopen(sFName, "w");
+	char *tmptmp = strdup("stateXXXXXX");
+
+	int sfilefd = mkstemp(tmptmp);
+	FILE *stateFile = fdopen(sfilefd, "w");
 	if (stateFile == NULL) { return false; }
 	fprintf(stateFile, "%u\n", lTS);
 	fprintf(stateFile, "%s\n", vFName);
@@ -961,5 +964,16 @@ bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS,
 		}
 	}
 	fclose(stateFile);
+
+	if (rename(tmptmp, sFName) < 0) {
+		perror("write_state_file:rename");
+		unlink(tmptmp);
+		return false;
+	}
+	if (!unlink(tmptmp)) {
+		perror("write_state_file:unlink");
+		// While not ideal don't want to stop logging in this instance, so return true
+		// anyway
+	}
 	return true;
 }

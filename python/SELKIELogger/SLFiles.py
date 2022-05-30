@@ -541,7 +541,9 @@ class StateFile:
         @returns Sorted set of source IDs
         """
         if self._stats is None:
-            self.parse()
+            if self.parse() is None:
+                return None
+
         return sorted(set(self._stats.index.get_level_values(0)))
 
     def channels(self, source):
@@ -554,7 +556,8 @@ class StateFile:
         @returns Sorted set of channel IDs
         """
         if self._stats is None:
-            self.parse()
+            if self.parse() is None:
+                return None
         return sorted(
             set(self._stats[(source, 0x00):(source, 0xFF)].index.get_level_values(1))
         )
@@ -570,12 +573,13 @@ class StateFile:
         @returns clocktime, or None on error.
         """
         if self._stats is None:
-            self.parse()
+            if self.parse() is None:
+                return None
+
         try:
-            return self.to_clocktime(
-                self._stats.loc[(source, 0x00):(source, 0xFF)].Time.max()
-            )
-        except KeyError:
+            times = self._stats.loc[(source, 0x00):(source, 0xFF)].Time
+            return self.to_clocktime(times.max())
+        except (KeyError, TypeError):
             return None
 
     def last_channel_message(self, source, channel):

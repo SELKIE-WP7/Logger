@@ -947,7 +947,14 @@ void destroy_global_opts(struct global_opts *go) {
  * @return False if unable to create state file, True otherwise
  */
 bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS, char *vFName) {
-	char *tmptmp = strdup("stateXXXXXX");
+	char *tmptmp = NULL;
+	char *dn = dirname(strdup(sFName));
+	if (asprintf(&tmptmp, "%s/stateXXXXXX", dn) < 0) {
+		perror("write_state_file:asprintf");
+		return false;
+	}
+	free(dn);
+	dn = NULL;
 
 	int sfilefd = mkstemp(tmptmp);
 	FILE *stateFile = fdopen(sfilefd, "w");
@@ -965,6 +972,7 @@ bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS,
 	}
 	fclose(stateFile);
 
+	errno = 0;
 	if (rename(tmptmp, sFName) < 0) {
 		perror("write_state_file:rename");
 		unlink(tmptmp);

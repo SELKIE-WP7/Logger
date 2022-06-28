@@ -90,15 +90,15 @@ def SLConvert():
                 "No channel map (.var) file found - will fall back to information embedded in main data file. This can be very slow!"
             )
 
-        return convertDataFile(
-            args.varfile,
-            args.file,
-            args.output,
-            args.format,
-            args.timesource,
-            args.resample,
-            args.dropna,
-        )
+    return convertDataFile(
+        args.varfile,
+        args.file,
+        args.output,
+        args.format,
+        args.timesource,
+        args.resample,
+        args.dropna,
+    )
 
 
 if __name__ == "__main__":

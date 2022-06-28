@@ -342,6 +342,8 @@ class SLChannelMap:
         @param ix Source ID
         @returns Source object
         """
+        if not isinstance(ix, int):
+            ix = int(ix, 0)
         return self._s[ix]
 
     def __iter__(self):

@@ -101,7 +101,7 @@ class DatFile:
         ## Cached conversion functions
         self._fields = None
         ## Primary Clock Source ID
-        self._pcs = pcs
+        self._pcs = int(pcs, 0)
         ## Source/Channel Map
         self._sm = None
         ## File data records (once parsed)
@@ -395,6 +395,7 @@ class DatFile:
 
         fields = self.prepConverters(includeTS=includeTS, force=force)
         log.debug(fields)
+        log.debug(f"Primary clock source: 0x{self._pcs:02x} [{self._sm[self._pcs]}]")
 
         self._records = []
         stack = []

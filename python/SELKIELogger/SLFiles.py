@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 
+from numbers import Number
 from .SLMessages import IDs, SLMessage, SLMessageSink
 
 ## @file
@@ -101,7 +102,10 @@ class DatFile:
         ## Cached conversion functions
         self._fields = None
         ## Primary Clock Source ID
-        self._pcs = int(pcs, 0)
+        if isinstance(pcs, Number):
+            self._pcs = int(pcs)
+        else:
+            self._pcs = int(pcs, 0)
         ## Source/Channel Map
         self._sm = None
         ## File data records (once parsed)

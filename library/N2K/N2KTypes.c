@@ -19,6 +19,10 @@ bool n2k_act_to_bytes(const n2k_act_message *act, uint8_t **out, size_t *len) {
 	if (act == NULL || out == NULL || len == NULL) { return false; }
 
 	(*out) = calloc(act->length + 2 * act->datalen, sizeof(uint8_t));
+	if ((*out) == NULL) {
+		(*len) = 0;
+		return false;
+	}
 	(*out)[0] = ACT_ESC;
 	(*out)[1] = ACT_SOT;
 	(*out)[2] = ACT_N2K;
@@ -47,7 +51,15 @@ bool n2k_act_to_bytes(const n2k_act_message *act, uint8_t **out, size_t *len) {
 	(*out)[ix++] = ACT_ESC;
 	(*out)[ix++] = ACT_EOT;
 	(*len) = ix;
-	(*out) = realloc((*out), ix * sizeof(uint8_t));
+	uint8_t *o = realloc((*out), ix * sizeof(uint8_t));
+	if (o == NULL) {
+		// In theory "out" is valid, but something weird has to happen
+		// to get here so free and clear out safely.
+		free((*out));
+		(*out) = NULL;
+		(*len) = 0;
+		return false;
+	}
 	return true;
 }
 

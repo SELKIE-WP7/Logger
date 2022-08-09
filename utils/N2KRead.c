@@ -103,6 +103,9 @@ int main(int argc, char *argv[]) {
 				case 127257:
 					n2k_127257_print(nm);
 					break;
+				case 128267:
+					n2k_128267_print(nm);
+					break;
 				case 129025:
 					n2k_129025_print(nm);
 					break;

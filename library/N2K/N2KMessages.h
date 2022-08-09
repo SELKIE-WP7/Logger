@@ -52,6 +52,9 @@ uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset);
 //! Extract values from PGN 127257: Device orientation
 bool n2k_127257_values(const n2k_act_message *n, uint8_t *seq, double *yaw, double *pitch, double *roll);
 
+//! Extract values from PGN 128267: Water depth
+bool n2k_128267_values(const n2k_act_message *n, uint8_t *seq, double *depth, double *offset, double *range);
+
 //! Extract values from PGN 129025: Device position
 bool n2k_129025_values(const n2k_act_message *n, double *lat, double *lon);
 
@@ -64,6 +67,9 @@ bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, dou
 //! Print PGN 127257 (Device orientation) to standard output
 void n2k_127257_print(const n2k_act_message *n);
 
+//! Print PGN 128267 (Water depth) to standard output
+void n2k_128267_print(const n2k_act_message *n);
+
 //! Print PGN 129025 (Device position) to standard output
 void n2k_129025_print(const n2k_act_message *n);
 
@@ -72,6 +78,7 @@ void n2k_129026_print(const n2k_act_message *n);
 
 //! Print PGN 130306 (Wind speed and direction) to standard output
 void n2k_130306_print(const n2k_act_message *n);
+
 //! @}
 
 //! @}

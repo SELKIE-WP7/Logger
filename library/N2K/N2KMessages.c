@@ -115,6 +115,52 @@ bool n2k_127257_values(const n2k_act_message *n, uint8_t *seq, double *yaw, doub
 
 /*!
  * @param[in] n Input message
+ * @param[out] seq Sequence number
+ * @param[out] depth Depth below sensor
+ * @param[out] offset Distance from sensor to reference surface
+ * @param[out] range Measurement range
+ * @returns True on success, false on error
+ */
+bool n2k_128267_values(const n2k_act_message *n, uint8_t *seq, double *depth, double *offset, double *range) {
+	if (n->PGN != 128267 || !n->data || n->datalen < 8) { return false; }
+
+	bool success = true;
+	if (seq) { *seq = n2k_get_uint8(n, 0); }
+
+	if (depth) {
+		uint32_t d = n2k_get_uint32(n, 1);
+		if (d == UINT32_MAX) {
+			(*depth) = NAN;
+			success = false;
+		} else {
+			(*depth) = d * 0.01;
+		}
+	}
+
+	if (offset) {
+		int16_t o = n2k_get_int16(n, 5);
+		if (o == INT16_MAX) {
+			(*offset) = NAN;
+			success = false;
+		} else {
+			(*offset) = o * 0.01;
+		}
+	}
+	if (range) {
+		int8_t r = n2k_get_int8(n, 7);
+		if (r == INT8_MAX) {
+			(*range) = NAN;
+			success = false;
+		} else {
+			(*range) = 10.0 * r;
+		}
+	}
+
+	return success;
+}
+
+/*!
+ * @param[in] n Input message
  * @param[out] lat GPS Latitude
  * @param[out] lon GPS Longitude
  * @returns True on success, false on error
@@ -226,6 +272,19 @@ void n2k_127257_print(const n2k_act_message *n) {
 	bool s = n2k_127257_values(n, &seq, &yaw, &pitch, &roll);
 	if (!s) { fprintf(stdout, "[!] "); }
 	fprintf(stdout, "Pitch: %.3lf, Roll: %.3lf, Yaw: %.3lf. Seq. ID: %03d\n", pitch, roll, yaw, seq);
+}
+
+/*!
+ * @param[in] n Input message
+ */
+void n2k_128267_print(const n2k_act_message *n) {
+	uint8_t seq = 0;
+	double depth = 0;
+	double offset = 0;
+	double range = 0;
+
+	if (!n2k_128267_values(n, &seq, &depth, &offset, &range)) { fprintf(stdout, "[!] "); }
+	fprintf(stdout, "Water Depth: %.2lfm (Offset: %.2lf, Range: %.0lf) Seq. ID %03d\n", depth, offset, range, seq);
 }
 
 /*!

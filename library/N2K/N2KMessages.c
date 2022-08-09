@@ -269,8 +269,10 @@ void n2k_127257_print(const n2k_act_message *n) {
 	double yaw = 0;
 	double pitch = 0;
 	double roll = 0;
-	bool s = n2k_127257_values(n, &seq, &yaw, &pitch, &roll);
-	if (!s) { fprintf(stdout, "[!] "); }
+
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	if (!n2k_127257_values(n, &seq, &yaw, &pitch, &roll)) { fprintf(stdout, "[!] "); }
+
 	fprintf(stdout, "Pitch: %.3lf, Roll: %.3lf, Yaw: %.3lf. Seq. ID: %03d\n", pitch, roll, yaw, seq);
 }
 
@@ -278,12 +280,16 @@ void n2k_127257_print(const n2k_act_message *n) {
  * @param[in] n Input message
  */
 void n2k_128267_print(const n2k_act_message *n) {
+	if (!n) { return; }
+
 	uint8_t seq = 0;
 	double depth = 0;
 	double offset = 0;
 	double range = 0;
 
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
 	if (!n2k_128267_values(n, &seq, &depth, &offset, &range)) { fprintf(stdout, "[!] "); }
+
 	fprintf(stdout, "Water Depth: %.2lfm (Offset: %.2lf, Range: %.0lf) Seq. ID %03d\n", depth, offset, range, seq);
 }
 
@@ -291,10 +297,14 @@ void n2k_128267_print(const n2k_act_message *n) {
  * @param[in] n Input message
  */
 void n2k_129025_print(const n2k_act_message *n) {
+	if (!n) { return; }
+
 	double lat = 0;
 	double lon = 0;
-	if (!n) { return; }
+
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
 	if (!n2k_129025_values(n, &lat, &lon)) { fprintf(stdout, "[!] "); }
+
 	fprintf(stdout, "GPS Position: %lf, %lf\n", lat, lon);
 }
 
@@ -302,12 +312,16 @@ void n2k_129025_print(const n2k_act_message *n) {
  * @param[in] n Input message
  */
 void n2k_129026_print(const n2k_act_message *n) {
+	if (!n) { return; }
+
 	uint8_t seq = 0;
 	uint8_t magnetic = 0;
 	double course = 0;
 	double speed = 0;
 
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
 	if (!n2k_129026_values(n, &seq, &magnetic, &course, &speed)) { fprintf(stdout, "[!] "); }
+
 	char *magStr = NULL;
 	switch (magnetic) {
 		case 0:
@@ -328,11 +342,14 @@ void n2k_129026_print(const n2k_act_message *n) {
  * @param[in] n Input message
  */
 void n2k_130306_print(const n2k_act_message *n) {
+	if (!n) { return; }
+
 	uint8_t seq = 0;
 	double speed = 0;
 	double angle = 0;
 	uint8_t ref = 0;
 
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
 	if (!n2k_130306_values(n, &seq, &ref, &speed, &angle)) { fprintf(stdout, "[!] "); }
 
 	char *refStr = NULL;
@@ -353,5 +370,6 @@ void n2k_130306_print(const n2k_act_message *n) {
 			refStr = "Unknown reference";
 			break;
 	}
+
 	fprintf(stdout, "Wind Speed: %.2lf @ %.3lf degrees [%s]. Seq. ID %03d\n", speed, angle, refStr, seq);
 }

@@ -16,10 +16,10 @@ Each line is indexed by GPS time of week, device source number, GNSS system and 
 If a satellite is being used for navigation calculations, this is flagged in the final column.
 
 ## OPTIONS
-**-v**, **--verbose**
+**-v**
 :  Increase output verbosity
 
-**-q**, **--verbose**
+**-q**
 :  Decrease output verbosity
 
 **-o** *OUTFILE*

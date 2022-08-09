@@ -64,13 +64,13 @@ bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, dou
 //! Print PGN 127257 (Device orientation) to standard output
 void n2k_127257_print(const n2k_act_message *n);
 
-//! Print PGN 129025 (Device orientation) to standard output
+//! Print PGN 129025 (Device position) to standard output
 void n2k_129025_print(const n2k_act_message *n);
 
-//! Print PGN 129026 (Device orientation) to standard output
+//! Print PGN 129026 (Course and Speed) to standard output
 void n2k_129026_print(const n2k_act_message *n);
 
-//! Print PGN 130306 (Device orientation) to standard output
+//! Print PGN 130306 (Wind speed and direction) to standard output
 void n2k_130306_print(const n2k_act_message *n);
 //! @}
 

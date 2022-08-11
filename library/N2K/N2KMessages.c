@@ -220,6 +220,26 @@ bool n2k_129026_values(const n2k_act_message *n, uint8_t *seq, uint8_t *mag, dou
 	}
 	return success;
 }
+/*!
+ * @param[in] n Input message
+ * @param[out] epochDays Days since January 1st 1970
+ * @param[out] seconds Seconds since local midnight
+ * @param[out] utcMins Offset from UTC in minutes
+ * @returns True on success, false on error
+ */
+bool n2k_129033_values(const n2k_act_message *n, uint16_t *epochDays, double *seconds, int16_t *utcMins) {
+	if (n->PGN != 129033 || !n->data || n->datalen < 8) { return false; }
+
+	if (epochDays) { *epochDays = n2k_get_uint16(n, 0); }
+	if (seconds) { *seconds = 0.0001 * n2k_get_uint32(n, 2); }
+	if (utcMins) { *utcMins = n2k_get_int16(n, 6); }
+	if ((*utcMins >= 1440) || (*utcMins <= -1440)) {
+		*utcMins = 0;
+		return false;
+	}
+
+	return true;
+}
 
 /*!
  * @param[in] n Input message
@@ -336,6 +356,25 @@ void n2k_129026_print(const n2k_act_message *n) {
 	}
 
 	fprintf(stdout, "Speed: %.2lf @ %.3lf degrees [%s]. Seq. ID %03d\n", speed, course, magStr, seq);
+}
+
+/*!
+ * @param[in] n Input message
+ */
+void n2k_129033_print(const n2k_act_message *n) {
+	if (!n) { return; }
+
+	uint16_t days = 0;
+	double secs = 0;
+	int16_t utcOff = 0;
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	if (!n2k_129033_values(n, &days, &secs, &utcOff)) { fprintf(stdout, "[!] "); }
+
+	long timetemp = (long)(86400 * days + secs);
+	struct tm dt = {0};
+	gmtime_r(&timetemp, &dt);
+
+	fprintf(stdout, "%s +%+02.2f\n", asctime(&dt), utcOff / 60.0);
 }
 
 /*!

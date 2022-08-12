@@ -33,6 +33,7 @@ setup(
     extras_require={
         "Web": ["Flask>=1.1.0", "Flask-Bootstrap>=3.3.7.1"],
         "AutoHat": ["autohatctl"],
+        "Serial": ["pyserial>=3.4"],
     },
     package_data={"SELKIELogger.WebInterface": ["templates/*.html"]},
     include_package_data=True,
@@ -44,6 +45,7 @@ setup(
             "SLExtract = SELKIELogger.scripts.SLExtract:SLExtract",
             "SLGPSWatch = SELKIELogger.scripts.SLGPSWatch:SLGPSWatch",
             "SLIcinga = SELKIELogger.scripts.SLIcinga:SLIcinga",
+            "SLSerialLog = SELKIELogger.scripts.SLSerialLog:SLSerialLog[Serial]",
             "SLWebDev = SELKIELogger.WebInterface:run_dev_server[Web]",
         ],
         "gui_scripts": [

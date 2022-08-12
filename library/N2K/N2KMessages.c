@@ -153,7 +153,7 @@ bool n2k_127251_values(const n2k_act_message *n, uint8_t *seq, double *rate) {
  * @returns True on success, false on error
  */
 bool n2k_127257_values(const n2k_act_message *n, uint8_t *seq, double *yaw, double *pitch, double *roll) {
-	if (n->PGN != 127257 || !n->data || n->datalen < 7) { return false; }
+	if (!n || n->PGN != 127257 || !n->data || n->datalen < 7) { return false; }
 	if (seq) { *seq = n2k_get_uint8(n, 0); }
 	bool success = true;
 	if (yaw) {
@@ -195,7 +195,7 @@ bool n2k_127257_values(const n2k_act_message *n, uint8_t *seq, double *yaw, doub
  * @returns True on success, false on error
  */
 bool n2k_128267_values(const n2k_act_message *n, uint8_t *seq, double *depth, double *offset, double *range) {
-	if (n->PGN != 128267 || !n->data || n->datalen < 8) { return false; }
+	if (!n || n->PGN != 128267 || !n->data || n->datalen < 8) { return false; }
 
 	bool success = true;
 	if (seq) { *seq = n2k_get_uint8(n, 0); }
@@ -239,7 +239,7 @@ bool n2k_128267_values(const n2k_act_message *n, uint8_t *seq, double *depth, do
  * @returns True on success, false on error
  */
 bool n2k_129025_values(const n2k_act_message *n, double *lat, double *lon) {
-	if (n->PGN != 129025 || !n->data || n->datalen < 8) { return false; }
+	if (!n || n->PGN != 129025 || !n->data || n->datalen < 8) { return false; }
 	if (lat) {
 		int32_t l = n2k_get_int32(n, 0);
 		if (l == INT32_MAX) {
@@ -268,7 +268,7 @@ bool n2k_129025_values(const n2k_act_message *n, double *lat, double *lon) {
  * @returns True on success, false on error
  */
 bool n2k_129026_values(const n2k_act_message *n, uint8_t *seq, uint8_t *mag, double *course, double *speed) {
-	if (n->PGN != 129026 || !n->data || n->datalen < 8) { return false; }
+	if (!n || n->PGN != 129026 || !n->data || n->datalen < 8) { return false; }
 	if (seq) { *seq = n2k_get_uint8(n, 0); }
 	if (mag) { (*mag) = n2k_get_uint8(n, 1) & 0x03; }
 
@@ -302,7 +302,7 @@ bool n2k_129026_values(const n2k_act_message *n, uint8_t *seq, uint8_t *mag, dou
  * @returns True on success, false on error
  */
 bool n2k_129033_values(const n2k_act_message *n, uint16_t *epochDays, double *seconds, int16_t *utcMins) {
-	if (n->PGN != 129033 || !n->data || n->datalen < 8) { return false; }
+	if (!n || n->PGN != 129033 || !n->data || n->datalen < 8) { return false; }
 
 	if (epochDays) { *epochDays = n2k_get_uint16(n, 0); }
 	if (seconds) { *seconds = 0.0001 * n2k_get_uint32(n, 2); }
@@ -324,7 +324,7 @@ bool n2k_129033_values(const n2k_act_message *n, uint16_t *epochDays, double *se
  * @returns True on success, false on error
  */
 bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, double *speed, double *angle) {
-	if (n->PGN != 130306 || !n->data || n->datalen < 8) { return false; }
+	if (!n || n->PGN != 130306 || !n->data || n->datalen < 8) { return false; }
 
 	if (seq) { *seq = n2k_get_uint8(n, 0); }
 

@@ -49,6 +49,12 @@ uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset);
  * @{
  */
 
+//! Extract values from PGN 127250: Vessel Heading
+bool n2k_127250_values(const n2k_act_message *n, uint8_t *seq, double *hdg, double *dev, double *var, uint8_t *ref);
+
+//! Extract values from PGN 127251: Rate of Turn
+bool n2k_127251_values(const n2k_act_message *n, uint8_t *seq, double *rate);
+
 //! Extract values from PGN 127257: Device orientation
 bool n2k_127257_values(const n2k_act_message *n, uint8_t *seq, double *yaw, double *pitch, double *roll);
 
@@ -66,6 +72,12 @@ bool n2k_129033_values(const n2k_act_message *n, uint16_t *epochDays, double *se
 
 //! Extract values from PGN 130306: Wind speed and direction
 bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, double *speed, double *angle);
+
+//! Print PGN 127250 (Vessel Heading) to standard output
+void n2k_127250_print(const n2k_act_message *n);
+
+//! Print PGN 127251 (Rate of Turn) to standard output
+void n2k_127251_print(const n2k_act_message *n);
 
 //! Print PGN 127257 (Device orientation) to standard output
 void n2k_127257_print(const n2k_act_message *n);

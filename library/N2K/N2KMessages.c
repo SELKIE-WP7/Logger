@@ -74,6 +74,79 @@ uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset) {
 /*!
  * @param[in] n Input message
  * @param[out] seq Sequence number
+ * @param[out] hdg Device heading, in degrees
+ * @param[out] dev Heading deviation?, in degrees
+ * @param[out] var Heading variation, in degrees
+ * @param[out] ref True (0) or Magnetic (1) heading
+ * @returns True on success, false on error
+ */
+bool n2k_127250_values(const n2k_act_message *n, uint8_t *seq, double *hdg, double *dev, double *var, uint8_t *ref) {
+	if (!n || n->PGN != 127250 || !n->data || n->datalen < 8) { return false; }
+
+	if (seq) { (*seq) = n2k_get_uint8(n, 0); }
+
+	bool success = true;
+	if (hdg) {
+		uint16_t h = n2k_get_uint16(n, 1);
+		if (h == UINT16_MAX) {
+			(*hdg) = NAN;
+			success = false;
+		} else {
+			(*hdg) = h * N2K_TO_DEGREES;
+		}
+	}
+
+	if (dev) {
+		int16_t d = n2k_get_int16(n, 3);
+		if (d == INT16_MAX) {
+			(*dev) = NAN;
+			success = false;
+		} else {
+			(*dev) = d * N2K_TO_DEGREES;
+		}
+	}
+	if (var) {
+		int16_t v = n2k_get_int16(n, 5);
+		if (v == INT16_MAX) {
+			(*var) = NAN;
+			success = false;
+		} else {
+			(*var) = v * N2K_TO_DEGREES;
+		}
+	}
+
+	if (ref) { (*ref) = n2k_get_uint8(n, 7) & 0x03; }
+
+	return success;
+}
+
+/*!
+ * @param[in] n Input message
+ * @param[out] seq Sequence number
+ * @param[out] rate Rate of turn (units TBC)
+ * @returns True on success, false on error
+ */
+bool n2k_127251_values(const n2k_act_message *n, uint8_t *seq, double *rate) {
+	if (!n || n->PGN != 127251 || !n->data || n->datalen < 8) { return false; }
+
+	if (seq) { (*seq) = n2k_get_uint8(n, 0); }
+
+	if (rate) {
+		int16_t r = n2k_get_int16(n, 1);
+		if (r == INT16_MAX) {
+			(*rate) = NAN;
+			return false;
+		} else {
+			(*rate) = r * N2K_TO_DEGREES;
+		}
+	}
+
+	return true;
+}
+
+/*!
+ * @param[in] n Input message
+ * @param[out] seq Sequence number
  * @param[out] yaw Device yaw, in degrees
  * @param[out] pitch Device pitch, in degrees
  * @param[out] roll Device roll, in degrees
@@ -220,6 +293,7 @@ bool n2k_129026_values(const n2k_act_message *n, uint8_t *seq, uint8_t *mag, dou
 	}
 	return success;
 }
+
 /*!
  * @param[in] n Input message
  * @param[out] epochDays Days since January 1st 1970
@@ -277,6 +351,52 @@ bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, dou
 		}
 	}
 	return success;
+}
+
+/*!
+ * @param[in] n Input message
+ */
+void n2k_127250_print(const n2k_act_message *n) {
+	if (!n) { return; }
+
+	uint8_t seq = 0;
+	double hdg = 0;
+	double dev = 0;
+	double var = 0;
+	uint8_t ref = 0;
+
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	if (!n2k_127250_values(n, &seq, &hdg, &dev, &var, &ref)) { fprintf(stdout, "[!] "); }
+
+	char *magStr = NULL;
+	switch (ref) {
+		case 0:
+			magStr = "True";
+			break;
+		case 1:
+			magStr = "Magnetic";
+			break;
+		default:
+			magStr = "Unknown Reference";
+			break;
+	}
+
+	fprintf(stdout, "Heading: %.3lf [%s], Deviation: %+.3lf, Variation: %+.3lf. Seq. ID %03d\n", hdg, magStr, dev,
+	        var, seq);
+}
+
+/*!
+ * @param[in] n Input message
+ */
+void n2k_127251_print(const n2k_act_message *n) {
+	if (!n) { return; }
+
+	uint8_t seq = 0;
+	double rot = 0;
+
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	if (!n2k_127251_values(n, &seq, &rot)) { fprintf(stdout, "[!] "); }
+	fprintf(stdout, "Rate of turn: %+.3lf. Seq. ID %03d\n", rot, seq);
 }
 
 /*!

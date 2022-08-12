@@ -100,6 +100,12 @@ int main(int argc, char *argv[]) {
 			log_info(&state, 2, "%d=>%d: PGN %d, Priority %d", nm->src, nm->dst,
 			         nm->PGN, nm->priority);
 			switch (nm->PGN) {
+				case 127250:
+					n2k_127250_print(nm);
+					break;
+				case 127251:
+					n2k_127251_print(nm);
+					break;
 				case 127257:
 					n2k_127257_print(nm);
 					break;

@@ -59,6 +59,14 @@ def processArguments():
         const=True,
         help="Enable compression of CSV output",
     )
+    options.add_argument(
+        "-e",
+        "--epoch",
+        default=False,
+        action="store_const",
+        const=True,
+        help="Convert running timestamps to date/time values using Epoch field from primary clock source",
+    )
     return options.parse_args()
 
 
@@ -98,6 +106,7 @@ def SLConvert():
         args.timesource,
         args.resample,
         args.dropna,
+        args.epoch,
     )
 
 

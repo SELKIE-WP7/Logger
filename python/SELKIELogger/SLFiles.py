@@ -440,7 +440,7 @@ class DatFile:
             f"Out of data - {len(stack)} messages abandoned beyond last timestanp"
         )
 
-    def yieldDataFrame(self, dropna=False, resample=None):
+    def yieldDataFrame(self, dropna=False, resample=None, convertEpoch=False):
         """!
         Process file and yield results as dataframes that can be merged later.
 
@@ -450,6 +450,9 @@ class DatFile:
         @returns pandas.DataFrame representing a chunk of file data
         """
         count = 0
+        lastDT = None
+        DTCol = f"DT:0x{self._pcs:02x}"
+        EpochCol = f"Epoch:0x{self._pcs:02x}"
         for chunk in self.processMessages():
             ndf = pd.DataFrame(data=[x[1] for x in chunk], index=[x[0] for x in chunk])
             count += len(ndf)
@@ -466,12 +469,41 @@ class DatFile:
 
             ndf = ndf.reindex(columns=self._columnList, copy=False)
 
+            if convertEpoch:
+                ndf[DTCol] = pd.to_datetime(
+                    ndf[EpochCol].sparse.to_dense(), unit="s", errors="ignore"
+                ).interpolate("ffill")
+
+                # Isolate values before first time stamp
+                firstValIX = ndf[DTCol].dropna().head(1).index[0]
+                preTSVals = ndf.loc[ndf.index.min() : firstValIX, DTCol]
+                preTSVals = preTSVals.head(len(preTSVals) - 1)
+                if lastDT:
+                    ndf.loc[preTSVals.index, DTCol] = lastDT[0] + pd.to_timedelta(
+                        preTSVals.index - lastDT[1], unit="ms"
+                    )
+                else:
+                    ndf.loc[preTSVals.index, DTCol] = (
+                        ndf[DTCol].dropna().head(1)
+                        - pd.to_timedelta(firstValIX - preTSVals.index, unit="ms")
+                    ).values
+
+                for l, g in ndf.groupby(DTCol):
+                    delta = g.index.values - g.index.values.min()
+                    dt = g[DTCol] + pd.to_timedelta(delta, unit="ms")
+                    if max(delta) > 1000:
+                        print(f"Large interval encountered at {l} [{max(delta)}]")
+                    ndf.loc[g.index, DTCol] = dt
+
+                lastDT = ndf[DTCol].dropna().tail(1)
+                lastDT = (lastDT.values[0], lastDT.index[0])
+
             if dropna:
                 ndf.dropna(how="all", inplace=True)
             ndf.index.name = "Timestamp"
             yield ndf
 
-    def asDataFrame(self, dropna=False, resample=None):
+    def asDataFrame(self, dropna=False, resample=None, convertEpoch=False):
         """!
         Wrapper around yieldDataFrame.
         Processes all records and merges them into a single frame.
@@ -480,7 +512,7 @@ class DatFile:
         @returns pandas.DataFrame containing file data
         """
         df = None
-        for ndf in self.yieldDataFrame(dropna, resample):
+        for ndf in self.yieldDataFrame(dropna, resample, convertEpoch):
             count = len(ndf)
             if df is None:
                 df = ndf

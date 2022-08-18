@@ -7,7 +7,16 @@ from .SLFiles import DatFile, VarFile
 from .SLMessages import IDs
 
 
-def convertDataFile(varfile, datfile, output, fileFormat, timesource, resample, dropna):
+def convertDataFile(
+    varfile,
+    datfile,
+    output,
+    fileFormat,
+    timesource,
+    resample,
+    dropna=False,
+    epoch=False,
+):
     log = logging.getLogger("SELKIELogger.convertDataFile")
 
     log.info(f"Using '{varfile}' as channel map file")

@@ -521,6 +521,14 @@ class StateFile:
         @returns Channel statistics (also stored in _stats)
         """
         with open(self._fn) as sf:
+            try:
+                # Safer, as ensures we get the mtime of the file we have open,
+                # even if it's been replaced underneath us in the interim
+                self._mtime = os.fstat(sf.fileno()).st_mtime
+            except IOError:
+                # But if we can't do that, try reading the file by name
+                self._mtime = os.stat(self._fn).st_mtime
+
             self._ts = int(sf.readline())
             self._vf = VarFile(sf.readline().strip()).getSourceMap()
             cols = ["Source", "Channel", "Count", "Time", "Value"]
@@ -626,8 +634,7 @@ class StateFile:
         """
         if timestamp is None:
             return None
-        if self._ts is None:
+        if self._ts is None or self._mtime is None:
             self.parse()
-        mtime = os.stat(self._fn).st_mtime
-        delta = mtime - self._ts / 1000
+        delta = self._mtime - self._ts / 1000
         return pd.to_datetime(timestamp / 1000 + delta, unit="s")

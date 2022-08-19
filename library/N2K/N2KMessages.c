@@ -452,15 +452,26 @@ void n2k_60928_print(const n2k_act_message *n) {
 
 /*!
  * @param[in] n Input message
+ * @param[in] d Delimiter - appended to output.
+ */
+void n2k_header_print(const n2k_act_message *n, const char d) {
+	char delim = '\n';
+	if (d) { delim = d; }
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	if (n->dst == 255) {
+		fprintf(stdout, "PGN %06d broadcast from %03d%c", n->PGN, n->src, delim);
+	} else {
+		fprintf(stdout, "PGN %06d sent from %03d to %03d%c", n->PGN, n->src, n->dst, delim);
+	}
+}
+
+/*!
+ * @param[in] n Input message
  */
 void n2k_basic_print(const n2k_act_message *n) {
 	if (!n) { return; }
-	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
-	if (n->dst == 255) {
-		fprintf(stdout, "PGN %06d broadcast from %03d\n", n->PGN, n->src);
-	} else {
-		fprintf(stdout, "PGN %06d sent from %03d to %03d\n", n->PGN, n->src, n->dst);
-	}
+	n2k_header_print(n, '\t');
+	fprintf(stdout, "-- Not parsed --\n");
 }
 
 /*!
@@ -475,7 +486,7 @@ void n2k_127250_print(const n2k_act_message *n) {
 	double var = 0;
 	uint8_t ref = 0;
 
-	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	n2k_header_print(n, '\t');
 	if (!n2k_127250_values(n, &seq, &hdg, &dev, &var, &ref)) { fprintf(stdout, "[!] "); }
 
 	char *magStr = NULL;
@@ -504,7 +515,7 @@ void n2k_127251_print(const n2k_act_message *n) {
 	uint8_t seq = 0;
 	double rot = 0;
 
-	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	n2k_header_print(n, '\t');
 	if (!n2k_127251_values(n, &seq, &rot)) { fprintf(stdout, "[!] "); }
 	fprintf(stdout, "Rate of turn: %+.3lf. Seq. ID %03d\n", rot, seq);
 }
@@ -520,7 +531,7 @@ void n2k_127257_print(const n2k_act_message *n) {
 	double pitch = 0;
 	double roll = 0;
 
-	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	n2k_header_print(n, '\t');
 	if (!n2k_127257_values(n, &seq, &yaw, &pitch, &roll)) { fprintf(stdout, "[!] "); }
 
 	fprintf(stdout, "Pitch: %.3lf, Roll: %.3lf, Yaw: %.3lf. Seq. ID: %03d\n", pitch, roll, yaw, seq);
@@ -537,7 +548,7 @@ void n2k_128267_print(const n2k_act_message *n) {
 	double offset = 0;
 	double range = 0;
 
-	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	n2k_header_print(n, '\t');
 	if (!n2k_128267_values(n, &seq, &depth, &offset, &range)) { fprintf(stdout, "[!] "); }
 
 	fprintf(stdout, "Water Depth: %.2lfm (Offset: %.2lf, Range: %.0lf) Seq. ID %03d\n", depth, offset, range, seq);
@@ -552,7 +563,7 @@ void n2k_129025_print(const n2k_act_message *n) {
 	double lat = 0;
 	double lon = 0;
 
-	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	n2k_header_print(n, '\t');
 	if (!n2k_129025_values(n, &lat, &lon)) { fprintf(stdout, "[!] "); }
 
 	fprintf(stdout, "GPS Position: %lf, %lf\n", lat, lon);
@@ -569,7 +580,7 @@ void n2k_129026_print(const n2k_act_message *n) {
 	double course = 0;
 	double speed = 0;
 
-	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	n2k_header_print(n, '\t');
 	if (!n2k_129026_values(n, &seq, &magnetic, &course, &speed)) { fprintf(stdout, "[!] "); }
 
 	char *magStr = NULL;
@@ -597,7 +608,8 @@ void n2k_129033_print(const n2k_act_message *n) {
 	uint16_t days = 0;
 	double secs = 0;
 	int16_t utcOff = 0;
-	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+
+	n2k_header_print(n, '\t');
 	if (!n2k_129033_values(n, &days, &secs, &utcOff)) { fprintf(stdout, "[!] "); }
 
 	long timetemp = (long)(86400 * days + secs);
@@ -620,7 +632,7 @@ void n2k_130306_print(const n2k_act_message *n) {
 	double angle = 0;
 	uint8_t ref = 0;
 
-	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	n2k_header_print(n, '\t');
 	if (!n2k_130306_values(n, &seq, &ref, &speed, &angle)) { fprintf(stdout, "[!] "); }
 
 	char *refStr = NULL;
@@ -658,7 +670,7 @@ void n2k_130311_print(const n2k_act_message *n) {
 	double h = 0;
 	double p = 0;
 
-	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	n2k_header_print(n, '\t');
 	if (!n2k_130311_values(n, &seq, &tid, &hid, &t, &h, &p)) { fprintf(stdout, "[!] "); }
 
 	char *tSrc = NULL;

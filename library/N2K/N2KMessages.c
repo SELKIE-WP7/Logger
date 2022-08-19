@@ -539,7 +539,9 @@ void n2k_129033_print(const n2k_act_message *n) {
 	struct tm dt = {0};
 	gmtime_r(&timetemp, &dt);
 
-	fprintf(stdout, "%s +%+02.2f\n", asctime(&dt), utcOff / 60.0);
+	char timeS[30] = {0};
+	strftime(timeS, sizeof(timeS), "%F %T", &dt);
+	fprintf(stdout, "%s %+02.2f\n", timeS, utcOff / 60.0);
 }
 
 /*!

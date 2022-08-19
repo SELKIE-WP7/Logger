@@ -130,6 +130,9 @@ int main(int argc, char *argv[]) {
 				case 130311:
 					n2k_130311_print(nm);
 					break;
+				default:
+					n2k_basic_print(nm);
+					break;
 			}
 			count++;
 		} else {

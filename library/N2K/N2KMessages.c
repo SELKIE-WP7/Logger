@@ -453,6 +453,19 @@ void n2k_60928_print(const n2k_act_message *n) {
 /*!
  * @param[in] n Input message
  */
+void n2k_basic_print(const n2k_act_message *n) {
+	if (!n) { return; }
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	if (n->dst == 255) {
+		fprintf(stdout, "PGN %06d broadcast from %03d\n", n->PGN, n->src);
+	} else {
+		fprintf(stdout, "PGN %06d sent from %03d to %03d\n", n->PGN, n->src, n->dst);
+	}
+}
+
+/*!
+ * @param[in] n Input message
+ */
 void n2k_127250_print(const n2k_act_message *n) {
 	if (!n) { return; }
 

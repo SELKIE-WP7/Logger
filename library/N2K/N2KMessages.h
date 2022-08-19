@@ -81,6 +81,9 @@ bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, dou
 bool n2k_130311_values(const n2k_act_message *n, uint8_t *seq, uint8_t *tid, uint8_t *hid, double *temp, double *humid,
                        double *press);
 
+//! Print basic PGN details to standard output
+void n2k_basic_print(const n2k_act_message *n);
+
 //! Print PGN 60928 (Address claim) to standard output
 void n2k_60928_print(const n2k_act_message *n);
 

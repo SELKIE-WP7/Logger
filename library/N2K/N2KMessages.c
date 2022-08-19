@@ -66,15 +66,40 @@ int32_t n2k_get_int32(const n2k_act_message *n, size_t offset) {
  * @returns Unsigned 32-bit integer
  */
 uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset) {
-	uint32_t v = n->data[offset] + (uint32_t)(n->data[offset + 1] << 8) + (uint32_t)(n->data[offset + 2] << 16) +
-	             (uint32_t)(n->data[offset + 3] << 24);
+	uint32_t v = n->data[offset] + ((uint32_t)(n->data[offset + 1]) << 8) +
+	             ((uint32_t)(n->data[offset + 2]) << 16) + ((uint32_t)(n->data[offset + 3]) << 24);
 	return v;
 }
 
 /*!
  * @param[in] n N2K message containing target data
  * @param[in] offset Starting offset within n2k_act_message.data
- * @param[in] size Read from 8, 16 or 32 bit integer
+ * @returns Signed 64-bit integer
+ */
+int64_t n2k_get_int64(const n2k_act_message *n, size_t offset) {
+	uint64_t u = n2k_get_uint64(n, offset);
+	int64_t v = (u & 0x7FFFFFFFFFFFFFFFULL);
+	if (u & 0x8000000000000000ULL) { v = -1 * ((1ULL << 63) - v); }
+	return v;
+}
+
+/*!
+ * @param[in] n N2K message containing target data
+ * @param[in] offset Starting offset within n2k_act_message.data
+ * @returns Unsigned 64-bit integer
+ */
+uint64_t n2k_get_uint64(const n2k_act_message *n, size_t offset) {
+	uint64_t v = n->data[offset] + ((uint64_t)(n->data[offset + 1]) << 8) +
+	             ((uint64_t)(n->data[offset + 2]) << 16) + ((uint64_t)(n->data[offset + 3]) << 24) +
+	             ((uint64_t)(n->data[offset + 4]) << 32) + ((uint64_t)(n->data[offset + 5]) << 40) +
+	             ((uint64_t)(n->data[offset + 6]) << 48) + ((uint64_t)(n->data[offset + 7]) << 56);
+	return v;
+}
+
+/*!
+ * @param[in] n N2K message containing target data
+ * @param[in] offset Starting offset within n2k_act_message.data
+ * @param[in] size Size of underlying integer (8,16,32,64)
  * @returns double - NAN if underlying data is invalid
  */
 double n2k_get_double(const n2k_act_message *n, size_t offset, uint8_t size) {
@@ -91,6 +116,10 @@ double n2k_get_double(const n2k_act_message *n, size_t offset, uint8_t size) {
 		int32_t v = n2k_get_int32(n, offset);
 		if (v == INT32_MAX || v == INT32_MIN) { return NAN; }
 		d = v;
+	} else if (size == 64) {
+		int64_t v = n2k_get_int64(n, offset);
+		if (v == INT64_MAX || v == INT64_MIN) { return NAN; }
+		d = v;
 	}
 	return d;
 }
@@ -98,7 +127,7 @@ double n2k_get_double(const n2k_act_message *n, size_t offset, uint8_t size) {
 /*!
  * @param[in] n N2K message containing target data
  * @param[in] offset Starting offset within n2k_act_message.data
- * @param[in] size Read from 8, 16 or 32 bit integer
+ * @param[in] size Size of underlying integer (8,16,32,64)
  * @returns double - NAN if underlying data is invalid
  */
 double n2k_get_udouble(const n2k_act_message *n, size_t offset, uint8_t size) {
@@ -114,6 +143,10 @@ double n2k_get_udouble(const n2k_act_message *n, size_t offset, uint8_t size) {
 	} else if (size == 32) {
 		uint32_t v = n2k_get_uint32(n, offset);
 		if (v == UINT32_MAX) { return NAN; }
+		d = v;
+	} else if (size == 64) {
+		uint64_t v = n2k_get_uint64(n, offset);
+		if (v == UINT64_MAX) { return NAN; }
 		d = v;
 	}
 	return d;

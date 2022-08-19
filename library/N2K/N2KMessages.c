@@ -7,7 +7,7 @@
 #include "N2KTypes.h"
 
 /*!
- * @param[in] n N2K message containing target daat
+ * @param[in] n N2K message containing target data
  * @param[in] offset Starting offset within n2k_act_message.data
  * @returns Unsigned byte
  */
@@ -16,7 +16,7 @@ uint8_t n2k_get_uint8(const n2k_act_message *n, size_t offset) {
 }
 
 /*!
- * @param[in] n N2K message containing target daat
+ * @param[in] n N2K message containing target data
  * @param[in] offset Starting offset within n2k_act_message.data
  * @returns Signed byte
  */
@@ -28,7 +28,7 @@ int8_t n2k_get_int8(const n2k_act_message *n, size_t offset) {
 }
 
 /*!
- * @param[in] n N2K message containing target daat
+ * @param[in] n N2K message containing target data
  * @param[in] offset Starting offset within n2k_act_message.data
  * @returns Signed 16-bit integer
  */
@@ -40,7 +40,7 @@ int16_t n2k_get_int16(const n2k_act_message *n, size_t offset) {
 }
 
 /*!
- * @param[in] n N2K message containing target daat
+ * @param[in] n N2K message containing target data
  * @param[in] offset Starting offset within n2k_act_message.data
  * @returns Unsigned 16-bit integer
  */
@@ -49,7 +49,7 @@ uint16_t n2k_get_uint16(const n2k_act_message *n, size_t offset) {
 }
 
 /*!
- * @param[in] n N2K message containing target daat
+ * @param[in] n N2K message containing target data
  * @param[in] offset Starting offset within n2k_act_message.data
  * @returns Signed 32-bit integer
  */
@@ -61,7 +61,7 @@ int32_t n2k_get_int32(const n2k_act_message *n, size_t offset) {
 }
 
 /*!
- * @param[in] n N2K message containing target daat
+ * @param[in] n N2K message containing target data
  * @param[in] offset Starting offset within n2k_act_message.data
  * @returns Unsigned 32-bit integer
  */
@@ -70,6 +70,55 @@ uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset) {
 	             (uint32_t)(n->data[offset + 3] << 24);
 	return v;
 }
+
+/*!
+ * @param[in] n N2K message containing target data
+ * @param[in] offset Starting offset within n2k_act_message.data
+ * @param[in] size Read from 8, 16 or 32 bit integer
+ * @returns double - NAN if underlying data is invalid
+ */
+double n2k_get_double(const n2k_act_message *n, size_t offset, uint8_t size) {
+	double d = 0;
+	if (size == 8) {
+		int8_t v = n2k_get_int8(n, offset);
+		if (v == INT8_MAX || v == INT8_MIN) { return NAN; }
+		d = v;
+	} else if (size == 16) {
+		int16_t v = n2k_get_int16(n, offset);
+		if (v == INT16_MAX || v == INT16_MIN) { return NAN; }
+		d = v;
+	} else if (size == 32) {
+		int32_t v = n2k_get_int32(n, offset);
+		if (v == INT32_MAX || v == INT32_MIN) { return NAN; }
+		d = v;
+	}
+	return d;
+}
+
+/*!
+ * @param[in] n N2K message containing target data
+ * @param[in] offset Starting offset within n2k_act_message.data
+ * @param[in] size Read from 8, 16 or 32 bit integer
+ * @returns double - NAN if underlying data is invalid
+ */
+double n2k_get_udouble(const n2k_act_message *n, size_t offset, uint8_t size) {
+	double d = 0;
+	if (size == 8) {
+		uint8_t v = n2k_get_uint8(n, offset);
+		if (v == UINT8_MAX) { return NAN; }
+		d = v;
+	} else if (size == 16) {
+		uint16_t v = n2k_get_uint16(n, offset);
+		if (v == UINT16_MAX) { return NAN; }
+		d = v;
+	} else if (size == 32) {
+		uint32_t v = n2k_get_uint32(n, offset);
+		if (v == UINT32_MAX) { return NAN; }
+		d = v;
+	}
+	return d;
+}
+
 /*!
  * @param[in] n Input message
  * @param[out] id ISO Identity
@@ -114,32 +163,17 @@ bool n2k_127250_values(const n2k_act_message *n, uint8_t *seq, double *hdg, doub
 
 	bool success = true;
 	if (hdg) {
-		uint16_t h = n2k_get_uint16(n, 1);
-		if (h == UINT16_MAX) {
-			(*hdg) = NAN;
-			success = false;
-		} else {
-			(*hdg) = h * N2K_TO_DEGREES;
-		}
+		(*hdg) = n2k_get_udouble(n, 1, 16) * N2K_TO_DEGREES;
+		success &= isfinite((*hdg));
 	}
 
 	if (dev) {
-		int16_t d = n2k_get_int16(n, 3);
-		if (d == INT16_MAX) {
-			(*dev) = NAN;
-			success = false;
-		} else {
-			(*dev) = d * N2K_TO_DEGREES;
-		}
+		(*dev) = n2k_get_double(n, 3, 16) * N2K_TO_DEGREES;
+		success &= isfinite((*dev));
 	}
 	if (var) {
-		int16_t v = n2k_get_int16(n, 5);
-		if (v == INT16_MAX) {
-			(*var) = NAN;
-			success = false;
-		} else {
-			(*var) = v * N2K_TO_DEGREES;
-		}
+		(*var) = n2k_get_double(n, 5, 16) * N2K_TO_DEGREES;
+		success &= isfinite((*var));
 	}
 
 	if (ref) { (*ref) = n2k_get_uint8(n, 7) & 0x03; }
@@ -159,13 +193,8 @@ bool n2k_127251_values(const n2k_act_message *n, uint8_t *seq, double *rate) {
 	if (seq) { (*seq) = n2k_get_uint8(n, 0); }
 
 	if (rate) {
-		int16_t r = n2k_get_int16(n, 1);
-		if (r == INT16_MAX) {
-			(*rate) = NAN;
-			return false;
-		} else {
-			(*rate) = r * N2K_TO_DEGREES;
-		}
+		(*rate) = n2k_get_double(n, 1, 32) / 3200 * N2K_TO_DEGREES;
+		if (!isfinite((*rate))) { return false; }
 	}
 
 	return true;
@@ -184,31 +213,16 @@ bool n2k_127257_values(const n2k_act_message *n, uint8_t *seq, double *yaw, doub
 	if (seq) { *seq = n2k_get_uint8(n, 0); }
 	bool success = true;
 	if (yaw) {
-		int16_t y = n2k_get_int16(n, 1);
-		if (y == INT16_MAX) {
-			(*yaw) = NAN;
-			success = false;
-		} else {
-			(*yaw) = y * N2K_TO_DEGREES;
-		}
+		(*yaw) = n2k_get_double(n, 1, 16) * N2K_TO_DEGREES;
+		success &= isfinite(*yaw);
 	}
 	if (pitch) {
-		int16_t p = n2k_get_int16(n, 3);
-		if (p == INT16_MAX) {
-			(*pitch) = NAN;
-			success = false;
-		} else {
-			(*pitch) = p * N2K_TO_DEGREES;
-		}
+		(*pitch) = n2k_get_double(n, 3, 16) * N2K_TO_DEGREES;
+		success &= isfinite(*pitch);
 	}
 	if (roll) {
-		int16_t r = n2k_get_int16(n, 5);
-		if (r == INT16_MAX) {
-			(*roll) = NAN;
-			success = false;
-		} else {
-			(*roll) = r * N2K_TO_DEGREES;
-		}
+		(*roll) = n2k_get_double(n, 5, 16) * N2K_TO_DEGREES;
+		success &= isfinite(*roll);
 	}
 	return success;
 }
@@ -228,32 +242,17 @@ bool n2k_128267_values(const n2k_act_message *n, uint8_t *seq, double *depth, do
 	if (seq) { *seq = n2k_get_uint8(n, 0); }
 
 	if (depth) {
-		uint32_t d = n2k_get_uint32(n, 1);
-		if (d == UINT32_MAX) {
-			(*depth) = NAN;
-			success = false;
-		} else {
-			(*depth) = d * 0.01;
-		}
+		(*depth) = n2k_get_udouble(n, 1, 32) * 0.01;
+		success &= isfinite((*depth));
 	}
 
 	if (offset) {
-		int16_t o = n2k_get_int16(n, 5);
-		if (o == INT16_MAX) {
-			(*offset) = NAN;
-			success = false;
-		} else {
-			(*offset) = o * 0.01;
-		}
+		(*offset) = n2k_get_double(n, 5, 16) * 0.01;
+		success &= isfinite((*offset));
 	}
 	if (range) {
-		int8_t r = n2k_get_int8(n, 7);
-		if (r == INT8_MAX) {
-			(*range) = NAN;
-			success = false;
-		} else {
-			(*range) = 10.0 * r;
-		}
+		(*range) = n2k_get_double(n, 7, 8) * 10.0;
+		success &= isfinite((*range));
 	}
 
 	return success;
@@ -267,23 +266,16 @@ bool n2k_128267_values(const n2k_act_message *n, uint8_t *seq, double *depth, do
  */
 bool n2k_129025_values(const n2k_act_message *n, double *lat, double *lon) {
 	if (!n || n->PGN != 129025 || !n->data || n->datalen < 8) { return false; }
+	bool success = true;
 	if (lat) {
-		int32_t l = n2k_get_int32(n, 0);
-		if (l == INT32_MAX) {
-			(*lat) = NAN;
-		} else {
-			(*lat) = l * 1E-7;
-		}
+		(*lat) = n2k_get_double(n, 0, 32) * 1E-7;
+		success &= isfinite((*lat));
 	}
 	if (lon) {
-		int32_t l = n2k_get_int32(n, 4);
-		if (l == INT32_MAX) {
-			(*lon) = NAN;
-		} else {
-			(*lon) = n2k_get_int32(n, 4) * 1E-7;
-		}
+		(*lon) = n2k_get_double(n, 4, 32) * 1E-7;
+		success &= isfinite((*lon));
 	}
-	return !(isnan(*lat) || isnan(*lon));
+	return success;
 }
 
 /*!
@@ -301,22 +293,12 @@ bool n2k_129026_values(const n2k_act_message *n, uint8_t *seq, uint8_t *mag, dou
 
 	bool success = true;
 	if (course) {
-		int16_t c = n2k_get_int16(n, 2);
-		if (c == INT16_MAX) {
-			(*course) = NAN;
-			success = false;
-		} else {
-			(*course) = c * N2K_TO_DEGREES;
-		}
+		(*course) = n2k_get_udouble(n, 2, 16) * N2K_TO_DEGREES;
+		success &= isfinite((*course));
 	}
 	if (speed) {
-		int16_t s = n2k_get_int16(n, 4);
-		if (s == INT16_MAX) {
-			(*speed) = NAN;
-			success = false;
-		} else {
-			(*speed) = s * 0.01;
-		}
+		(*speed) = n2k_get_double(n, 4, 16) * 0.01;
+		success &= isfinite((*speed));
 	}
 	return success;
 }
@@ -359,23 +341,13 @@ bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, dou
 
 	bool success = true;
 	if (speed) {
-		int16_t s = n2k_get_int16(n, 1);
-		if (s == INT16_MAX) {
-			(*speed) = NAN;
-			success = false;
-		} else {
-			(*speed) = s * 0.01;
-		}
+		(*speed) = n2k_get_double(n, 1, 16) * 0.01;
+		success &= isfinite((*speed));
 	}
 
 	if (angle) {
-		int16_t a = n2k_get_int16(n, 3);
-		if (a == INT16_MAX) {
-			(*angle) = NAN;
-			success = false;
-		} else {
-			(*angle) = a * N2K_TO_DEGREES;
-		}
+		(*angle) = n2k_get_udouble(n, 3, 16) * N2K_TO_DEGREES;
+		success &= isfinite((*angle));
 	}
 	return success;
 }
@@ -402,31 +374,16 @@ bool n2k_130311_values(const n2k_act_message *n, uint8_t *seq, uint8_t *tid, uin
 	if (tid) { (*tid) = ids & 0x3F; }
 	if (hid) { (*hid) = (ids & 0xC0) >> 6; }
 	if (temp) {
-		uint16_t t = n2k_get_uint16(n, 2);
-		if (t == UINT16_MAX) {
-			(*temp) = NAN;
-			success = false;
-		} else {
-			(*temp) = t * 0.01 - 273.15;
-		}
+		(*temp) = n2k_get_udouble(n, 2, 16) * 0.01 - 273.15;
+		success &= isfinite((*temp));
 	}
 	if (humid) {
-		int16_t h = n2k_get_uint16(n, 4);
-		if (h == INT16_MAX) {
-			(*humid) = NAN;
-			success = false;
-		} else {
-			(*humid) = h * 0.004;
-		}
+		(*humid) = n2k_get_double(n, 4, 16) * 0.004;
+		success &= isfinite((*humid));
 	}
 	if (press) {
-		uint16_t p = n2k_get_uint16(n, 6);
-		if (p == UINT16_MAX) {
-			(*press) = NAN;
-			success = false;
-		} else {
-			(*press) = p;
-		}
+		(*press) = n2k_get_udouble(n, 6, 16);
+		success &= isfinite((*press));
 	}
 
 	return success;
@@ -708,6 +665,6 @@ void n2k_130311_print(const n2k_act_message *n) {
 			break;
 	}
 
-	fprintf(stdout, "Environmental data: %+.2lfC (%s), %+.3lf%% RH (%s), %.0lf bar[?]. Seq ID %03d\n", t, tSrc, h,
+	fprintf(stdout, "Environmental data: %+.2lfC (%s), %+.3lf%% RH (%s), %.0lf mbar. Seq ID %03d\n", t, tSrc, h,
 	        hSrc, p, seq);
 }

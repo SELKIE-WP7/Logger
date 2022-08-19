@@ -42,6 +42,12 @@ int32_t n2k_get_int32(const n2k_act_message *n, size_t offset);
 
 //! Extract unsigned 32-bit integer from N2K Message
 uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset);
+
+//! Extract double from underlying integer data
+double n2k_get_double(const n2k_act_message *n, size_t offset, uint8_t size);
+
+//! Extract double from underlying unsigned integer data
+double n2k_get_udouble(const n2k_act_message *n, size_t offset, uint8_t size);
 //! @}
 
 /*!

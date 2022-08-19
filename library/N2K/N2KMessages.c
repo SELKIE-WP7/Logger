@@ -379,7 +379,7 @@ bool n2k_130311_values(const n2k_act_message *n, uint8_t *seq, uint8_t *tid, uin
 	}
 	if (humid) {
 		(*humid) = n2k_get_double(n, 4, 16) * 0.004;
-		success &= isfinite((*humid));
+		success &= (isfinite((*humid)) || ((*hid) == 3));
 	}
 	if (press) {
 		(*press) = n2k_get_udouble(n, 6, 16);
@@ -659,6 +659,9 @@ void n2k_130311_print(const n2k_act_message *n) {
 			break;
 		case 1:
 			hSrc = "External";
+			break;
+		case 3:
+			hSrc = "Unavailable";
 			break;
 		default:
 			hSrc = "Unknown";

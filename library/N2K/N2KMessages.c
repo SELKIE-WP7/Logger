@@ -380,6 +380,58 @@ bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, dou
 	return success;
 }
 
+/*!
+ * @param[in] n Input message
+ * @param[out] seq Sequence number
+ * @param[out] tid Temperature source
+ * @param[out] hid Humidity Source
+ * @param[out] temp Temperature
+ * @param[out] humid Humidity
+ * @param[out] press Atmospheric Pressure
+ * @returns True on success, false on error
+ */
+
+bool n2k_130311_values(const n2k_act_message *n, uint8_t *seq, uint8_t *tid, uint8_t *hid, double *temp, double *humid,
+                       double *press) {
+	if (!n || n->PGN != 130311 || !n->data || n->datalen < 8) { return false; }
+
+	if (seq) { (*seq) = n2k_get_uint8(n, 0); }
+
+	bool success = true;
+	uint8_t ids = n2k_get_uint8(n, 1);
+	if (tid) { (*tid) = ids & 0x3F; }
+	if (hid) { (*hid) = (ids & 0xC0) >> 6; }
+	if (temp) {
+		uint16_t t = n2k_get_uint16(n, 2);
+		if (t == UINT16_MAX) {
+			(*temp) = NAN;
+			success = false;
+		} else {
+			(*temp) = t * 0.01 - 273.15;
+		}
+	}
+	if (humid) {
+		int16_t h = n2k_get_uint16(n, 4);
+		if (h == INT16_MAX) {
+			(*humid) = NAN;
+			success = false;
+		} else {
+			(*humid) = h * 0.004;
+		}
+	}
+	if (press) {
+		uint16_t p = n2k_get_uint16(n, 6);
+		if (p == UINT16_MAX) {
+			(*press) = NAN;
+			success = false;
+		} else {
+			(*press) = p;
+		}
+	}
+
+	return success;
+}
+
 void n2k_60928_print(const n2k_act_message *n) {
 	if (!n) { return; }
 	uint32_t id = 0;  // Really 21 bits
@@ -578,4 +630,59 @@ void n2k_130306_print(const n2k_act_message *n) {
 	}
 
 	fprintf(stdout, "Wind Speed: %.2lf @ %.3lf degrees [%s]. Seq. ID %03d\n", speed, angle, refStr, seq);
+}
+
+/*!
+ * @param[in] n Input message
+ */
+void n2k_130311_print(const n2k_act_message *n) {
+	if (!n) { return; }
+
+	uint8_t seq = 0;
+	uint8_t tid = 0;
+	uint8_t hid = 0;
+	double t = 0;
+	double h = 0;
+	double p = 0;
+
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	if (!n2k_130311_values(n, &seq, &tid, &hid, &t, &h, &p)) { fprintf(stdout, "[!] "); }
+
+	char *tSrc = NULL;
+	switch (tid) {
+		case 0:
+			tSrc = "Sea Water";
+			break;
+		case 1:
+			tSrc = "External";
+			break;
+		case 2:
+			tSrc = "Internal";
+			break;
+		case 3:
+			tSrc = "Engine Room";
+			break;
+		case 4:
+			tSrc = "Cabin";
+			break;
+		default:
+			tSrc = "Unknown";
+			break;
+	}
+
+	char *hSrc = NULL;
+	switch (hid) {
+		case 0:
+			hSrc = "Internal";
+			break;
+		case 1:
+			hSrc = "External";
+			break;
+		default:
+			hSrc = "Unknown";
+			break;
+	}
+
+	fprintf(stdout, "Environmental data: %+.2lfC (%s), %+.3lf%% RH (%s), %.0lf bar[?]. Seq ID %03d\n", t, tSrc, h,
+	        hSrc, p, seq);
 }

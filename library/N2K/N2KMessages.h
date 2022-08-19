@@ -77,6 +77,10 @@ bool n2k_129033_values(const n2k_act_message *n, uint16_t *epochDays, double *se
 //! Extract values from PGN 130306: Wind speed and direction
 bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, double *speed, double *angle);
 
+//! Extract values from PGN 130311: Environmental data
+bool n2k_130311_values(const n2k_act_message *n, uint8_t *seq, uint8_t *tid, uint8_t *hid, double *temp, double *humid,
+                       double *press);
+
 //! Print PGN 60928 (Address claim) to standard output
 void n2k_60928_print(const n2k_act_message *n);
 
@@ -104,6 +108,8 @@ void n2k_129033_print(const n2k_act_message *n);
 //! Print PGN 130306 (Wind speed and direction) to standard output
 void n2k_130306_print(const n2k_act_message *n);
 
+//! Print PGN 130311 (Environmental data) to standard output
+void n2k_130311_print(const n2k_act_message *n);
 //! @}
 
 //! @}

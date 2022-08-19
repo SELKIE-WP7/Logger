@@ -338,6 +338,88 @@ bool n2k_129026_values(const n2k_act_message *n, uint8_t *seq, uint8_t *mag, dou
 
 /*!
  * @param[in] n Input message
+ * @param[out] seq Sequence number
+ * @param[out] epochDays Days since January 1st 1970
+ * @param[out] seconds Seconds since local midnight
+ * @param[out] lat Latitude
+ * @param[out] lon Longitude
+ * @param[out] alt Altitude
+ * @param[out] type GNSS System in use
+ * @param[out] method GNSS Position fix type
+ * @param[out] integ Data integrity check type
+ * @param[out] nsv Number of SVs (Satellites) used in solution
+ * @param[out] hdop Horizontal Dilution of Precision
+ * @param[out] pdop Probably Dilution of Precision
+ * @param[out] geos Geoid Separation
+ * @param[out] rs Number of Reference Stations used
+ * @param[out] rst Reference station type
+ * @param[out] rsid Reference station ID
+ * @param[out] dgnssa DGNSS data age
+ * @returns True on success, false on error
+ */
+bool n2k_129029_values(const n2k_act_message *n, uint8_t *seq, uint16_t *epochDays, double *seconds, double *lat,
+                       double *lon, double *alt, uint8_t *type, uint8_t *method, uint8_t *integ, uint8_t *nsv,
+                       double *hdop, double *pdop, double *geos, uint8_t *rs, uint8_t *rst, uint16_t *rsid,
+                       double *dgnssa) {
+	if (!n || n->PGN != 129029 || !n->data || n->datalen < 43) { return false; }
+	bool success = true;
+	if (seq) { (*seq) = n2k_get_uint8(n, 0); }
+	if (epochDays) { (*epochDays) = n2k_get_uint16(n, 1); }
+	if (seconds) {
+		(*seconds) = n2k_get_uint32(n, 3) * 0.0001;
+		success &= isfinite((*seconds));
+	}
+
+	if (lat) {
+		(*lat) = n2k_get_double(n, 7, 64) * 1E-16;
+		success &= isfinite((*lat));
+	}
+
+	if (lon) {
+		(*lon) = n2k_get_double(n, 15, 64) * 1E-16;
+		success &= isfinite((*lon));
+	}
+
+	if (alt) {
+		(*alt) = n2k_get_double(n, 23, 64) * 1E-6;
+		success &= isfinite((*alt));
+	}
+
+	uint8_t tm = n2k_get_uint8(n, 31);
+	if (type) { (*type) = (tm & 0x0F); }
+	if (method) { (*method) = (tm & 0xF0) >> 4; }
+	if (integ) { (*integ) = (n2k_get_uint8(n, 32) & 0xC0) >> 12; }
+
+	if (nsv) { (*nsv) = n2k_get_uint8(n, 33); }
+	if (hdop) {
+		(*hdop) = n2k_get_double(n, 34, 16) * 0.01;
+		success &= isfinite((*hdop));
+	}
+
+	if (pdop) {
+		(*pdop) = n2k_get_double(n, 36, 16) * 0.01;
+		success &= isfinite((*pdop));
+	}
+
+	if (geos) {
+		(*geos) = n2k_get_double(n, 38, 16) * 0.01;
+		success &= isfinite((*geos));
+	}
+
+	if (rs) { (*rs) = n2k_get_uint8(n, 40); }
+	uint16_t rsdetails = n2k_get_uint16(n, 41);
+	if (rst) { (*rst) = rsdetails & 0x000F; }
+	if (rsid) { (*rsid) = (rsdetails & 0xFFF0) >> 4; }
+
+	if (dgnssa && n->datalen >= 45) {
+		(*dgnssa) = n2k_get_double(n, 4, 16) * 0.01;
+		success &= isfinite((*dgnssa));
+	}
+	return success;
+}
+
+/*!
+ * @param[in] n Input message
  * @param[out] epochDays Days since January 1st 1970
  * @param[out] seconds Seconds since local midnight
  * @param[out] utcMins Offset from UTC in minutes
@@ -587,6 +669,46 @@ void n2k_129026_print(const n2k_act_message *n) {
 	}
 
 	fprintf(stdout, "Speed: %.2lf @ %.3lf degrees [%s]. Seq. ID %03d\n", speed, course, magStr, seq);
+}
+
+/*!
+ * @param[in] n Input message
+ */
+void n2k_129029_print(const n2k_act_message *n) {
+	if (!n) { return; }
+
+	uint8_t seq = 0;
+	uint16_t days = 0;
+	double secs = 0;
+
+	double lat = NAN;
+	double lon = NAN;
+	double alt = NAN;
+
+	uint8_t type = 0;
+	uint8_t method = 0;
+	uint8_t integrity = 0;
+
+	uint8_t numSV = 0;
+
+	double hdop = NAN;
+	double pdop = NAN;
+
+	double geos = NAN;
+	uint8_t rs = 0;
+	uint8_t rsType = 0;
+	uint16_t rsID = 0;
+
+	double dgnssa = NAN;
+
+	n2k_header_print(n, '\t');
+	if (!n2k_129029_values(n, &seq, &days, &secs, &lat, &lon, &alt, &type, &method, &integrity, &numSV, &hdop,
+	                       &pdop, &geos, &rs, &rsType, &rsID, &dgnssa)) {
+		fprintf(stdout, "[!] ");
+	}
+	fprintf(stdout,
+	        "Position: (%+.10lf,%+.10lf), Altitude: %.4lf m. %d SVs in use. HDOP %+.2lf, PDOP %+.2lf, Geoid Sep. %+.2lf m\n",
+	        lat, lon, alt, numSV, hdop, pdop, geos);
 }
 
 /*!

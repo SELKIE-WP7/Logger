@@ -83,6 +83,12 @@ bool n2k_129025_values(const n2k_act_message *n, double *lat, double *lon);
 //! Extract values from PGN 129026: Course and speed
 bool n2k_129026_values(const n2k_act_message *n, uint8_t *seq, uint8_t *mag, double *course, double *speed);
 
+//! Extract values from PGN 129029: GNSS Position
+bool n2k_129029_values(const n2k_act_message *n, uint8_t *seq, uint16_t *epochDays, double *seconds, double *lat,
+                       double *lon, double *alt, uint8_t *type, uint8_t *method, uint8_t *integ, uint8_t *nsv,
+                       double *hdop, double *pdop, double *geos, uint8_t *rs, uint8_t *rst, uint16_t *rsid,
+                       double *dgnssa);
+
 //! Extract values from PGN 129033: Date/Time
 bool n2k_129033_values(const n2k_act_message *n, uint16_t *epochDays, double *seconds, int16_t *utcMins);
 
@@ -119,6 +125,9 @@ void n2k_129025_print(const n2k_act_message *n);
 
 //! Print PGN 129026 (Course and Speed) to standard output
 void n2k_129026_print(const n2k_act_message *n);
+
+//! Print PGN 129029 (GNSS Position) to standard output
+void n2k_129029_print(const n2k_act_message *n);
 
 //! Print PGN 129033 (Date and Time) to standard output
 void n2k_129033_print(const n2k_act_message *n);

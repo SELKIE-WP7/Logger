@@ -49,6 +49,10 @@ uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset);
  * @{
  */
 
+//! Extract values from PGN  60928: ISO Adddress Claim
+bool n2k_60928_values(const n2k_act_message *n, uint32_t *id, uint16_t *mfr, uint8_t *inst, uint8_t *fn, uint8_t *class,
+                      uint8_t *sys, uint8_t *ind, bool *cfg);
+
 //! Extract values from PGN 127250: Vessel Heading
 bool n2k_127250_values(const n2k_act_message *n, uint8_t *seq, double *hdg, double *dev, double *var, uint8_t *ref);
 
@@ -72,6 +76,9 @@ bool n2k_129033_values(const n2k_act_message *n, uint16_t *epochDays, double *se
 
 //! Extract values from PGN 130306: Wind speed and direction
 bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, double *speed, double *angle);
+
+//! Print PGN 60928 (Address claim) to standard output
+void n2k_60928_print(const n2k_act_message *n);
 
 //! Print PGN 127250 (Vessel Heading) to standard output
 void n2k_127250_print(const n2k_act_message *n);

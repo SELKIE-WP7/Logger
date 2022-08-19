@@ -70,6 +70,33 @@ uint32_t n2k_get_uint32(const n2k_act_message *n, size_t offset) {
 	             (uint32_t)(n->data[offset + 3] << 24);
 	return v;
 }
+/*!
+ * @param[in] n Input message
+ * @param[out] id ISO Identity
+ * @param[out] mfr Manufacturer code
+ * @param[out] inst Device Instance
+ * @param[out] fn Device Function
+ * @param[out] class Device Class
+ * @param[out] sys System/Class Instance
+ * @param[out] ind Industry
+ * @param[out] cfg "Self-Configurable"
+ * @returns True on success, false on error
+ */
+bool n2k_60928_values(const n2k_act_message *n, uint32_t *id, uint16_t *mfr, uint8_t *inst, uint8_t *fn, uint8_t *class,
+                      uint8_t *sys, uint8_t *ind, bool *cfg) {
+	if (!n || n->PGN != 60928 || !n->data || n->datalen < 8) { return false; }
+	bool success = true;
+	if (id) { (*id) = n2k_get_uint32(n, 0) & 0x1FFFFF; }
+	if (mfr) { (*mfr) = n2k_get_uint16(n, 2) >> 5; }
+	if (inst) { (*inst) = n2k_get_uint8(n, 4); }
+	if (fn) { (*fn) = n2k_get_uint8(n, 5); }
+	if (class) { (*class) = (n2k_get_uint8(n, 6) & 0xFE) >> 1; } // Discard single reserved bit
+	uint8_t si = n2k_get_uint8(n, 7);
+	if (cfg) { (*cfg) = (si & 0x80) == 0x80; }
+	if (ind) { (*ind) = (si & 0x70) >> 4; }
+	if (sys) { (*sys) = (si & 0x0F); }
+	return success;
+}
 
 /*!
  * @param[in] n Input message
@@ -351,6 +378,24 @@ bool n2k_130306_values(const n2k_act_message *n, uint8_t *seq, uint8_t *ref, dou
 		}
 	}
 	return success;
+}
+
+void n2k_60928_print(const n2k_act_message *n) {
+	if (!n) { return; }
+	uint32_t id = 0;  // Really 21 bits
+	uint16_t mfr = 0; // Really 11 bits
+	uint8_t instance = 0;
+	uint8_t function = 0;
+	uint8_t class = 0;
+	uint8_t system = 0;
+	uint8_t industry = 0;
+	bool configurable = false;
+
+	fprintf(stdout, "%.3f\t", (float)(n->timestamp / 1000.0));
+	if (!n2k_60928_values(n, &id, &mfr, &instance, &function, &class, &system, &industry, &configurable)) {
+		fprintf(stdout, "[!] ");
+	}
+	fprintf(stdout, "Address claim - ID: %08u, Manufacturer: %05u\n", id, mfr);
 }
 
 /*!

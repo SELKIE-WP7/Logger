@@ -66,7 +66,9 @@ crossorigin=""/>
 
 	{% for m in g.markers %}
 		addRefLoc([{{m[1].refLat}}, {{m[1].refLon}}], {{m[1].threshold}}, "{{m[1].name}}");
+		{% if not (m[0][2][0] is none or m[0][2][1] is none) %}
 		addLoc([{{m[0][2][0]}}, {{m[0][2][1]}}], "{{m[1].name}}");
+		{% endif %}
 	{% endfor %}
 
 	map.addLayer(cg);
@@ -74,7 +76,9 @@ crossorigin=""/>
 {% if g.markers %}
 	map.fitBounds([
 	{% for m in g.markers %}
+		{% if not (m[0][2][0] is none or m[0][2][1] is none) %}
 			[{{m[0][2][0]}}, {{m[0][2][1]}}],
+		{% endif %}
 	{% endfor %}
 		], {maxZoom: 13});
 

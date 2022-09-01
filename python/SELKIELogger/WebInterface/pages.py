@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from math import isnan
 
 from flask import (
     Response,
@@ -192,9 +193,12 @@ def show_map():
     for m in markers:
         m = LocatorSpec(m)
         c = m.check(stats)
-        ml.extend([[c, m]])
-        alat.extend([c[2][0]])
-        alon.extend([c[2][1]])
+        if not (isnan(c[2][0]) or isnan(c[2][1])):
+            ml.extend([[c, m]])
+            alat.extend([c[2][0]])
+            alon.extend([c[2][1]])
+        else:
+            ml.extend([[(c[0],c[1],(None,None),None),m]])
     g.markers = ml
     if (len(alat) > 0) and (len(alon) > 0):
         g.pos = [sum(alat) / len(alat), sum(alon) / len(alon)]

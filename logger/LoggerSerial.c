@@ -237,6 +237,11 @@ bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 					lta->tag, sn);
 			}
 		}
+	} else {
+		rx->sourceNum = SLSOURCE_EXT + 0x0E;
+		log_warning(lta->pstate,
+		            "[Serial:%s] Source number not provided - 0x%02x assigned", lta->tag,
+		            rx->sourceNum);
 	}
 
 	if ((t = config_get_key(s, "baud"))) {

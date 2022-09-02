@@ -7,6 +7,7 @@ include_directories($<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 add_subdirectory(base)
 add_subdirectory(DW)
 add_subdirectory(GPS)
+add_subdirectory(LPMS)
 add_subdirectory(MP)
 add_subdirectory(MQTT)
 add_subdirectory(NMEA)

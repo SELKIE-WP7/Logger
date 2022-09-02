@@ -30,3 +30,4 @@
 - [AutomationHatLEDTest](@ref AutomationHatLEDTest)
 - [DumpMessages](@ref DumpMessages)
 - [MQTTTest](@ref MQTTTest)
+- [LPMSRead](@ref LPMSRead)

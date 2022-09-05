@@ -42,9 +42,15 @@ bool lpms_from_bytes(const uint8_t *in, const size_t len, lpms_message *msg, siz
 	} else {
 		// Check there's enough bytes in buffer to cover message header
 		// (6 bytes), footer (4 bytes), and embedded data
-		if ((len - start - 10) < msg->length) { return false; }
+		if ((len - start - 10) < msg->length) {
+			msg->id = 0xFF;
+			return false;
+		}
 		msg->data = calloc(msg->length, sizeof(uint8_t));
-		if (msg->data == NULL) { return false; }
+		if (msg->data == NULL) {
+			msg->id = 0xAA;
+			return false;
+		}
 
 		(*pos) += 7; // Move (*pos) up now we know we can read data in
 		for (int i = 0; i < msg->length; i++) {
@@ -54,7 +60,7 @@ bool lpms_from_bytes(const uint8_t *in, const size_t len, lpms_message *msg, siz
 	msg->checksum = in[(*pos)] + ((uint16_t)in[(*pos) + 1] << 8);
 	(*pos) += 2;
 	if ((in[(*pos)] != LPMS_END1) || (in[(*pos) + 1] != LPMS_END2)) {
-		fprintf(stdout, "Bad footer: %02x %02x\n", in[(*pos)], in[(*pos) + 1]);
+		msg->id = 0xEE;
 		return false;
 	}
 	(*pos) += 2;

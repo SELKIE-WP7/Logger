@@ -96,7 +96,6 @@ bool lpms_readMessage_buf(int handle, lpms_message *out, uint8_t buf[LPMS_BUFF],
 	if (r) {
 		(*out) = t;
 	} else {
-		out->id = 0xEE;
 		if (ti == 0 && ((*hw) - (*index)) < 10) {
 			// No data available and less than 1 message in buffer
 			out->id = 0xFD;

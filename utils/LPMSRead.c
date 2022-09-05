@@ -99,9 +99,10 @@ int main(int argc, char *argv[]) {
 			         m->command, m->length, m->checksum, cs, OK ? "OK" : "not OK");
 			count++;
 		} else {
-			if (end > 0) {
-				log_info(&state, 3, "%zu bytes read, failed to decode message",
-				         end);
+			if (m->id == 0xAA || m->id == 0xEE) {
+				log_error(&state,
+				          "Error reading messages from file (Code: 0x%02x)\n",
+				          (uint8_t)m->id);
 			}
 
 			if (m->id == 0xFD) {

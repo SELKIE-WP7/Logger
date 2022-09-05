@@ -79,6 +79,7 @@ bool lpms_readMessage_buf(int handle, lpms_message *out, uint8_t buf[LPMS_BUFF],
 			}
 		}
 	}
+
 	if (((*hw) == LPMS_BUFF) && (*index) > 0 && (*index) > ((*hw) - 25)) {
 		// Full buffer, very close to the fill limit
 		// Assume we're full of garbage before index
@@ -96,6 +97,13 @@ bool lpms_readMessage_buf(int handle, lpms_message *out, uint8_t buf[LPMS_BUFF],
 		(*out) = t;
 	} else {
 		out->id = 0xEE;
+		if (ti == 0 && ((*hw) - (*index)) < 10) {
+			// No data available and less than 1 message in buffer
+			out->id = 0xFD;
+		} else {
+			if ((*index) < (*hw)) { (*index)++; }
+		}
+		if (t.data) { free(t.data); } // Not passing message back
 	}
 
 	if ((*hw) > 0 && ((*hw) >= (*index))) {
@@ -103,6 +111,7 @@ bool lpms_readMessage_buf(int handle, lpms_message *out, uint8_t buf[LPMS_BUFF],
 		memmove(buf, &(buf[(*index)]), LPMS_BUFF - (*index));
 		(*hw) -= (*index);
 		(*index) = 0;
+		memset(&(buf[(*hw)]), 0, LPMS_BUFF - (*hw));
 	}
 	return r;
 }

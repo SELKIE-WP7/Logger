@@ -11,7 +11,10 @@
  * @ingroup Library
  * @{
  */
+
 #include "LPMS/LPMSConnection.h"
+#include "LPMS/LPMSMessages.h"
 #include "LPMS/LPMSTypes.h"
+
 //! @}
 #endif

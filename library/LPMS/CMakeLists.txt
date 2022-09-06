@@ -1,5 +1,5 @@
-list(APPEND SL_LPMS_SRC LPMSTypes.c LPMSConnection.c )
-list(APPEND SL_LPMS_INC LPMSTypes.h LPMSConnection.h )
+list(APPEND SL_LPMS_SRC LPMSConnection.c LPMSMessages.c)
+list(APPEND SL_LPMS_INC LPMSTypes.h LPMSConnection.h LPMSMessages.h)
 
 add_library(SELKIELoggerLPMS ${SL_LPMS_SRC})
 set_target_properties(SELKIELoggerLPMS PROPERTIES VERSION ${PROJECT_VERSION})

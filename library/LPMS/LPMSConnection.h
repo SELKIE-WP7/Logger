@@ -3,8 +3,9 @@
 
 #include <stdbool.h>
 
-#include "LPMSTypes.h"
 #include "SELKIELoggerBase.h"
+
+#include "LPMSTypes.h"
 
 /*!
  * @file LPMSConnection.h LPMS connection handling
@@ -25,5 +26,9 @@ bool lpms_readMessage(int handle, lpms_message *out);
 
 //! Read data from handle, and parse message if able
 bool lpms_readMessage_buf(int handle, lpms_message *out, uint8_t buf[LPMS_BUFF], size_t *index, size_t *hw);
+
+//! Read data from handle until first of specified message types is found
+bool lpms_find_messages(int handle, size_t numtypes, uint8_t types[], int timeout, lpms_message *out,
+                        uint8_t buf[LPMS_BUFF], size_t *index, size_t *hw);
 
 #endif

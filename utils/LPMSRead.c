@@ -93,10 +93,90 @@ int main(int argc, char *argv[]) {
 		bool r = lpms_readMessage_buf(fileno(nf), m, buf, &end, &hw);
 		if (r) {
 			uint16_t cs = 0;
-			bool OK = (lpms_checksum(m, &cs) && cs == m->checksum);
-			log_info(&state, 2,
-			         "%02x: Command %02x, %u bytes, checksum %04x/%04x (%s)", m->id,
-			         m->command, m->length, m->checksum, cs, OK ? "OK" : "not OK");
+			bool csOK = (lpms_checksum(m, &cs) && cs == m->checksum);
+			if (m->command == LPMS_MSG_GET_IMUDATA) {
+				lpms_data d = {0};
+				// Guess based on observed data until detection implemented
+				d.present |= (1 << LPMS_IMU_ACCEL_RAW);
+				d.present |= (1 << LPMS_IMU_ACCEL_CAL);
+				d.present |= (1 << LPMS_IMU_MAG_RAW);
+				d.present |= (1 << LPMS_IMU_MAG_CAL);
+				d.present |= (1 << LPMS_IMU_GYRO_RAW);
+				d.present |= (1 << LPMS_IMU_GYRO_CAL);
+				d.present |= (1 << LPMS_IMU_GYRO_ALIGN);
+				d.present |= (1 << LPMS_IMU_OMEGA);
+				d.present |= (1 << LPMS_IMU_EULER);
+				d.present |= (1 << LPMS_IMU_ALTITUDE);
+				d.present |= (1 << LPMS_IMU_TEMPERATURE);
+				if (lpms_imu_set_timestamp(m, &d)) {
+					log_info(&state, 1, "%02x: Timestamp: %u", m->id,
+					         d.timestamp);
+				} else {
+					log_warning(&state, "%02x: Timestamp invalid", m->id);
+				}
+				if (lpms_imu_set_accel_raw(m, &d)) {
+					log_info(&state, 1,
+					         "%02x: Raw Acceleration: (%+.4f, %+.4f, %+4.f)",
+					         m->id, d.accel_raw[0], d.accel_raw[1],
+					         d.accel_raw[2]);
+				}
+				if (lpms_imu_set_accel_cal(m, &d)) {
+					log_info(
+						&state, 1,
+						"%02x: Calibrated Acceleration: (%+.4f, %+.4f, %+4.f)",
+						m->id, d.accel_cal[0], d.accel_cal[1],
+						d.accel_cal[2]);
+				}
+				if (lpms_imu_set_gyro_raw(m, &d)) {
+					log_info(&state, 1,
+					         "%02x: Raw Gyro: (%+.4f, %+.4f, %+4.f)", m->id,
+					         d.gyro_raw[0], d.gyro_raw[1], d.gyro_raw[2]);
+				}
+				if (lpms_imu_set_gyro_cal(m, &d)) {
+					log_info(&state, 1,
+					         "%02x: Calibrated Gyro: (%+.4f, %+.4f, %+4.f)",
+					         m->id, d.gyro_cal[0], d.gyro_cal[1],
+					         d.gyro_cal[2]);
+				}
+				if (lpms_imu_set_gyro_aligned(m, &d)) {
+					log_info(&state, 1,
+					         "%02x: Aligned Gyro: (%+.4f, %+.4f, %+4.f)",
+					         m->id, d.gyro_aligned[0], d.gyro_aligned[1],
+					         d.gyro_aligned[2]);
+				}
+				if (lpms_imu_set_mag_raw(m, &d)) {
+					log_info(&state, 1,
+					         "%02x: Raw Magnetic Field: (%+.4f, %+.4f, %+4.f)",
+					         m->id, d.mag_raw[0], d.mag_raw[1], d.mag_raw[2]);
+				}
+				if (lpms_imu_set_mag_cal(m, &d)) {
+					log_info(
+						&state, 1,
+						"%02x: Calibrated Magnetic Field: (%+.4f, %+.4f, %+4.f)",
+						m->id, d.mag_cal[0], d.mag_cal[1], d.mag_cal[2]);
+				}
+				if (lpms_imu_set_euler_angles(m, &d)) {
+					log_info(&state, 1,
+					         "%02x: Euler roll angles: (%+.4f, %+.4f, %+.4f)",
+					         m->id, d.euler_angles[0], d.euler_angles[1],
+					         d.euler_angles[2]);
+				}
+				if (lpms_imu_set_pressure(m, &d)) {
+					log_info(&state, 1, "%02x: Pressure: %.2f", m->id,
+					         d.pressure);
+				}
+				if (lpms_imu_set_altitude(m, &d)) {
+					log_info(&state, 1, "%02x: Altitude: %.2f", m->id,
+					         d.altitude);
+				}
+				if (lpms_imu_set_temperature(m, &d)) {
+					log_info(&state, 1, "%02x: Temperature: %.2f", m->id,
+					         d.temperature);
+				}
+			} else {
+				log_info(&state, 2, "%02x: Command %02x, %u bytes, checksum %s",
+				         m->id, m->command, m->length, csOK ? "OK" : "not OK");
+			}
 			count++;
 		} else {
 			if (m->id == 0xAA || m->id == 0xEE) {

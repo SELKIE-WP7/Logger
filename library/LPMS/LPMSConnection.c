@@ -4,9 +4,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "SELKIELoggerBase.h"
+
 #include "LPMSConnection.h"
 
-#include "SELKIELoggerBase.h"
+#include "LPMSMessages.h"
 
 /*!
  * Delegates to openSerialConnection() to open the serial device.
@@ -113,4 +115,24 @@ bool lpms_readMessage_buf(int handle, lpms_message *out, uint8_t buf[LPMS_BUFF],
 		memset(&(buf[(*hw)]), 0, LPMS_BUFF - (*hw));
 	}
 	return r;
+}
+
+bool lpms_find_messages(int handle, size_t numtypes, uint8_t types[], int timeout, lpms_message *out,
+                        uint8_t buf[LPMS_BUFF], size_t *index, size_t *hw) {
+	time_t start = time(NULL);
+	while (time(NULL) <= (start + timeout)) {
+		lpms_message t = {0};
+		bool rs = lpms_readMessage_buf(handle, &t, buf, index, hw);
+		if (rs) {
+			for (int c = 0; c < numtypes; c++) {
+				if (out->command == types[c]) {
+					(*out) = t;
+					return true;
+				}
+			}
+		}
+		if (t.data) { free(t.data); }
+	}
+
+	return false;
 }

@@ -72,6 +72,42 @@ bool lpms_from_bytes(const uint8_t *in, const size_t len, lpms_message *msg, siz
 }
 
 /*!
+ *
+ * Convert lpms_message structure to array of bytes. The array will be
+ * allocated here and must be freed by the caller.
+ *
+ * @param[in] msg Pointer to lpms_message
+ * @param[out] pos Pointer to array of bytes
+ * @param[out] len Pointer to size_t - will be set to array length
+ * @returns True on success, false on error
+ */
+bool lpms_to_bytes(const lpms_message *msg, uint8_t **out, size_t *len) {
+	if ((msg == NULL) || (out == NULL)) { return false; }
+	(*len) = msg->length + 11;
+	(*out) = calloc((*len), sizeof(uint8_t));
+	if ((*out) == NULL) {
+		perror("lpms_to_bytes");
+		return false;
+	}
+	(*out)[0] = LPMS_START;
+	(*out)[1] = (msg->id & 0x00FF);
+	(*out)[2] = (msg->id & 0xFF00) >> 8;
+	(*out)[3] = (msg->command & 0x00FF);
+	(*out)[4] = (msg->command & 0xFF00) >> 8;
+	(*out)[5] = (msg->length & 0x00FF);
+	(*out)[6] = (msg->length & 0xFF00) >> 8;
+	size_t p = 7;
+	for (int j = 0; j < msg->length; j++) {
+		(*out)[p++] = msg->data[j];
+	}
+	(*out)[p++] = (msg->checksum & 0x00FF);
+	(*out)[p++] = (msg->checksum & 0xFF00) >> 8;
+	(*out)[p++] = LPMS_END1;
+	(*out)[p++] = LPMS_END2;
+	return (p == (*len));
+}
+
+/*!
  * @param[in] msg Pointer to message structure
  * @param[out] csum Calculated checksum value
  * @returns True if calculated successfully, false on error

@@ -117,16 +117,17 @@ bool lpms_readMessage_buf(int handle, lpms_message *out, uint8_t buf[LPMS_BUFF],
 	return r;
 }
 
-bool lpms_find_messages(int handle, size_t numtypes, uint8_t types[], int timeout, lpms_message *out,
+bool lpms_find_messages(int handle, size_t numtypes, const uint8_t types[], int timeout, lpms_message *out,
                         uint8_t buf[LPMS_BUFF], size_t *index, size_t *hw) {
 	time_t start = time(NULL);
 	while (time(NULL) <= (start + timeout)) {
 		lpms_message t = {0};
 		bool rs = lpms_readMessage_buf(handle, &t, buf, index, hw);
 		if (rs) {
+			fprintf(stdout, "%02x: Command 0x%02x received while waiting\n", t.id, t.command);
 			for (int c = 0; c < numtypes; c++) {
-				if (out->command == types[c]) {
-					(*out) = t;
+				if (t.command == types[c]) {
+					if (out) { (*out) = t; }
 					return true;
 				}
 			}
@@ -135,4 +136,33 @@ bool lpms_find_messages(int handle, size_t numtypes, uint8_t types[], int timeou
 	}
 
 	return false;
+}
+
+bool lpms_send_command(const int handle, lpms_message *m) {
+	uint16_t cs = 0;
+	// Ignore the return value as we're resetting the checksum anyway
+	(void)lpms_checksum(m, &cs);
+	m->checksum = cs;
+	uint8_t *arr = NULL;
+	size_t len = 0;
+	bool rs = lpms_to_bytes(m, &arr, &len);
+	if (!rs) { return false; }
+	rs = (write(handle, arr, len) == len);
+	free(arr);
+	return rs;
+}
+
+bool lpms_send_command_mode(const int handle) {
+	lpms_message m = {.id = 1, .command = 0x0006};
+	return lpms_send_command(handle, &m);
+}
+
+bool lpms_send_stream_mode(const int handle) {
+	lpms_message m = {.id = 1, .command = 0x0007};
+	return lpms_send_command(handle, &m);
+}
+
+bool lpms_send_get_config(const int handle) {
+	lpms_message m = {.id = 1, .command = 0x0004};
+	return lpms_send_command(handle, &m);
 }

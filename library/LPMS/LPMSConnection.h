@@ -28,7 +28,13 @@ bool lpms_readMessage(int handle, lpms_message *out);
 bool lpms_readMessage_buf(int handle, lpms_message *out, uint8_t buf[LPMS_BUFF], size_t *index, size_t *hw);
 
 //! Read data from handle until first of specified message types is found
-bool lpms_find_messages(int handle, size_t numtypes, uint8_t types[], int timeout, lpms_message *out,
+bool lpms_find_messages(int handle, size_t numtypes, const uint8_t types[], int timeout, lpms_message *out,
                         uint8_t buf[LPMS_BUFF], size_t *index, size_t *hw);
 
+//! Write command defined by structure to handle
+bool lpms_send_command(const int handle, lpms_message *m);
+
+bool lpms_send_command_mode(const int handle);
+bool lpms_send_stream_mode(const int handle);
+bool lpms_send_get_config(const int handle);
 #endif

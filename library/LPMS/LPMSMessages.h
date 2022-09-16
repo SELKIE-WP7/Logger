@@ -57,6 +57,9 @@
 //! Read bytes and populate message structure
 bool lpms_from_bytes(const uint8_t *in, const size_t len, lpms_message *msg, size_t *pos);
 
+//! Convert message structure to flat array
+bool lpms_to_bytes(const lpms_message *msg, uint8_t **out, size_t *len);
+
 //! Calculate checksum for LPMS message packet
 bool lpms_checksum(const lpms_message *msg, uint16_t *csum);
 

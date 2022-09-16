@@ -69,6 +69,10 @@ add_executable(LPMSRead LPMSRead.c)
 target_link_libraries(LPMSRead PUBLIC SELKIELoggerBase SELKIELoggerLPMS)
 install(TARGETS LPMSRead RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
 
+add_executable(LPMSTest LPMSTest.c)
+target_link_libraries(LPMSTest PUBLIC SELKIELoggerBase SELKIELoggerLPMS)
+install(TARGETS LPMSTest RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
+
 set(CPACK_COMPONENT_CONVERSION_GROUP "Applications")
 set(CPACK_COMPONONT_CONVERSION_DESCRIPTION "Data format conversion/inspection utilities")
 

@@ -12,14 +12,29 @@
 
 #include "SELKIELoggerBase.h"
 
+//! @{
+
+/*!
+ * @brief Represent LPMS message
+ *
+ * Each word is represented as two bytes in little-endian format when
+ * transmited.  `id`, `command`, and `length` are transmitted at the start of
+ * the message, followed by `length` bytes of data and then `command` - which
+ * is the bytewise sum of message contents.
+ *
+ * When transmitted, an initial LPMS_START byte precedes the message and
+ * LPMS_END1 and LPMS_END2 are appended.
+ */
 typedef struct {
-	uint16_t id;
-	uint16_t command;
-	uint16_t length;
-	uint16_t checksum;
-	uint8_t *data;
+	uint16_t id;       //!< Source/Destination Sensor ID
+	uint16_t command;  //!< Message type
+	uint16_t length;   //!< Length of data, in bytes
+	uint16_t checksum; //!< Sum of all preceding message bytes
+	uint8_t *data;     //!< Pointer to data array
 } lpms_message;
 
+// While it is unlikely that this wouldn't be true on any supported system, the
+// entire library is based on this assumption holding.
 _Static_assert(sizeof(float) == 4, "LPMS support requires 32bit floats");
 
 /*!

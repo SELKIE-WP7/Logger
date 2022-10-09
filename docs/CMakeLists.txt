@@ -15,8 +15,8 @@ if (BUILD_DOCUMENTATION)
 	set(DOXYGEN_IMAGE_PATH docs/images)
 	set(DOXYGEN_MACRO_EXPANSION YES)
 	set(DOXYGEN_EXPAND_ONLY_PREDEF YES)
-	set(DOXYGEN_PREDEFINED "__attribute__(x)=")
-	doxygen_add_docs(doxygen ALL ${PROJECT_SOURCE_DIR}/docs/ ${PROJECT_SOURCE_DIR}/logger/ ${PROJECT_SOURCE_DIR}/utils/ ${PROJECT_SOURCE_DIR}/library/ ${PROJECT_SOURCE_DIR}/tests/ ${PROJECT_SOURCE_DIR}/python/ COMMENT "Generate developer documentation")
+	set(DOXYGEN_PREDEFINED "__attribute__(x)=" "_Static_assert(x,y)=")
+	doxygen_add_docs(doxygen ${PROJECT_SOURCE_DIR}/docs/ ${PROJECT_SOURCE_DIR}/logger/ ${PROJECT_SOURCE_DIR}/utils/ ${PROJECT_SOURCE_DIR}/library/ ${PROJECT_SOURCE_DIR}/tests/ ${PROJECT_SOURCE_DIR}/python/ COMMENT "Generate developer documentation")
 endif()
 
 

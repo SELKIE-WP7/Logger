@@ -117,6 +117,23 @@ bool lpms_readMessage_buf(int handle, lpms_message *out, uint8_t buf[LPMS_BUFF],
 	return r;
 }
 
+/*!
+ * Read messages from serial data and discard them until a message matching one
+ * of the provided types is seen, or a timeout is reached.
+ *
+ * Uses lpms_readMessage_buf() internally, and can make use of the same buffer
+ * if the same `buf`, `index`, and `hw` parameters are passed in.
+ *
+ * @param[in] handle File descriptor from lpms_openConnection()
+ * @param[in] numtypes Number of entries in types[]
+ * @param[in] types Array of message/commands to match. @sa LPMS_MSG
+ * @param[in] timeout Number of seconds to wait for matching message
+ * @param[out] out Pointer to message structure to fill with data
+ * @param[in,out] buf Serial data buffer
+ * @param[in,out] index Current search position within `buf`
+ * @param[in,out] hw End of current valid data in `buf`
+ * @return True if a matching message type was found, false otherwise.
+ */
 bool lpms_find_messages(int handle, size_t numtypes, const uint8_t types[], int timeout, lpms_message *out,
                         uint8_t buf[LPMS_BUFF], size_t *index, size_t *hw) {
 	time_t start = time(NULL);

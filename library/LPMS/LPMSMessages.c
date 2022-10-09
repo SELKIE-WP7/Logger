@@ -77,7 +77,7 @@ bool lpms_from_bytes(const uint8_t *in, const size_t len, lpms_message *msg, siz
  * allocated here and must be freed by the caller.
  *
  * @param[in] msg Pointer to lpms_message
- * @param[out] pos Pointer to array of bytes
+ * @param[out] out Pointer to array of bytes
  * @param[out] len Pointer to size_t - will be set to array length
  * @returns True on success, false on error
  */
@@ -135,8 +135,8 @@ bool lpms_checksum(const lpms_message *msg, uint16_t *csum) {
  * Extract timestamp from input message into data struct.
  *
  * @param[in] msg Pointer to message structure containing IMU data
- * @param[in/out] d Pointer to lpms_data structure to populate
- * @returns True if timestamp extracted from message, false on error
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
  */
 bool lpms_imu_set_timestamp(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
@@ -152,8 +152,8 @@ bool lpms_imu_set_timestamp(const lpms_message *msg, lpms_data *d) {
  * Checks if data is expected to be present before attempting to extract.
  *
  * @param[in] msg Pointer to message structure containing IMU data
- * @param[in/out] d Pointer to lpms_data structure to populate
- * @returns True if timestamp extracted from message, false on error
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
  */
 bool lpms_imu_set_accel_raw(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
@@ -168,8 +168,8 @@ bool lpms_imu_set_accel_raw(const lpms_message *msg, lpms_data *d) {
  * Checks if data is expected to be present before attempting to extract.
  *
  * @param[in] msg Pointer to message structure containing IMU data
- * @param[in/out] d Pointer to lpms_data structure to populate
- * @returns True if timestamp extracted from message, false on error
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
  */
 bool lpms_imu_set_accel_cal(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
@@ -183,6 +183,14 @@ bool lpms_imu_set_accel_cal(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract raw gyroscope data from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_gyro_raw(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_GYRO_RAW)) { return false; }
@@ -196,6 +204,14 @@ bool lpms_imu_set_gyro_raw(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract calibrated gyroscope data from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_gyro_cal(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_GYRO_CAL)) { return false; }
@@ -211,6 +227,14 @@ bool lpms_imu_set_gyro_cal(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract aligned gyroscope data from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_gyro_aligned(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_GYRO_ALIGN)) { return false; }
@@ -226,6 +250,14 @@ bool lpms_imu_set_gyro_aligned(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract raw magnetometer data from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_mag_raw(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_MAG_RAW)) { return false; }
@@ -242,6 +274,14 @@ bool lpms_imu_set_mag_raw(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract calibrated magnetometer data from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_mag_cal(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_MAG_CAL)) { return false; }
@@ -259,6 +299,14 @@ bool lpms_imu_set_mag_cal(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract angular momentum from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_omega(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_OMEGA)) { return false; }
@@ -277,6 +325,14 @@ bool lpms_imu_set_omega(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract orientation quaternion from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_quaternion(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_QUATERNION)) { return false; }
@@ -296,6 +352,14 @@ bool lpms_imu_set_quaternion(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract Euler orientation angles from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_euler_angles(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_EULER)) { return false; }
@@ -316,6 +380,14 @@ bool lpms_imu_set_euler_angles(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract linear acceleration data from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_accel_linear(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_ACCEL_LINEAR)) { return false; }
@@ -337,6 +409,14 @@ bool lpms_imu_set_accel_linear(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract atmospheric pressure data from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_pressure(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_PRESSURE)) { return false; }
@@ -359,6 +439,14 @@ bool lpms_imu_set_pressure(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract altitude data from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_altitude(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_ALTITUDE)) { return false; }
@@ -382,6 +470,14 @@ bool lpms_imu_set_altitude(const lpms_message *msg, lpms_data *d) {
 	return true;
 }
 
+/*!
+ * Extract temperature data from input message into data struct.
+ * Checks if data is expected to be present before attempting to extract.
+ *
+ * @param[in] msg Pointer to message structure containing IMU data
+ * @param[in,out] d Pointer to lpms_data structure to populate
+ * @returns True if data extracted from message, false on error
+ */
 bool lpms_imu_set_temperature(const lpms_message *msg, lpms_data *d) {
 	if (!msg || !d || msg->command != LPMS_MSG_GET_IMUDATA) { return false; }
 	if (!LPMS_HAS(d->present, LPMS_IMU_TEMPERATURE)) { return false; }

@@ -34,7 +34,12 @@ bool lpms_find_messages(int handle, size_t numtypes, const uint8_t types[], int 
 //! Write command defined by structure to handle
 bool lpms_send_command(const int handle, lpms_message *m);
 
+//! Shortcut: Send LPMS_MSG_MODE_CMD
 bool lpms_send_command_mode(const int handle);
+
+//! Shortcut: Send LPMS_MSG_MODE_STREAM
 bool lpms_send_stream_mode(const int handle);
+
+//! Shortcut: Send LPMS_MSG_GET_OUTPUTS
 bool lpms_send_get_config(const int handle);
 #endif

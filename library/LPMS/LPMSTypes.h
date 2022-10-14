@@ -79,7 +79,7 @@ typedef struct {
 //! @{
 #define LPMS_IMU_ACCEL_RAW    0  //!< accel_raw[] will contain data
 #define LPMS_IMU_ACCEL_CAL    1  //!< accel_cal[] will contain data
-#define LPMS_IMU_GYRO_RAW     2  //!< gyro_raw[] will contain data
+#define LPMS_IMU_GYRO_RAW     3  //!< gyro_raw[] will contain data
 #define LPMS_IMU_GYRO_CAL     5  //!< gyro_cal[] will contain data
 #define LPMS_IMU_GYRO_ALIGN   7  //!< gyro_align[] will contain data
 #define LPMS_IMU_MAG_RAW      8  //!< mag_raw[] will contain data

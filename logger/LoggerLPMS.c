@@ -356,6 +356,9 @@ void *lpms_logging(void *ptargs) {
 			}
 			free(m->data);
 			free(m);
+		} else {
+			// No message available, so sleep 
+			usleep(1E5);
 		}
 	}
 	free(buf);

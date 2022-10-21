@@ -56,6 +56,7 @@ void *mqtt_logging(void *ptargs) {
 	log_info(args->pstate, 1, "[MQTT:%s] Logging thread started", args->tag);
 
 	time_t lastKA = 0;
+	time_t lastMessage = 0;
 	uint16_t count = 0; // Unsigned so that it wraps around
 	while (!shutdownFlag) {
 		if (mqttInfo->victron_keepalives &&
@@ -69,6 +70,10 @@ void *mqtt_logging(void *ptargs) {
 					            "[MQTT:%s] Error sending keepalive message",
 					            args->tag);
 				}
+			}
+			if ((now - lastMessage) > 180) {
+				log_warning(args->pstate, "[MQTT:%s] More than 3 minutes since last message. Resetting timer", args->tag);
+				lastMessage = now;
 			}
 		}
 		count++;
@@ -86,6 +91,7 @@ void *mqtt_logging(void *ptargs) {
 			args->returnCode = -1;
 			pthread_exit(&(args->returnCode));
 		}
+		lastMessage = time(NULL);
 	}
 	return NULL;
 }

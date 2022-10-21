@@ -28,6 +28,7 @@ struct dmap dmap[] = {
 	{"TCP", &net_getCallbacks, &net_parseConfig},
 	{"TIMER", &timer_getCallbacks, &timer_parseConfig},
 	{"TICK", &timer_getCallbacks, &timer_parseConfig},
+	{"LPMS", &lpms_getCallbacks, &lpms_parseConfig},
 	{NULL, NULL} // End of list sentinel value
 };
 

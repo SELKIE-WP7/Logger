@@ -10,9 +10,9 @@ find_package(Threads REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} PRIVATE)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} PRIVATE)
 
-add_executable(Logger Logger.h Logger.c LoggerConfig.c LoggerDMap.c LoggerDW.c LoggerGPS.c LoggerSignals.c LoggerMP.c LoggerMQTT.c LoggerNet.c LoggerNMEA.c LoggerN2K.c LoggerI2C.c LoggerSerial.c LoggerTime.c)
+add_executable(Logger Logger.h Logger.c LoggerConfig.c LoggerDMap.c LoggerDW.c LoggerGPS.c LoggerSignals.c LoggerMP.c LoggerMQTT.c LoggerNet.c LoggerNMEA.c LoggerN2K.c LoggerI2C.c LoggerSerial.c LoggerTime.c LoggerLPMS.c)
 target_link_libraries(Logger PUBLIC Threads::Threads)
-target_link_libraries(Logger PUBLIC SELKIELoggerBase SELKIELoggerGPS SELKIELoggerMP SELKIELoggerMQTT SELKIELoggerNMEA SELKIELoggerN2K SELKIELoggerI2C SELKIELoggerDW)
+target_link_libraries(Logger PUBLIC SELKIELoggerBase SELKIELoggerGPS SELKIELoggerLPMS SELKIELoggerMP SELKIELoggerMQTT SELKIELoggerNMEA SELKIELoggerN2K SELKIELoggerI2C SELKIELoggerDW)
 target_link_libraries(Logger PUBLIC inih)
 
 install(TARGETS Logger RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Logger)

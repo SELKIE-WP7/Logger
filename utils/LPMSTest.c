@@ -85,6 +85,7 @@ int main(int argc, char *argv[]) {
 	lpms_send_command(hdl, &getSerial);
 	lpms_message getTransmitted = {.id = 0x01, .command = LPMS_MSG_GET_OUTPUTS};
 	lpms_send_command(hdl, &getTransmitted);
+	usleep(10000);
 	lpms_send_stream_mode(hdl);
 	lpms_data d = {0};
 	while (processing || hw > 10) {

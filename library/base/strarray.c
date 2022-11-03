@@ -18,8 +18,10 @@ strarray *sa_new(int entries) {
 	strarray *newarray = calloc(1, sizeof(strarray));
 	if (newarray == NULL) { return NULL; }
 	if (!sa_init(newarray, entries)) {
+		//LCOV_EXCL_START
 		free(newarray);
 		return NULL;
+		//LCOV_EXCL_STOP
 	}
 	return newarray;
 }
@@ -57,16 +59,20 @@ bool sa_copy(strarray *dst, const strarray *src) {
 	dst->entries = src->entries;
 	dst->strings = calloc(dst->entries, sizeof(string));
 	if (dst->strings == NULL) {
+		//LCOV_EXCL_START
 		dst->entries = 0;
 		return false;
+		//LCOV_EXCL_STOP
 	}
 	bool success = true;
 	for (int ix = 0; ix < dst->entries; ix++) {
 		success &= str_copy(&(dst->strings[ix]), &(src->strings[ix]));
 	}
 	if (!success) {
+		//LCOV_EXCL_START
 		sa_destroy(dst);
 		return false;
+		//LCOV_EXCL_STOP
 	}
 	return true;
 }
@@ -203,8 +209,10 @@ string *str_new(const size_t len, const char *ca) {
 	if (ca[len - 1] != 0) { alen++; }
 	ns->data = malloc(alen);
 	if (ns->data == NULL) {
+		//LCOV_EXCL_START
 		free(ns);
 		return NULL;
+		//LCOV_EXCL_STOP
 	}
 
 	strncpy(ns->data, ca, len);
@@ -227,8 +235,10 @@ bool str_copy(string *dst, const string *src) {
 	dst->length = src->length;
 	dst->data = malloc(dst->length + 1);
 	if (dst->data == NULL) {
+		//LCOV_EXCL_START
 		dst->length = 0;
 		return false;
+		//LCOV_EXCL_STOP
 	}
 	if (src->data == NULL) {
 		dst->length = 0;
@@ -272,8 +282,10 @@ bool str_update(string *str, const size_t len, const char *src) {
 	str->length = checklen + 1;
 	str->data = malloc(str->length);
 	if (str->data == NULL) {
+		//LCOV_EXCL_START
 		str->length = 0;
 		return false;
+		//LCOV_EXCL_STOP
 	}
 	strncpy(str->data, src, checklen);
 	str->data[str->length - 1] = 0;

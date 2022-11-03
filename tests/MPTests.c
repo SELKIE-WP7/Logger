@@ -100,6 +100,12 @@ int main(int argc, char *argv[]) {
 		if (mp_readMessage(fileno(tmp), &tMessage)) {
 			// Successfully read message
 			count++;
+			char *str = msg_to_string(&tMessage);
+			if (str) {
+				fprintf(stdout, "%s\n", str);
+				free(str);
+				str = NULL;
+			}
 		} else {
 			assert(tMessage.dtype == MSG_ERROR);
 			switch ((uint8_t)tMessage.data.value) {

@@ -68,8 +68,10 @@ msg_t *msg_new_string(const uint8_t source, const uint8_t type, const size_t len
 	newmsg->dtype = MSG_STRING;
 	newmsg->length = len;
 	if (!str_update(&(newmsg->data.string), len, str)) {
+		//LCOV_EXCL_START
 		free(newmsg);
 		return NULL;
+		//LCOV_EXCL_STOP
 	}
 	return newmsg;
 }
@@ -98,8 +100,10 @@ msg_t *msg_new_string_array(const uint8_t source, const uint8_t type, const stra
 	newmsg->dtype = MSG_STRARRAY;
 	newmsg->length = array->entries;
 	if (!sa_copy(&(newmsg->data.names), array)) {
+		//LCOV_EXCL_START
 		free(newmsg);
 		return NULL;
+		//LCOV_EXCL_STOP
 	}
 	return newmsg;
 }
@@ -221,6 +225,7 @@ char *msg_data_to_string(const msg_t *msg) {
 			out = msg_data_narr_to_string(msg);
 			if (out == NULL) { out = strdup("[Numeric array - error converting to string]"); }
 			break;
+		//LCOV_EXCL_START
 		case MSG_ERROR:
 			out = strdup("[Message flagged as error]");
 		case MSG_UNDEF:
@@ -228,10 +233,13 @@ char *msg_data_to_string(const msg_t *msg) {
 		default:
 			out = strdup("[Message type unknown]");
 			break;
+		//LCOV_EXCL_STOP
 	}
 	if (rv < 0) {
+		//LCOV_EXCL_START
 		if (out) { free(out); }
 		return NULL;
+		//LCOV_EXCL_STOP
 	}
 	return out;
 }
@@ -255,8 +263,10 @@ char *msg_data_narr_to_string(const msg_t *msg) {
 	for (int i = 0; i < msg->length; i++) {
 		int l = snprintf(&(out[pos]), (alen - pos), "%.4f/", msg->data.farray[i]);
 		if (l < 0) {
+			//LCOV_EXCL_START
 			free(out);
 			return NULL;
+			//LCOV_EXCL_STOP
 		}
 		pos += l;
 	}
@@ -334,9 +344,11 @@ void msg_destroy(msg_t *msg) {
 		case MSG_NUMARRAY:
 			free(msg->data.farray);
 			break;
+		//LCOV_EXCL_START
 		default:
 			fprintf(stderr, "Unhandled message type in msg_destroy!\n");
 			break;
+		//LCOV_EXCL_STOP
 	}
 	msg->length = 0;
 	msg->dtype = MSG_UNDEF;

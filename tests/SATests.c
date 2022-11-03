@@ -156,6 +156,12 @@ int main(int argc, char *argv[]) {
 		//LCOV_EXCL_STOP
 	}
 	sa_destroy(SA);
+	// Should be safe to call twice, so check we can!
+	sa_destroy(SA);
+	// Then test destruction of a malformed array
+	SA->entries=1;
+	sa_destroy(SA);
+
 	sa_destroy(SA2);
 	free(SA);
 	free(SA2);

@@ -48,7 +48,7 @@ target_link_libraries(MPTests PUBLIC SELKIELoggerBase SELKIELoggerMP)
 target_compile_options(MPTests PRIVATE "-UNDEBUG")
 instrumented(MPTests MPTests)
 add_test(NAME MPTestsOutput COMMAND bash -c "$<TARGET_FILE:MPTests>|md5sum")
-set_property(TEST MPTestsOutput PROPERTY PASS_REGULAR_EXPRESSION "ee530c7e4b7a2c8f16524c0bf1e274cd")
+set_property(TEST MPTestsOutput PROPERTY PASS_REGULAR_EXPRESSION "7a56454f66accb3461873f13717318eb")
 
 add_executable(NMEAChecksumTest NMEAChecksumTest.c)
 target_link_libraries(NMEAChecksumTest PUBLIC SELKIELoggerNMEA)
@@ -78,3 +78,13 @@ instrumented(LPMSMessagesFromFile LPMSMessagesFromFile lpmscu3Sample.dat)
 set_property(TEST LPMSMessagesFromFile PROPERTY PASS_REGULAR_EXPRESSION "19 messages successfully read from file")
 add_test(NAME LPMSMessagesOutput COMMAND bash -c "$<TARGET_FILE:LPMSMessagesFromFile> lpmscu3Sample.dat|md5sum")
 set_property(TEST LPMSMessagesOutput PROPERTY PASS_REGULAR_EXPRESSION "1966a807d8890313a9726fc07d14daf9")
+
+add_executable(LogTests logTests.c)
+target_link_libraries(LogTests PUBLIC SELKIELoggerBase)
+instrumented(LogTests LogTests)
+set_property(TEST LogTests PROPERTY PASS_REGULAR_EXPRESSION "Error: Error message while running")
+set_property(TEST LogTests PROPERTY FAIL_REGULAR_EXPRESSION "Current verbosity")
+
+add_test(NAME LogTestsOutput COMMAND bash -c "$<TARGET_FILE:LogTests>|& md5sum")
+set_property(TEST LogTestsOutput PROPERTY PASS_REGULAR_EXPRESSION "cfac6e2be77f6a1e0b7888f0d856ccce")
+

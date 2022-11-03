@@ -49,13 +49,19 @@ void *lpms_setup(void *ptargs) {
 	args->returnCode = 0;
 
 	lpms_send_command_mode(lpmsInfo->handle);
-	usleep(10000);
+	usleep(250000);
 	lpms_message getModel = {.id = lpmsInfo->unitID, .command = LPMS_MSG_GET_SENSORMODEL};
 	lpms_send_command(lpmsInfo->handle, &getModel);
+	usleep(10000);
+
 	lpms_message getFW = {.id = lpmsInfo->unitID, .command = LPMS_MSG_GET_FIRMWAREVER};
 	lpms_send_command(lpmsInfo->handle, &getFW);
+	usleep(10000);
+
 	lpms_message getSerial = {.id = lpmsInfo->unitID, .command = LPMS_MSG_GET_SERIALNUM};
 	lpms_send_command(lpmsInfo->handle, &getSerial);
+	usleep(10000);
+
 	uint8_t rateData[4] = {
 		(lpmsInfo->pollFreq & 0xFF),
 		(lpmsInfo->pollFreq & 0xFF00) >> 8,
@@ -67,6 +73,11 @@ void *lpms_setup(void *ptargs) {
 	                        .length = sizeof(uint32_t),
 	                        .data = rateData};
 	lpms_send_command(lpmsInfo->handle, &setRate);
+	usleep(125000);
+	lpms_message getRate = {.id = lpmsInfo->unitID, .command = LPMS_MSG_GET_FREQ};
+	lpms_send_command(lpmsInfo->handle, &getRate);
+	usleep(10000);
+
 	const uint32_t outputs =
 		((1U << LPMS_IMU_ACCEL_RAW) + (1U << LPMS_IMU_ACCEL_CAL) +
 	         (1U << LPMS_IMU_GYRO_RAW) + (1U << LPMS_IMU_GYRO_CAL) +
@@ -80,12 +91,12 @@ void *lpms_setup(void *ptargs) {
 	                               .length = sizeof(uint32_t),
 	                               .data = outputData};
 	lpms_send_command(lpmsInfo->handle, &setTransmitted);
-	usleep(10000);
+	usleep(125000);
 
 	lpms_message getTransmitted = {.id = lpmsInfo->unitID, .command = LPMS_MSG_GET_OUTPUTS};
 	lpms_send_command(lpmsInfo->handle, &getTransmitted);
 	usleep(10000);
-	log_info(args->pstate, 2, "[LPMS:%s] Initial setup commands sent", args->tag);
+	log_info(args->pstate, 1, "[LPMS:%s] Initial setup commands sent", args->tag);
 	return NULL;
 }
 
@@ -139,6 +150,7 @@ void *lpms_logging(void *ptargs) {
 	uint32_t outputs = 0;
 	bool unitMismatch = false;
 	unsigned int pendingCount = 0;
+	unsigned int missingCount = 0;
 	while (!shutdownFlag) {
 		lpms_data d = {.present = outputs};
 		lpms_message *m = calloc(1, sizeof(lpms_message));
@@ -228,6 +240,13 @@ void *lpms_logging(void *ptargs) {
 					args->returnCode = -1;
 					pthread_exit(&(args->returnCode));
 				}
+			} else if (m->command == LPMS_MSG_GET_FREQ) {
+				uint32_t rate = m->data[0] +
+					((uint32_t) m->data[1] << 8) +
+					((uint32_t) m->data[2] << 16) +
+					((uint32_t) m->data[3] << 24);
+				log_info(args->pstate, 1,
+					"[LPMS:%s] Unit 0x%02x: Message rate %dHz", args->tag, m->id, rate);
 			} else if (m->command == LPMS_MSG_GET_IMUDATA) {
 				if (!d.present) {
 					// Can't extract data until configuration has appeared
@@ -286,10 +305,15 @@ void *lpms_logging(void *ptargs) {
 				dataSet |= lpms_imu_set_temperature(m, &d);
 				*/
 				if (!dataSet) {
-					log_warning(
-						args->pstate,
-						"[LPMS:%s] Unit 0x%02x: Some data missing in update",
-						args->tag, m->id);
+					if (missingCount == 0) {
+						log_warning(
+							args->pstate,
+							"[LPMS:%s] Unit 0x%02x: Some data missing in update",
+							args->tag, m->id);
+					}
+					missingCount++;
+				} else {
+					missingCount = 0;
 				}
 				// Create output messages and push to queue
 				bool rs = true;
@@ -353,6 +377,8 @@ void *lpms_logging(void *ptargs) {
 					args->returnCode = -1;
 					pthread_exit(&(args->returnCode));
 				}
+			} else {
+				log_info(args->pstate, 2, "[LPSM:%s] Unhandled message type: 0x%02x [%02d bytes]", args->tag, m->command, m->length);
 			}
 			free(m->data);
 			free(m);

@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
 		msg_t *in = NULL;
 		in = queue_pop(&qm.q);
 		if (in == NULL) {
-			usleep(5E-2);
+			usleep(5000);
 			continue;
 		}
 		log_info(&state, 1, "[0x%02x] %s - %s", in->type,

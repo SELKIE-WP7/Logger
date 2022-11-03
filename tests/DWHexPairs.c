@@ -24,8 +24,10 @@ bool test(const char *in, const uint8_t target) {
 	uint8_t val = 0;
 	bool res = hexpair_to_uint(in, &val);
 	if (!res) {
+		//LCOV_EXCL_START
 		fprintf(stderr, "Conversion of '%c%c' failed\n", in[0], in[1]);
 		return false;
+		//LCOV_EXCL_STOP
 	}
 
 	if (val == target) {
@@ -33,9 +35,11 @@ bool test(const char *in, const uint8_t target) {
 		        target);
 		return true;
 	}
+	//LCOV_EXCL_START
 	fprintf(stdout, "Conversion of '%c%c' failed (returned %d, not %d)\n", in[0], in[1], val,
 	        target);
 	return false;
+	//LCOV_EXCL_STOP
 }
 
 /*!

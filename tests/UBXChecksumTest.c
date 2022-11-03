@@ -30,9 +30,11 @@ int main(int argc, char *argv[]) {
 
 	char *hex = ubx_string_hex(&validCS);
 	if (ubx_check_checksum(&validCS) == false) {
+		//LCOV_EXCL_START
 		fprintf(stderr, "[Failed] %s\n", hex);
 		fprintf(stderr, "[Error] Valid checksum failed test\n");
 		passed = false;
+		//LCOV_EXCL_STOP
 	} else {
 		printf("[Pass] Valid checksum: %s\n", hex);
 	}
@@ -41,9 +43,11 @@ int main(int argc, char *argv[]) {
 
 	hex = ubx_string_hex(&invalidCS);
 	if (ubx_check_checksum(&invalidCS) == true) {
+		//LCOV_EXCL_START
 		fprintf(stderr, "[Failed] %s\n", hex);
 		fprintf(stderr, "[Error] Invalid checksum passed test\n");
 		passed = false;
+		//LCOV_EXCL_STOP
 	} else {
 		printf("[Pass] Invalid checksum: %s\n", hex);
 	}
@@ -54,9 +58,11 @@ int main(int argc, char *argv[]) {
 
 	hex = ubx_string_hex(&invalidCS);
 	if (ubx_check_checksum(&invalidCS) == false) {
+		//LCOV_EXCL_START
 		fprintf(stderr, "[Failed] %s\n", hex);
 		fprintf(stderr, "[Error] Corrected checksum failed test\n");
 		passed = false;
+		//LCOV_EXCL_STOP
 	} else {
 		printf("[Pass] Corrected checksum: %s\n", hex);
 	}

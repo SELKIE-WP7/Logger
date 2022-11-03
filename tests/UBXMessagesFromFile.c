@@ -25,6 +25,7 @@
  * @returns 0 (Pass), -1 (Fail), -2 (Failed to run / Error)
  */
 int main(int argc, char *argv[]) {
+	//LCOV_EXCL_START
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s <file>\n", argv[0]);
 		return -2;
@@ -37,6 +38,7 @@ int main(int argc, char *argv[]) {
 		perror("open");
 		return -2;
 	}
+	//LCOV_EXCL_STOP
 
 	int count = 0;
 	int exit = 0;
@@ -47,6 +49,7 @@ int main(int argc, char *argv[]) {
 			count++;
 		} else {
 			switch (tmp.sync1) {
+				//LCOV_EXCL_START
 				case 0xAA:
 					fclose(testFile);
 					return -2;
@@ -55,6 +58,7 @@ int main(int argc, char *argv[]) {
 					fclose(testFile);
 					return -1;
 					break;
+				//LCOV_EXCL_STOP
 				case 0xFD:
 					exit = 1;
 					break;

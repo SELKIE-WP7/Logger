@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
 
+	//LCOV_EXCL_START
 	// Should be 1 spare arguments: The file to convert
 	if (argc - optind != 1) {
 		log_error(&state, "Invalid arguments");
@@ -50,6 +51,7 @@ int main(int argc, char *argv[]) {
 		log_error(&state, "Unable to open input file \"%s\"", argv[optind]);
 		return -1;
 	}
+	//LCOV_EXCL_STOP
 
 	state.started = true;
 	bool processing = true;
@@ -59,14 +61,18 @@ int main(int argc, char *argv[]) {
 	int count = 0;
 	size_t end = 0;
 	while (processing || hw > 10) {
+		//LCOV_EXCL_START
 		if (feof(nf) && processing) {
 			log_info(&state, 2, "End of file reached");
 			processing = false;
 		}
+		//LCOV_EXCL_STOP
 		lpms_message *m = calloc(1, sizeof(lpms_message));
 		if (!m) {
+			//LCOV_EXCL_START
 			perror("lpms_message calloc");
 			return EXIT_FAILURE;
+			//LCOV_EXCL_STOP
 		}
 		bool r = lpms_readMessage_buf(fileno(nf), m, buf, &end, &hw);
 		if (r) {
@@ -90,7 +96,10 @@ int main(int argc, char *argv[]) {
 					log_info(&state, 1, "%02x: Timestamp: %u", m->id,
 					         d.timestamp);
 				} else {
+					//LCOV_EXCL_START
 					log_warning(&state, "%02x: Timestamp invalid", m->id);
+					return -1;
+					//LCOV_EXCL_STOP
 				}
 				if (lpms_imu_set_accel_raw(m, &d)) {
 					log_info(&state, 1,
@@ -139,10 +148,6 @@ int main(int argc, char *argv[]) {
 					         m->id, d.euler_angles[0], d.euler_angles[1],
 					         d.euler_angles[2]);
 				}
-				if (lpms_imu_set_pressure(m, &d)) {
-					log_info(&state, 1, "%02x: Pressure: %.2f", m->id,
-					         d.pressure);
-				}
 				if (lpms_imu_set_altitude(m, &d)) {
 					log_info(&state, 1, "%02x: Altitude: %.2f", m->id,
 					         d.altitude);
@@ -152,15 +157,19 @@ int main(int argc, char *argv[]) {
 					         d.temperature);
 				}
 			} else {
+				//LCOV_EXCL_START
 				log_info(&state, 2, "%02x: Command %02x, %u bytes, checksum %s",
 				         m->id, m->command, m->length, csOK ? "OK" : "not OK");
+				//LCOV_EXCL_STOP
 			}
 			count++;
 		} else {
 			if (m->id == 0xAA || m->id == 0xEE) {
+				//LCOV_EXCL_START
 				log_error(&state,
 				          "Error reading messages from file (Code: 0x%02x)\n",
 				          (uint8_t)m->id);
+				//LCOV_EXCL_STOP
 			}
 
 			if (m->id == 0xFD) {

@@ -103,6 +103,7 @@ int main(int argc, char *argv[]) {
 		} else {
 			assert(tMessage.dtype == MSG_ERROR);
 			switch ((uint8_t)tMessage.data.value) {
+				//LCOV_EXCL_START
 				case 0xAA:
 					msg_destroy(&tMessage);
 					fclose(tmp);
@@ -111,6 +112,7 @@ int main(int argc, char *argv[]) {
 					msg_destroy(&tMessage);
 					fclose(tmp);
 					return -1;
+				//LCOV_EXCL_STOP
 				case 0xFD:
 					exit = 1;
 					break;

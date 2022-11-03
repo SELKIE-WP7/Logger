@@ -166,13 +166,32 @@ int main(int argc, char *argv[]) {
 	msg_destroy(out);
 	free(out);
 
-	//One more message, to test destroying a queue with messages remaining
+	// Destroy the now-empty queue structure
+	queue_destroy(&QT);
+
+	// Reinitialise the queue
+	if (!queue_init(&QT)) {
+		//LCOV_EXCL_START
+		fprintf(stderr, "Failed to initialise queue\n");
+		perror("queue_init");
+		return -1;
+		//LCOV_EXCL_STOP
+	}
+
 	if (!queue_push(&QT, msg_new_string(1, 6, 20, "Test Message - 5678"))) {
 		//LCOV_EXCL_START
 		fprintf(stderr, "Unable to push string message to queue");
 		return -1;
 		//LCOV_EXCL_STOP
 	}
+
+	if (!queue_push(&QT, msg_new_string(1, 7, 20, "Test Message - ABCD"))) {
+		//LCOV_EXCL_START
+		fprintf(stderr, "Unable to push string message to queue");
+		return -1;
+		//LCOV_EXCL_STOP
+	}
+	// Now destroy a queue with multiple items still present
 	queue_destroy(&QT);
 
 	count = queue_count(&QT);
@@ -185,6 +204,15 @@ int main(int argc, char *argv[]) {
 		return -1;
 		//LCOV_EXCL_STOP
 	}
+
+	queue_init(&QT);
+	if (queue_pop(&QT) != NULL) {
+		//LCOV_EXCL_START
+		fprintf(stderr, "Gained an item from a destroyed queue!\n");
+		return -1;
+		//LCOV_EXCL_STOP
+	}
+	queue_destroy(&QT);
 
 	return 0;
 }

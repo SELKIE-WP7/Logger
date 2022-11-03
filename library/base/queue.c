@@ -22,8 +22,10 @@ bool queue_init(msgqueue *queue) {
 	pthread_mutexattr_destroy(&ma);
 
 	if (pthread_mutex_lock(&(queue->lock))) {
+		// LCOV_EXCL_START
 		perror("queue_init");
 		return false;
+		// LCOV_EXCL_STOP
 	}
 	queue->head = NULL;
 	queue->tail = NULL;
@@ -42,7 +44,7 @@ bool queue_init(msgqueue *queue) {
 void queue_destroy(msgqueue *queue) {
 	queue->valid = false;
 	if (pthread_mutex_lock(&(queue->lock))) {
-		perror("queue_destroy");
+		perror("queue_destroy"); //LCOV_EXCL_LINE
 		// Not returning, as we should still invalidate the queue
 		// Just means that we're already in an odd case
 	}
@@ -50,15 +52,19 @@ void queue_destroy(msgqueue *queue) {
 		// Queue is empty
 		// Tail should already be null, but set it just in case
 		queue->tail = NULL;
+		pthread_mutex_unlock(&(queue->lock));
+		pthread_mutex_destroy(&(queue->lock));
 		return;
 	}
 	queueitem *qi = queue->head;
-	while (qi->next) {
+	while (qi) {
 		// Use message destroy to handle underlying storage
 		msg_destroy(qi->item);
 		free(qi->item);
 		qi->item = NULL;
-		qi = qi->next;
+		queueitem *qin = qi->next;
+		free(qi);
+		qi = qin;
 	}
 	queue->head = NULL;
 	queue->tail = NULL;
@@ -80,12 +86,10 @@ bool queue_push(msgqueue *queue, msg_t *msg) {
 	if (queue_push_qi(queue, qi)) {
 		return true;
 	} else {
-		// free() complains about the volatile flag on qi
-		// If we end up in this branch, the item was never queued and
-		// this is the only pointer left to qi, so we're safe to free
-		// it here and the cast keeps the compiler happy.
-		free((struct queueitem *)qi);
+		//LCOV_EXCL_START
+		free(qi);
 		return false;
+		//LCOV_EXCL_STOP
 	}
 }
 
@@ -107,8 +111,10 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 	queueitem *qi = NULL;
 
 	if (pthread_mutex_lock(&(queue->lock))) {
+		//LCOV_EXCL_START
 		perror("queue_push_qi");
 		return false;
+		//LCOV_EXCL_STOP
 	}
 
 	// If head is NULL, the queue is empty, so point head and tail at our
@@ -160,8 +166,10 @@ bool queue_push_qi(msgqueue *queue, queueitem *item) {
 msg_t *queue_pop(msgqueue *queue) {
 	int e = pthread_mutex_lock(&(queue->lock));
 	if (e != 0) {
+		//LCOV_EXCL_START
 		perror("queue_pop");
 		return NULL;
+		//LCOV_EXCL_STOP
 	}
 	queueitem *head = queue->head;
 	if (head == NULL || !queue->valid) {

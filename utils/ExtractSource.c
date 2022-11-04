@@ -84,7 +84,14 @@ int main(int argc, char *argv[]) {
 				break;
 
 			case 'o':
-				outFileName = strdup(optarg);
+				if (outFileName) {
+					log_error(
+						&state,
+						"Only a single output file name can be provided");
+					doUsage = true;
+				} else {
+					outFileName = strdup(optarg);
+				}
 				break;
 			case '?':
 				log_error(&state, "Unknown option `-%c'", optopt);
@@ -143,10 +150,17 @@ int main(int argc, char *argv[]) {
 		// New basename is old basename up to . (or end, if absent)
 		char *nbn = calloc(bnl + 1, sizeof(char));
 		strncpy(nbn, bn, bnl);
-		if (asprintf(&outFileName, "%s/%s.s%02x.dat", dn, nbn, source) <= 0) { return -1; }
+		if (asprintf(&outFileName, "%s/%s.s%02x.dat", dn, nbn, source) <= 0) {
+			outFileName = NULL;
+		}
 		free(nbn);
 		free(inF1);
 		free(inF2);
+		if (outFileName == NULL) {
+			log_error(&state, "Unable to generate output file name");
+			free(inFileName);
+			return -1;
+		}
 	}
 
 	errno = 0;

@@ -306,8 +306,9 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 		errno = 0;
 		net->port = strtol(t->value, NULL, 0);
 		if (errno) {
-			log_error(lta->pstate, "[Network:%s] Error parsing source number: %s",
+			log_error(lta->pstate, "[Network:%s] Error parsing port number: %s",
 			          lta->tag, strerror(errno));
+			free(net);
 			return false;
 		}
 	}
@@ -327,11 +328,13 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[Network:%s] Error parsing source number: %s",
 			          lta->tag, strerror(errno));
+			free(net);
 			return false;
 		}
 		if (sn < 0) {
 			log_error(lta->pstate, "[Network:%s] Invalid source number (%s)", lta->tag,
 			          t->value);
+			free(net);
 			return false;
 		}
 		if (sn < 10) {
@@ -353,6 +356,7 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[Network:%s] Error parsing port number: %s",
 			          lta->tag, strerror(errno));
+			free(net);
 			return false;
 		}
 	}
@@ -365,6 +369,7 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 			log_error(lta->pstate,
 			          "[Network:%s] Error parsing minimum message size: %s", lta->tag,
 			          strerror(errno));
+			free(net);
 			return false;
 		}
 		if (net->minBytes <= 0) {
@@ -372,6 +377,7 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 				lta->pstate,
 				"[Network:%s] Invalid minimum packet size specified (%d is not greater than zero)",
 				lta->tag, net->minBytes);
+			free(net);
 			return false;
 		}
 	}
@@ -384,6 +390,7 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 			log_error(lta->pstate,
 			          "[Network:%s] Error parsing maximum message size: %s", lta->tag,
 			          strerror(errno));
+			free(net);
 			return false;
 		}
 
@@ -392,6 +399,7 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 				lta->pstate,
 				"[Network:%s] Invalid maximum packet size specified (%d is not greater than zero)",
 				lta->tag, net->maxBytes);
+			free(net);
 			return false;
 		}
 
@@ -400,6 +408,7 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 				lta->pstate,
 				"[Network:%s] Invalid maximum packet size specified (%d is smaller than specified minimum packet size)",
 				lta->tag, net->maxBytes);
+			free(net);
 			return false;
 		}
 	}
@@ -411,6 +420,7 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[Network:%s] Error parsing timeout: %s", lta->tag,
 			          strerror(errno));
+			free(net);
 			return false;
 		}
 
@@ -419,6 +429,7 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 				lta->pstate,
 				"[Network:%s] Invalid timeout value (%d is not greater than zero)",
 				lta->tag, net->timeout);
+			free(net);
 			return false;
 		}
 	}

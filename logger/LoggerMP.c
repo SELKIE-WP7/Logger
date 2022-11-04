@@ -252,6 +252,7 @@ bool mp_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[MP:%s] Error parsing baud rate: %s", lta->tag,
 			          strerror(errno));
+			free(mp);
 			return false;
 		}
 	}

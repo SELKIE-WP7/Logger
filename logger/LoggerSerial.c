@@ -219,11 +219,13 @@ bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[Serial:%s] Error parsing source number: %s",
 			          lta->tag, strerror(errno));
+			free(rx);
 			return false;
 		}
 		if (sn < 0) {
 			log_error(lta->pstate, "[Serial:%s] Invalid source number (%s)", lta->tag,
 			          t->value);
+			free(rx);
 			return false;
 		}
 		if (sn < 10) {
@@ -250,6 +252,7 @@ bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[Serial:%s] Error parsing baud rate: %s", lta->tag,
 			          strerror(errno));
+			free(rx);
 			return false;
 		}
 	}
@@ -262,6 +265,7 @@ bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 			log_error(lta->pstate,
 			          "[Serial:%s] Error parsing minimum message size: %s", lta->tag,
 			          strerror(errno));
+			free(rx);
 			return false;
 		}
 		if (rx->minBytes <= 0) {
@@ -269,6 +273,7 @@ bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 				lta->pstate,
 				"[Serial:%s] Invalid minimum packet size specified (%d is not greater than zero)",
 				lta->tag, rx->minBytes);
+			free(rx);
 			return false;
 		}
 	}
@@ -281,6 +286,7 @@ bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 			log_error(lta->pstate,
 			          "[Serial:%s] Error parsing maximum message size: %s", lta->tag,
 			          strerror(errno));
+			free(rx);
 			return false;
 		}
 
@@ -289,6 +295,7 @@ bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 				lta->pstate,
 				"[Serial:%s] Invalid maximum packet size specified (%d is not greater than zero)",
 				lta->tag, rx->maxBytes);
+			free(rx);
 			return false;
 		}
 
@@ -297,6 +304,7 @@ bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 				lta->pstate,
 				"[Serial:%s] Invalid maximum packet size specified (%d is smaller than specified minimum packet size)",
 				lta->tag, rx->maxBytes);
+			free(rx);
 			return false;
 		}
 	}
@@ -309,6 +317,7 @@ bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 			log_error(lta->pstate,
 			          "[Serial:%s] Error parsing minimum poll frequency: %s", lta->tag,
 			          strerror(errno));
+			free(rx);
 			return false;
 		}
 
@@ -317,6 +326,7 @@ bool rx_parseConfig(log_thread_args_t *lta, config_section *s) {
 				lta->pstate,
 				"[Serial:%s] Invalid minimum poll frequency (%d is not greater than zero)",
 				lta->tag, rx->pollFreq);
+			free(rx);
 			return false;
 		}
 	}

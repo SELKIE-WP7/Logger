@@ -72,7 +72,10 @@ void *mqtt_logging(void *ptargs) {
 				}
 			}
 			if ((now - lastMessage) > 180) {
-				log_warning(args->pstate, "[MQTT:%s] More than 3 minutes since last message. Resetting timer", args->tag);
+				log_warning(
+					args->pstate,
+					"[MQTT:%s] More than 3 minutes since last message. Resetting timer",
+					args->tag);
 				lastMessage = now;
 			}
 		}
@@ -229,6 +232,7 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 			if (errno) {
 				log_error(lta->pstate, "[MQTT:%s] Error parsing port number: %s",
 				          lta->tag, strerror(errno));
+				free(mqtt);
 				return false;
 			}
 		} else if (strcasecmp(t->key, "name") == 0) {
@@ -239,11 +243,13 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 			if (errno) {
 				log_error(lta->pstate, "[MQTT:%s] Error parsing source number: %s",
 				          lta->tag, strerror(errno));
+				free(mqtt);
 				return false;
 			}
 			if (sn < 0) {
 				log_error(lta->pstate, "[MQTT:%s] Invalid source number (%s)",
 				          lta->tag, t->value);
+				free(mqtt);
 				return false;
 			}
 			if (sn < 10) {
@@ -265,6 +271,7 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 					lta->pstate,
 					"[MQTT:%s] Invalid value provided for 'victron_keepalives': %s",
 					lta->tag, t->value);
+				free(mqtt);
 				return false;
 			}
 			mqtt->victron_keepalives = (tmp > 0);
@@ -274,6 +281,7 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 					lta->pstate,
 					"[MQTT:%s] Only a single system ID is supported for Victron keepalive messages",
 					lta->tag);
+				free(mqtt);
 				return false;
 			}
 			mqtt->sysid = strdup(t->value);
@@ -284,6 +292,7 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 				log_error(lta->pstate,
 				          "[MQTT:%s] Error parsing keepalive interval: %s",
 				          lta->tag, strerror(errno));
+				free(mqtt);
 				return false;
 			}
 			mqtt->keepalive_interval = ki;
@@ -293,6 +302,7 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 				log_error(lta->pstate,
 				          "[MQTT:%s] Invalid value provided for 'dumpall': %s",
 				          lta->tag, t->value);
+				free(mqtt);
 				return false;
 			}
 			mqtt->qm.dumpall = (tmp > 0);
@@ -313,6 +323,7 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 							lta->pstate,
 							"[MQTT:%s] Invalid textmode specifier (%s) for topic '%s' ",
 							lta->tag, t->value, mqtt->qm.tc[n].topic);
+						free(mqtt);
 						return false;
 					}
 					mqtt->qm.tc[n].text = (tmp > 0);
@@ -333,6 +344,7 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 	if (mqtt->qm.numtopics < 1) {
 		log_error(lta->pstate, "[MQTT:%s] Must provide at least one topic to log",
 		          lta->tag);
+		free(mqtt);
 		return false;
 	}
 	if (mqtt->victron_keepalives && mqtt->sysid == NULL) {
@@ -340,6 +352,7 @@ bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s) {
 			lta->pstate,
 			"[MQTT:%s] Must provide a system ID if enabling Victron-style keepalive messages",
 			lta->tag);
+		free(mqtt);
 		return false;
 	}
 	lta->dParams = mqtt;

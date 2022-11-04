@@ -412,6 +412,7 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[I2C:%s] Error parsing sample frequency: %s",
 			          lta->tag, strerror(errno));
+			free(ip);
 			return false;
 		}
 		if (ip->frequency <= 0) {
@@ -419,6 +420,7 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 				lta->pstate,
 				"[I2C:%s] Invalid frequency requested (%d) - must be positive and non-zero",
 				lta->tag, ip->frequency);
+			free(ip);
 			return false;
 		}
 	}
@@ -430,11 +432,13 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[I2C:%s] Error parsing source number: %s",
 			          lta->tag, strerror(errno));
+			free(ip);
 			return false;
 		}
 		if (sn < 0) {
 			log_error(lta->pstate, "[I2C:%s] Invalid source number (%s)", lta->tag,
 			          t->value);
+			free(ip);
 			return false;
 		}
 		if (sn < 10) {
@@ -472,6 +476,7 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 						lta->pstate,
 						"[I2C:%s] Failed to register INA219 device at address 0x%02x and base message ID 0x%02x",
 						lta->tag, baddr, msgid);
+					free(ip);
 					return false;
 				}
 
@@ -484,6 +489,7 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 						lta->pstate,
 						"[I2C:%s] Failed to register INA219 device at address 0x%02x and base message ID 0x%02x",
 						lta->tag, baddr, baseMsgID);
+					free(ip);
 					return false;
 				}
 				baseMsgID += 3;
@@ -501,6 +507,7 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 					log_error(lta->pstate,
 					          "[I2C:%s] Error parsing values in configuration",
 					          lta->tag);
+					free(ip);
 					return false;
 				}
 
@@ -514,6 +521,7 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 							lta->pstate,
 							"[I2C:%s] Error parsing scale value in configuration",
 							lta->tag);
+						free(ip);
 						return false;
 					}
 
@@ -526,6 +534,7 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 								lta->pstate,
 								"[I2C:%s] Error parsing offset value in configuration",
 								lta->tag);
+							free(ip);
 							return false;
 						}
 					}
@@ -536,6 +545,7 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 						lta->pstate,
 						"[I2C:%s] Failed to register ADS1015 device at address 0x%02x and base message ID 0x%02x",
 						lta->tag, baddr, msgid);
+					free(ip);
 					return false;
 				}
 
@@ -548,6 +558,7 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 						lta->pstate,
 						"[I2C:%s] Failed to register ADS1015 device at address 0x%02x and base message ID 0x%02x",
 						lta->tag, baddr, baseMsgID);
+					free(ip);
 					return false;
 				}
 				baseMsgID += 4;

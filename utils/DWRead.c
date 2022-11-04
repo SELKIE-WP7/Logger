@@ -78,6 +78,7 @@ int main(int argc, char *argv[]) {
 	FILE *inFile = fopen(inFileName, "rb");
 	if (inFile == NULL) {
 		log_error(&state, "Unable to open input file");
+		if (inFileName) { free(inFileName); }
 		return -1;
 	}
 
@@ -135,6 +136,8 @@ int main(int argc, char *argv[]) {
 						memset(cycdata, 0, 20 * sizeof(cycdata[0]));
 						break;
 					}
+
+					if (cycCount < 16) { break; }
 
 					dw_spectrum ds = {0};
 					if (!dw_spectrum_from_array(cycdata, &ds)) {
@@ -214,6 +217,7 @@ int main(int argc, char *argv[]) {
 				break;
 			default:
 				// Error!
+				free(inFileName);
 				return -2;
 		}
 		memmove(buf, &(buf[end]), hw - end);

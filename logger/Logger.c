@@ -415,7 +415,11 @@ int main(int argc, char *argv[]) {
 
 	pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
 	if (!threads) {
+		state.shutdown = true;
 		log_error(&state, "Unable to allocate threads: %s", strerror(errno));
+		free(ltargs);
+		destroy_global_opts(&go);
+		destroy_program_state(&state);
 		return EXIT_FAILURE;
 	}
 
@@ -948,12 +952,17 @@ void destroy_global_opts(struct global_opts *go) {
  */
 bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS, char *vFName) {
 	char *tmptmp = NULL;
-	char *dn = dirname(strdup(sFName));
+	char *sfn = strdup(sFName);
+	char *dn = dirname(sfn);
 	if (asprintf(&tmptmp, "%s/stateXXXXXX", dn) < 0) {
 		perror("write_state_file:asprintf");
+		free(dn);
+		free(sfn);
 		return false;
 	}
 	free(dn);
+	free(sfn);
+	sfn = NULL;
 	dn = NULL;
 
 	int sfilefd = mkstemp(tmptmp);

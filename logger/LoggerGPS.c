@@ -364,6 +364,7 @@ bool gps_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[GPS:%s] Error parsing baud rate: %s", lta->tag,
 			          strerror(errno));
+			free(gp);
 			return false;
 		}
 	}
@@ -375,6 +376,7 @@ bool gps_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[GPS:%s] Error parsing initial baud rate: %s",
 			          lta->tag, strerror(errno));
+			free(gp);
 			return false;
 		}
 	}
@@ -386,11 +388,13 @@ bool gps_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[GPS:%s] Error parsing source number: %s",
 			          lta->tag, strerror(errno));
+			free(gp);
 			return false;
 		}
 		if (sn < 0) {
 			log_error(lta->pstate, "[GPS:%s] Invalid source number (%s)", lta->tag,
 			          t->value);
+			free(gp);
 			return false;
 		}
 		if (sn < 10) {

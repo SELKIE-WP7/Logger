@@ -61,7 +61,14 @@ int main(int argc, char *argv[]) {
 				doGZ = false;
 				break;
 			case 'o':
-				outFileName = strdup(optarg);
+				if (outFileName) {
+					log_error(
+						&state,
+						"Only a single output file name can be provided");
+					doUsage = true;
+				} else {
+					outFileName = strdup(optarg);
+				}
 				break;
 			case '?':
 				log_error(&state, "Unknown option `-%c'", optopt);

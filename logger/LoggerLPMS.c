@@ -241,12 +241,12 @@ void *lpms_logging(void *ptargs) {
 					pthread_exit(&(args->returnCode));
 				}
 			} else if (m->command == LPMS_MSG_GET_FREQ) {
-				uint32_t rate = m->data[0] +
-					((uint32_t) m->data[1] << 8) +
-					((uint32_t) m->data[2] << 16) +
-					((uint32_t) m->data[3] << 24);
+				uint32_t rate = m->data[0] + ((uint32_t)m->data[1] << 8) +
+				                ((uint32_t)m->data[2] << 16) +
+				                ((uint32_t)m->data[3] << 24);
 				log_info(args->pstate, 1,
-					"[LPMS:%s] Unit 0x%02x: Message rate %dHz", args->tag, m->id, rate);
+				         "[LPMS:%s] Unit 0x%02x: Message rate %dHz", args->tag,
+				         m->id, rate);
 			} else if (m->command == LPMS_MSG_GET_IMUDATA) {
 				if (!d.present) {
 					// Can't extract data until configuration has appeared
@@ -378,12 +378,14 @@ void *lpms_logging(void *ptargs) {
 					pthread_exit(&(args->returnCode));
 				}
 			} else {
-				log_info(args->pstate, 2, "[LPSM:%s] Unhandled message type: 0x%02x [%02d bytes]", args->tag, m->command, m->length);
+				log_info(args->pstate, 2,
+				         "[LPSM:%s] Unhandled message type: 0x%02x [%02d bytes]",
+				         args->tag, m->command, m->length);
 			}
 			free(m->data);
 			free(m);
 		} else {
-			// No message available, so sleep 
+			// No message available, so sleep
 			usleep(1E5);
 		}
 	}
@@ -539,11 +541,13 @@ bool lpms_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[LPMS:%s] Error parsing source number: %s",
 			          lta->tag, strerror(errno));
+			free(lpmsInfo);
 			return false;
 		}
 		if (sn < 0) {
 			log_error(lta->pstate, "[LPMS:%s] Invalid source number (%s)", lta->tag,
 			          t->value);
+			free(lpmsInfo);
 			return false;
 		}
 		if (sn < 10) {
@@ -569,6 +573,7 @@ bool lpms_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[LPMS:%s] Error parsing baud rate: %s", lta->tag,
 			          strerror(errno));
+			free(lpmsInfo);
 			return false;
 		}
 	}
@@ -580,12 +585,14 @@ bool lpms_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[LPMS:%s] Error parsing unit ID: %s", lta->tag,
 			          strerror(errno));
+			free(lpmsInfo);
 			return false;
 		}
 		if ((lpmsInfo->unitID <= 0) || (lpmsInfo->unitID > 255)) {
 			log_error(lta->pstate,
 			          "[LPMS:%s] Unit ID specified (%d not in range 1-255)", lta->tag,
 			          lpmsInfo->unitID);
+			free(lpmsInfo);
 			return false;
 		}
 	}
@@ -598,6 +605,7 @@ bool lpms_parseConfig(log_thread_args_t *lta, config_section *s) {
 			log_error(lta->pstate,
 			          "[LPMS:%s] Error parsing minimum poll frequency: %s", lta->tag,
 			          strerror(errno));
+			free(lpmsInfo);
 			return false;
 		}
 
@@ -614,6 +622,7 @@ bool lpms_parseConfig(log_thread_args_t *lta, config_section *s) {
 					lta->pstate,
 					"[LPMS:%s] Invalid minimum poll frequency (%d is not greater than zero)",
 					lta->tag, lpmsInfo->pollFreq);
+				free(lpmsInfo);
 				return false;
 		}
 	}

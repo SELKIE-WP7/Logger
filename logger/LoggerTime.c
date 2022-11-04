@@ -218,6 +218,7 @@ bool timer_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[Timer:%s] Error parsing frequency: %s", lta->tag,
 			          strerror(errno));
+			free(tp);
 			return false;
 		}
 		if (tp->frequency <= 0) {
@@ -225,6 +226,7 @@ bool timer_parseConfig(log_thread_args_t *lta, config_section *s) {
 				lta->pstate,
 				"[Timer:%s] Invalid frequency requested (%d) - must be positive and non-zero",
 				lta->tag, tp->frequency);
+			free(tp);
 			return false;
 		}
 	}
@@ -236,11 +238,13 @@ bool timer_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[Timer:%s] Error parsing source number: %s",
 			          lta->tag, strerror(errno));
+			free(tp);
 			return false;
 		}
 		if (sn < 0) {
 			log_error(lta->pstate, "[Timer:%s] Invalid source number (%s)", lta->tag,
 			          t->value);
+			free(tp);
 			return false;
 		}
 		if (sn < 10) {

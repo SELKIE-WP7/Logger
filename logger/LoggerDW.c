@@ -154,6 +154,10 @@ void *dw_logging(void *ptargs) {
 				continue; // Continue main processing loop
 			}
 
+			if (cCount < 18) {
+				log_warning(args->pstate, "[DW:%s] Insufficient cyclic data (%u)",
+				            args->tag, cCount);
+			}
 			dw_spectrum ds = {0};
 			if (!dw_spectrum_from_array(cycdata, &ds)) {
 				log_info(args->pstate, 2, "[DW:%s] Invalid spectrum data\n",
@@ -479,11 +483,13 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[DW:%s] Error parsing source number: %s", lta->tag,
 			          strerror(errno));
+			free(dw);
 			return false;
 		}
 		if (sn < 0) {
 			log_error(lta->pstate, "[DW:%s] Invalid source number (%s)", lta->tag,
 			          t->value);
+			free(dw);
 			return false;
 		}
 		if (sn < 10) {
@@ -505,6 +511,7 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[DW:%s] Error parsing timeout: %s", lta->tag,
 			          strerror(errno));
+			free(dw);
 			return false;
 		}
 
@@ -512,6 +519,7 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 			log_error(lta->pstate,
 			          "[DW:%s] Invalid timeout value (%d is not greater than zero)",
 			          lta->tag, dw->timeout);
+			free(dw);
 			return false;
 		}
 	}
@@ -523,6 +531,7 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (tmp < 0) {
 			log_error(lta->pstate, "[DW:%s] Invalid value provided for 'raw': %s",
 			          lta->tag, t->value);
+			free(dw);
 			return false;
 		}
 		dw->recordRaw = (tmp == 1);
@@ -535,6 +544,7 @@ bool dw_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (tmp < 0) {
 			log_error(lta->pstate, "[DW:%s] Invalid value provided for 'spectrum': %s",
 			          lta->tag, t->value);
+			free(dw);
 			return false;
 		}
 		dw->parseSpectrum = (tmp == 1);

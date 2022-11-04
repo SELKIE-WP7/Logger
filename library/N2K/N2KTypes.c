@@ -60,6 +60,7 @@ bool n2k_act_to_bytes(const n2k_act_message *act, uint8_t **out, size_t *len) {
 		(*len) = 0;
 		return false;
 	}
+	(*out) = o;
 	return true;
 }
 
@@ -254,10 +255,13 @@ uint8_t n2k_act_checksum(const n2k_act_message *msg) {
 void n2k_act_print(const n2k_act_message *msg) {
 	uint8_t *tmp = NULL;
 	size_t len = 0;
-	n2k_act_to_bytes(msg, &tmp, &len);
-	fprintf(stdout, "N2k ACT Message: ");
-	for (int j = 0; j < len; ++j) {
-		fprintf(stdout, "%c%02x", j > 0 ? ':' : ' ', tmp[j]);
+	if (n2k_act_to_bytes(msg, &tmp, &len)) {
+		fprintf(stdout, "N2k ACT Message: ");
+		for (int j = 0; j < len; ++j) {
+			fprintf(stdout, "%c%02x", j > 0 ? ':' : ' ', tmp[j]);
+		}
+		fprintf(stdout, "\n");
+	} else {
+		fprintf(stdout, "N2k ACT Message: [Byte conversion failed]\n");
 	}
-	fprintf(stdout, "\n");
 }

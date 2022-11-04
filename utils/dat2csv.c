@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 	program_state state = {0};
 	state.verbose = 1;
 
-	char *varfileName = NULL;
+	char *varFileName = NULL;
 	char *outFileName = NULL;
 	bool doGZ = true;
 	bool clobberOutput = false;
@@ -165,10 +165,24 @@ int main(int argc, char *argv[]) {
 				doGZ = false;
 				break;
 			case 'c':
-				varfileName = strdup(optarg);
+				if (varFileName) {
+					log_error(
+						&state,
+						"Only a single source mapping (.var) file may be specified");
+					doUsage = true;
+				} else {
+					varFileName = strdup(optarg);
+				}
 				break;
 			case 'o':
-				outFileName = strdup(optarg);
+				if (outFileName) {
+					log_error(
+						&state,
+						"Only a single output file name may be specified");
+					doUsage = true;
+				} else {
+					outFileName = strdup(optarg);
+				}
 				break;
 			case 'T':
 				errno = 0;
@@ -193,6 +207,8 @@ int main(int argc, char *argv[]) {
 
 	if (doUsage) {
 		fprintf(stderr, usage, argv[0]);
+		if (varFileName) { free(varFileName); }
+		if (outFileName) { free(outFileName); }
 		return -1;
 	}
 
@@ -200,6 +216,9 @@ int main(int argc, char *argv[]) {
 	FILE *inFile = fopen(inFileName, "rb");
 	if (inFile == NULL) {
 		log_error(&state, "Unable to open input file");
+		if (inFileName) { free(inFileName); }
+		if (varFileName) { free(varFileName); }
+		if (outFileName) { free(outFileName); }
 		return -1;
 	}
 
@@ -217,11 +236,11 @@ int main(int argc, char *argv[]) {
 	int nSources = 0;
 	uint8_t usedSources[128] = {0};
 
-	if (varfileName == NULL) {
+	if (varFileName == NULL) {
 		log_warning(&state, "Reading entire data file to generate channel list.");
 		log_warning(&state, "Provide .var file using '-c' option to avoid this");
-		varfileName = strdup(inFileName);
-		if (varfileName == NULL) {
+		varFileName = strdup(inFileName);
+		if (varFileName == NULL) {
 			log_error(&state, "Error processing variable file name: %s",
 			          strerror(errno));
 			return -1;
@@ -230,8 +249,8 @@ int main(int argc, char *argv[]) {
 
 	// No longer run conditionally, but keeping variables in own scope
 	{
-		log_info(&state, 1, "Reading channel and source names from %s", varfileName);
-		FILE *varFile = fopen(varfileName, "rb");
+		log_info(&state, 1, "Reading channel and source names from %s", varFileName);
+		FILE *varFile = fopen(varFileName, "rb");
 		if (varFile == NULL) {
 			log_error(&state, "Unable to open variable file");
 			return -1;
@@ -296,8 +315,8 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		// clang-format on
-		free(varfileName);
-		varfileName = NULL;
+		free(varFileName);
+		varFileName = NULL;
 		qsort(&usedSources, nSources, sizeof(uint8_t), &sort_uint);
 	}
 

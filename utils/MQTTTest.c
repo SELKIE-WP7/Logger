@@ -68,8 +68,9 @@ int main(int argc, char *argv[]) {
 				if (host) {
 					log_error(&state, "Only a single hostname is supported");
 					doUsage = true;
+				} else {
+					host = strdup(optarg);
 				}
-				host = strdup(optarg);
 				break;
 			case 'p':
 				errno = 0;
@@ -81,7 +82,14 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'k':
 				keepalive = true;
-				sysid = strdup(optarg);
+				if (sysid) {
+					log_error(
+						&state,
+						"Cannot specify keepalive option multiple times");
+					doUsage = true;
+				} else {
+					sysid = strdup(optarg);
+				}
 				break;
 			case 'v':
 				dumpAll = true;
@@ -101,6 +109,8 @@ int main(int argc, char *argv[]) {
 	if (doUsage) {
 		log_error(&state, "Invalid options provided");
 		fprintf(stderr, usage, argv[0]);
+		if (host) { free(host); }
+		if (sysid) { free(sysid); }
 		return -1;
 	}
 
@@ -124,6 +134,8 @@ int main(int argc, char *argv[]) {
 	mqtt_conn *mc = mqtt_openConnection(host, port, &qm);
 	if (!mqtt_subscribe_batch(mc, &qm)) {
 		log_error(&state, "Unable to subscribe to topics");
+		if (host) { free(host); }
+		if (sysid) { free(sysid); }
 		return EXIT_FAILURE;
 	}
 
@@ -172,4 +184,6 @@ int main(int argc, char *argv[]) {
 	mqtt_destroy_queue_map(&qm);
 	free(hMask);
 	free(host);
+	free(sysid);
+	return 0;
 }

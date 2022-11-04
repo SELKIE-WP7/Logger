@@ -259,6 +259,7 @@ bool nmea_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[NMEA:%s] Error parsing baud rate: %s", lta->tag,
 			          strerror(errno));
+			free(nmp);
 			return false;
 		}
 	}
@@ -270,11 +271,13 @@ bool nmea_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[NMEA:%s] Error parsing source number: %s",
 			          lta->tag, strerror(errno));
+			free(nmp);
 			return false;
 		}
 		if (sn < 0) {
 			log_error(lta->pstate, "[NMEA:%s] Invalid source number (%s)", lta->tag,
 			          t->value);
+			free(nmp);
 			return false;
 		}
 		if (sn < 10) {

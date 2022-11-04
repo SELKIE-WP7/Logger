@@ -139,9 +139,7 @@ void *n2k_logging(void *ptargs) {
 		}
 		if (out.data) { free(out.data); }
 
-		if (n2k_hw == 1024) {
-			log_error(args->pstate, "[N2K:%s] Buffer full", args->tag);
-		}
+		if (n2k_hw == 1024) { log_error(args->pstate, "[N2K:%s] Buffer full", args->tag); }
 
 		if (n2k_hw == 1024 && n2k_index == 0) {
 			log_error(args->pstate, "[N2K:%s] Ignoring first 100 bytes", args->tag);
@@ -283,6 +281,7 @@ bool n2k_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[N2K:%s] Error parsing baud rate: %s", lta->tag,
 			          strerror(errno));
+			free(nmp);
 			return false;
 		}
 	}
@@ -294,11 +293,13 @@ bool n2k_parseConfig(log_thread_args_t *lta, config_section *s) {
 		if (errno) {
 			log_error(lta->pstate, "[N2K:%s] Error parsing source number: %s",
 			          lta->tag, strerror(errno));
+			free(nmp);
 			return false;
 		}
 		if (sn < 0) {
 			log_error(lta->pstate, "[N2K:%s] Invalid source number (%s)", lta->tag,
 			          t->value);
+			free(nmp);
 			return false;
 		}
 		if (sn < 10) {

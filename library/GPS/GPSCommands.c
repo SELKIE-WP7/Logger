@@ -5,6 +5,18 @@
 #include "GPSSerial.h"
 #include "GPSTypes.h"
 
+/***
+ * Some common features of all messages:
+ * - Header:
+ *   - 2 byte header
+ *   - 2 byte message ID (category + type)
+ *   - 2 byte / 1 word length
+ * - Footer:
+ *   - 2 byte checksum
+ * An artefact of the internal representation of the messages is an additional
+ * trailing zero in the values used here.  This ensures that the pointer to any
+ * extra data is set to zero
+ */
 /*!
  * Sends a UBX protocol CFG-PRT message, configuring UART 1 for the specified
  * baud rate with all protocols permitted as input and only UBX messages
@@ -36,7 +48,8 @@ bool ubx_setBaudRate(const int handle, const uint32_t baud) {
 				       0x00, 0x00              // Reserved
 			       },
 	                       0xFF,
-	                       0xFF}; // Checksum (TBC)
+	                       0xFF,  // Checksum value calculated later
+	                       0x00}; // No extra data pointer
 
 	setBaud.data[8] = (uint8_t)(baud & 0xFF);
 	setBaud.data[9] = (uint8_t)((baud >> 8) & 0xFF);
@@ -75,7 +88,8 @@ bool ubx_setMessageRate(const int handle, const uint8_t msgClass, const uint8_t 
 				       0x00  // Disable on port 5
 			       },
 	                       0xFF,
-	                       0xFF};
+	                       0xFF,
+	                       0x00};
 	ubx_set_checksum(&setRate);
 	return ubx_writeMessage(handle, &setRate);
 }
@@ -92,7 +106,7 @@ bool ubx_setMessageRate(const int handle, const uint8_t msgClass, const uint8_t 
  * @return Status of ubx_writeMessage()
  */
 bool ubx_pollMessage(const int handle, const uint8_t msgClass, const uint8_t msgID) {
-	ubx_message poll = {0xB5, 0x62, msgClass, msgID, 0x0000, {0x00}, 0xFF, 0xFF};
+	ubx_message poll = {0xB5, 0x62, msgClass, msgID, 0x0000, {0x00}, 0xFF, 0xFF, 0x00};
 	ubx_set_checksum(&poll);
 	return ubx_writeMessage(handle, &poll);
 }
@@ -115,7 +129,8 @@ bool ubx_enableGalileo(const int handle) {
 	                              0x04, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x03, 0x05, 0x00, 0x03, 0x00,
 	                              0x01, 0x00, 0x01, 0x05, 0x06, 0x08, 0x0E, 0x00, 0x01, 0x00, 0x01, 0x01},
 	                             0xFF,
-	                             0xFF};
+	                             0xFF,
+	                             0x00};
 	ubx_set_checksum(&enableGalileo);
 	return ubx_writeMessage(handle, &enableGalileo);
 }
@@ -145,7 +160,8 @@ bool ubx_setNavigationRate(const int handle, const uint16_t interval, const uint
 				       0x00 // Align measurements to UTC
 			       },
 	                       0xFF,
-	                       0xFF}; // Dummy checksum values
+	                       0xFF,
+	                       0x00};
 	ubx_set_checksum(&navRate);
 	return ubx_writeMessage(handle, &navRate);
 }
@@ -173,7 +189,8 @@ bool ubx_enableLogMessages(const int handle) {
 					 0x00, // Error, warning and info on UART 1, disable all others
 				 },
 	                         0xFF,
-	                         0xFF}; // Checksum to be set below
+	                         0xFF,
+	                         0x00};
 	ubx_set_checksum(&enableInf);
 	return ubx_writeMessage(handle, &enableInf);
 }
@@ -197,7 +214,8 @@ bool ubx_disableLogMessages(const int handle) {
 					  0x00, // Disable all
 				  },
 	                          0xFF,
-	                          0xFF}; // Checksum to be set below
+	                          0xFF,
+	                          0x00};
 	ubx_set_checksum(&disableInf);
 	return ubx_writeMessage(handle, &disableInf);
 }
@@ -226,7 +244,8 @@ bool ubx_setI2CAddress(const int handle, const uint8_t addr) {
 				      0x00, 0x00, 0x00, 0x00,        // Flags, reserved
 			      },
 	                      0xFF,
-	                      0xFF}; // Checksum to be set below
+	                      0xFF,
+	                      0x00};
 	ubx_set_checksum(&setI2C);
 	return ubx_writeMessage(handle, &setI2C);
 }

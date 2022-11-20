@@ -29,7 +29,7 @@ struct dmap dmap[] = {
 	{"TIMER", &timer_getCallbacks, &timer_parseConfig},
 	{"TICK", &timer_getCallbacks, &timer_parseConfig},
 	{"LPMS", &lpms_getCallbacks, &lpms_parseConfig},
-	{NULL, NULL} // End of list sentinel value
+	{NULL, NULL, NULL} // End of list sentinel value
 };
 
 /*!

@@ -220,26 +220,26 @@ int main(int argc, char *argv[]) {
 
 	while (!(feof(inFile))) {
 		// Read message from data file
-		msg_t tmp = {0};
-		if (!mp_readMessage(fileno(inFile), &tmp)) {
-			if (tmp.data.value == 0xAA || tmp.data.value == 0xEE) {
+		msg_t mtmp = {0};
+		if (!mp_readMessage(fileno(inFile), &mtmp)) {
+			if (mtmp.data.value == 0xAA || mtmp.data.value == 0xEE) {
 				log_error(&state,
 				          "Error reading messages from file (Code: 0x%52x)\n",
-				          (uint8_t)tmp.data.value);
+				          (uint8_t)mtmp.data.value);
 			}
-			if (tmp.data.value == 0xFD) {
+			if (mtmp.data.value == 0xFD) {
 				// No more data, exit cleanly
 				log_info(&state, 1, "End of file reached");
 			}
 			break;
 		}
-		if (tmp.source == source) {
+		if (mtmp.source == source) {
 			bool writeMsg = true;
-			if (typeCount > 0) { writeMsg = type[tmp.type]; }
+			if (typeCount > 0) { writeMsg = type[mtmp.type]; }
 
 			if (writeMsg) {
 				if (raw) {
-					if (!mp_writeData(fileno(outFile), &tmp)) {
+					if (!mp_writeData(fileno(outFile), &mtmp)) {
 						log_error(&state, "Unable to write output: %s",
 						          strerror(errno));
 						fclose(inFile);
@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
 						return -1;
 					}
 				} else {
-					if (!mp_writeMessage(fileno(outFile), &tmp)) {
+					if (!mp_writeMessage(fileno(outFile), &mtmp)) {
 						log_error(&state, "Unable to write output: %s",
 						          strerror(errno));
 						fclose(inFile);
@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
 				msgCount++;
 			}
 		}
-		msg_destroy(&tmp);
+		msg_destroy(&mtmp);
 		inPos = ftell(inFile);
 		if (((((1.0 * inPos) / inSize) * 100) - progress) >= 5) {
 			progress = (((1.0 * inPos) / inSize) * 100);

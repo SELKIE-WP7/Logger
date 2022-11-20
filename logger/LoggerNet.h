@@ -47,10 +47,10 @@ void *net_channels(void *ptargs);
 bool net_connect(void *ptargs);
 
 //! Fill out device callback functions for logging
-device_callbacks net_getCallbacks();
+device_callbacks net_getCallbacks(void);
 
 //! Fill out default MP source parameters
-net_params net_getParams();
+net_params net_getParams(void);
 
 //! Take a configuration section and parse parameters
 bool net_parseConfig(log_thread_args_t *lta, config_section *s);

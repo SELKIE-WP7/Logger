@@ -35,10 +35,10 @@ void *mqtt_shutdown(void *ptargs);
 void *mqtt_channels(void *ptargs);
 
 //! Fill out device callback functions for logging
-device_callbacks mqtt_getCallbacks();
+device_callbacks mqtt_getCallbacks(void);
 
 //! Fill out default MP source parameters
-mqtt_params mqtt_getParams();
+mqtt_params mqtt_getParams(void);
 
 //! Take a configuration section and parse parameters
 bool mqtt_parseConfig(log_thread_args_t *lta, config_section *s);

@@ -50,10 +50,10 @@ void *gps_shutdown(void *ptargs);
 void *gps_channels(void *ptargs);
 
 //! Fill out device callback functions for logging
-device_callbacks gps_getCallbacks();
+device_callbacks gps_getCallbacks(void);
 
 //! Fill out default GPS parameters
-gps_params gps_getParams();
+gps_params gps_getParams(void);
 
 //! Parse configuration section
 bool gps_parseConfig(log_thread_args_t *lta, config_section *s);

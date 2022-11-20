@@ -15,6 +15,27 @@
  * @ingroup testing
  */
 
+bool test(const char *in);
+
+/*!
+ * Test dw_string_hxv() for CTest
+ *
+ * @returns 1 on error, otherwise 0
+ *
+ */
+int main(void) {
+	const char *l1 = "0618,B34D,8EE9,2DE4,2F4C\r";
+	const char *l2 = "0424,4CBA,2FC8,2F84,F09E\r";
+	const char *l3 = "001E,7FFF,80E0,0300,1689\r";
+
+	bool rv = true;
+	rv &= test(l1);
+	rv &= test(l2);
+	rv &= test(l3);
+
+	return rv ? 0 : 1;
+}
+
 /*!
  * Convert and print HXV data
  *
@@ -38,23 +59,4 @@ bool test(const char *in) {
 	        thxv.lines, thxv.status, north / 100.0, west / 100.0, vert / 100.0);
 	fprintf(stdout, "\tCyclic data: 0x%04x. Parity bytes: 0x%04x\n", cycdat, parity);
 	return rv;
-}
-
-/*!
- * Test dw_string_hxv() for CTest
- *
- * @returns 1 on error, otherwise 0
- *
- */
-int main(void) {
-	const char *l1 = "0618,B34D,8EE9,2DE4,2F4C\r";
-	const char *l2 = "0424,4CBA,2FC8,2F84,F09E\r";
-	const char *l3 = "001E,7FFF,80E0,0300,1689\r";
-
-	bool rv = true;
-	rv &= test(l1);
-	rv &= test(l2);
-	rv &= test(l3);
-
-	return rv ? 0 : 1;
 }

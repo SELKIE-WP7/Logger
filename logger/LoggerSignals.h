@@ -40,14 +40,14 @@ void signalUnpause(int signnum);
 /*! @} */
 
 //! Install signal handlers
-void signalHandlersInstall();
+void signalHandlersInstall(void);
 
 //! Return a signal mask with suitable defaults
-sigset_t *signalHandlerMask();
+sigset_t *signalHandlerMask(void);
 
 //! Block signals that we have handlers for
-void signalHandlersBlock();
+void signalHandlersBlock(void);
 
 //! Unblock signals that we have handlers for
-void signalHandlersUnblock();
+void signalHandlersUnblock(void);
 #endif

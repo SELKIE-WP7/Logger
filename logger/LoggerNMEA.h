@@ -46,10 +46,10 @@ void *nmea_shutdown(void *ptargs);
 void *nmea_channels(void *ptargs);
 
 //! Fill out device callback functions for logging
-device_callbacks nmea_getCallbacks();
+device_callbacks nmea_getCallbacks(void);
 
 //! Fill out default NMEA parameters
-nmea_params nmea_getParams();
+nmea_params nmea_getParams(void);
 
 //! Take a configuration section and parse parameters
 bool nmea_parseConfig(log_thread_args_t *lta, config_section *s);

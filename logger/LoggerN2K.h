@@ -52,10 +52,10 @@ void *n2k_shutdown(void *ptargs);
 void *n2k_channels(void *ptargs);
 
 //! Fill out device callback functions for logging
-device_callbacks n2k_getCallbacks();
+device_callbacks n2k_getCallbacks(void);
 
 //! Fill out default N2K parameters
-n2k_params n2k_getParams();
+n2k_params n2k_getParams(void);
 
 //! Take a configuration section and parse parameters
 bool n2k_parseConfig(log_thread_args_t *lta, config_section *s);

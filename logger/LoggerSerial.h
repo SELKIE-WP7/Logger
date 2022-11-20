@@ -44,10 +44,10 @@ void *rx_shutdown(void *ptargs);
 void *rx_channels(void *ptargs);
 
 //! Fill out device callback functions for logging
-device_callbacks rx_getCallbacks();
+device_callbacks rx_getCallbacks(void);
 
 //! Fill out default MP source parameters
-rx_params rx_getParams();
+rx_params rx_getParams(void);
 
 //! Take a configuration section and parse parameters
 bool rx_parseConfig(log_thread_args_t *lta, config_section *s);

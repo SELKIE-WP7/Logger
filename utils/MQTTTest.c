@@ -21,14 +21,7 @@
 //! Set true to start clean shutdown
 bool shutdown = false;
 
-/*!
- * Signal handler - sets shutdown flag
- * @internal
- * @param[in] signnum Signal number (ignored)
- */
-void signalShutdown(int signnum __attribute__((unused))) {
-	shutdown = true;
-}
+void signalShutdown(int signnum);
 
 /*!
  * Connects to MQTT broker, subscribing to topics given on the command line.
@@ -186,4 +179,13 @@ int main(int argc, char *argv[]) {
 	free(host);
 	free(sysid);
 	return 0;
+}
+
+/*!
+ * Signal handler - sets shutdown flag
+ * @internal
+ * @param[in] signnum Signal number (ignored)
+ */
+void signalShutdown(int signnum __attribute__((unused))) {
+	shutdown = true;
 }

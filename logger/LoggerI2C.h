@@ -62,10 +62,10 @@ void *i2c_shutdown(void *ptargs);
 void *i2c_channels(void *ptargs);
 
 //! Fill out device callback functions for logging
-device_callbacks i2c_getCallbacks();
+device_callbacks i2c_getCallbacks(void);
 
 //! Fill out default I2C parameters
-i2c_params i2c_getParams();
+i2c_params i2c_getParams(void);
 
 //! Check channel mapping is valid
 bool i2c_validate_chanmap(i2c_params *ip);

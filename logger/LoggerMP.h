@@ -45,10 +45,10 @@ void *mp_channels(void *ptargs);
 void *mp_shutdown(void *ptargs);
 
 //! Fill out device callback functions for logging
-device_callbacks mp_getCallbacks();
+device_callbacks mp_getCallbacks(void);
 
 //! Fill out default MP source parameters
-mp_params mp_getParams();
+mp_params mp_getParams(void);
 
 //! Take a configuration section and parse parameters
 bool mp_parseConfig(log_thread_args_t *lta, config_section *s);

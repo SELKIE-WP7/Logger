@@ -82,10 +82,10 @@ void *dw_channels(void *ptargs);
 void dw_push_message(log_thread_args_t *args, uint8_t sNum, uint8_t cNum, float data);
 
 //! Fill out device callback functions for logging
-device_callbacks dw_getCallbacks();
+device_callbacks dw_getCallbacks(void);
 
 //! Fill out default MP source parameters
-dw_params dw_getParams();
+dw_params dw_getParams(void);
 
 //! Take a configuration section and parse parameters
 bool dw_parseConfig(log_thread_args_t *lta, config_section *s);

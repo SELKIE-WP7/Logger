@@ -42,10 +42,10 @@ void *timer_shutdown(void *ptargs);
 void *timer_channels(void *ptargs);
 
 //! Fill out device callback functions for logging
-device_callbacks timer_getCallbacks();
+device_callbacks timer_getCallbacks(void);
 
 //! Fill out default timer parameters
-timer_params timer_getParams();
+timer_params timer_getParams(void);
 
 //! Take a configuration section and parse parameters
 bool timer_parseConfig(log_thread_args_t *lta, config_section *s);

@@ -2,9 +2,9 @@
 
 //! Device map entry
 struct dmap {
-	char *tag;                 //!< ID tag
-	device_callbacks (*dcb)(); //!< Device getCallbacks function
-	dc_parser dp;              //!< Device parseConfig function
+	char *tag;                     //!< ID tag
+	device_callbacks (*dcb)(void); //!< Device getCallbacks function
+	dc_parser dp;                  //!< Device parseConfig function
 };
 
 /*!

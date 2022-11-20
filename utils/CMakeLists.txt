@@ -26,7 +26,7 @@ find_package(ZLIB REQUIRED)
 add_executable(dat2csv dat2csv.c)
 target_link_libraries(dat2csv PUBLIC ZLIB::ZLIB)
 target_link_libraries(dat2csv PUBLIC SELKIELoggerBase SELKIELoggerMP)
-target_compile_options(dat2csv PRIVATE -Wno-format) # Silence warnings about positional printf arguments
+target_compile_options(dat2csv PRIVATE -Wno-format -Wno-format-security) # Silence warnings about positional printf arguments
 install(TARGETS dat2csv RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Conversion)
 
 add_executable(DumpMessages DumpMessages.c)

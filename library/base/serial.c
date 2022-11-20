@@ -37,8 +37,14 @@ int openSerialConnection(const char *port, const int baudRate) {
 	// interface
 	tcgetattr(handle, &options);
 
-	cfsetispeed(&options, baud_to_flag(baudRate));
-	cfsetospeed(&options, baud_to_flag(baudRate));
+	speed_t rate = baud_to_flag(baudRate);
+	if (rate == (speed_t) -1) {
+		fprintf(stderr, "Unsupported baud rate requested: %d\n", baudRate);
+		return -1;
+	}
+
+	cfsetispeed(&options, baud_to_flag(rate));
+	cfsetospeed(&options, baud_to_flag(rate));
 	options.c_oflag &= ~OPOST; // Disable any post processing
 	options.c_cflag &= ~(PARENB | CSTOPB | CSIZE);
 	options.c_cflag |= (CLOCAL | CREAD);
@@ -52,7 +58,7 @@ int openSerialConnection(const char *port, const int baudRate) {
 	{
 		struct termios check;
 		tcgetattr(handle, &check);
-		if (cfgetispeed(&check) != baud_to_flag(baudRate)) {
+		if (cfgetispeed(&check) != rate) {
 			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", baudRate,
 			        flag_to_baud(cfgetispeed(&check)));
 			close(handle); // Don't leave file descriptor dangling
@@ -64,10 +70,9 @@ int openSerialConnection(const char *port, const int baudRate) {
 }
 
 /*!
- * Defaults to returning a negated version of the rate in the event that an
- * unknown baud rate is passed.
+ * Defaults to returning -1 if a rate is not known/available at compile time.
  *
- * This was apparently a good idea, but not sure why...
+ * Earlier versions returned -rate.
  *
  * @param[in] rate Baud rate as integer value
  * @return Corresponding flag from termios.h
@@ -110,22 +115,30 @@ int baud_to_flag(const int rate) {
 			return B1500000;
 		case 2000000:
 			return B2000000;
+#ifdef B2500000
 		case 2500000:
 			return B2500000;
+#endif
+#ifdef B3000000
 		case 3000000:
 			return B3000000;
+#endif
+#ifdef B3500000
 		case 3500000:
 			return B3500000;
+#endif
+#ifdef B4000000
 		case 4000000:
 			return B4000000;
+#endif
 		default:
-			return -rate;
+			return -1;
 	}
 }
 
 /*!
- * As with the baud_to_flag() counterpart, will return a negated version of the
- * flag if no matching baud rate is found.
+ * As with the baud_to_flag() counterpart, will return -1 flag if no matching
+ * baud rate is found.
  *
  * @param[in] flag Corresponding flag from termios.h
  * @return Baud rate as integer value
@@ -168,15 +181,23 @@ int flag_to_baud(const int flag) {
 			return 1500000;
 		case B2000000:
 			return 2000000;
+#ifdef B2500000
 		case B2500000:
 			return 2500000;
+#endif
+#ifdef B3000000
 		case B3000000:
 			return 3000000;
+#endif
+#ifdef B3500000
 		case B3500000:
 			return 3500000;
+#endif
+#ifdef B4000000
 		case B4000000:
 			return 4000000;
+#endif
 		default:
-			return -flag;
+			return -1;
 	}
 }

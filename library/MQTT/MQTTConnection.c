@@ -114,6 +114,8 @@ bool mqtt_subscribe_batch(mqtt_conn *conn, mqtt_queue_map *qm) {
  * @param[in] inmsg Incoming message
  */
 void mqtt_enqueue_messages(mqtt_conn *conn, void *userdat_qm, const struct mosquitto_message *inmsg) {
+	(void) conn; // Deliberately unused
+
 	mqtt_queue_map *qm = (mqtt_queue_map *)(userdat_qm);
 
 	int ix = -1;

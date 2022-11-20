@@ -695,6 +695,11 @@ int sort_uint(const void *a, const void *b) {
  */
 char *csv_all_timestamp_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                 const char *channelName) {
+	// Not used here
+	(void) type;
+	(void) sourceName;
+	(void) channelName;
+
 	char *fields = NULL;
 	if (asprintf(&fields, "Timestamp:%02X", source) <= 0) { return NULL; }
 	return fields;
@@ -725,6 +730,10 @@ char *csv_all_timestamp_data(const msg_t *msg) {
  */
 char *csv_gps_position_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                const char *channelName) {
+	(void) type;
+	(void) sourceName;
+	(void) channelName;
+
 	char *fields = NULL;
 	if (asprintf(&fields,
 	             "Longitude:%1$02X,Latitude:%1$02X,Height:%1$02X,HAcc:%1$02X,VAcc:%1$02X",
@@ -764,6 +773,10 @@ char *csv_gps_position_data(const msg_t *msg) {
  */
 char *csv_gps_velocity_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                const char *channelName) {
+	(void) type;
+	(void) sourceName;
+	(void) channelName;
+
 	char *fields = NULL;
 	if (asprintf(
 		    &fields,
@@ -806,6 +819,10 @@ char *csv_gps_velocity_data(const msg_t *msg) {
  */
 char *csv_gps_datetime_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                                const char *channelName) {
+	(void) type;
+	(void) sourceName;
+	(void) channelName;
+
 	char *fields = NULL;
 	if (asprintf(&fields, "Date:%1$02X,Time:%1$02X,DTAcc:%1$02X", source) <= 0) {
 		return NULL;
@@ -846,6 +863,9 @@ char *csv_gps_datetime_data(const msg_t *msg) {
  */
 char *csv_all_float_headers(const uint8_t source, const uint8_t type, const char *sourceName,
                             const char *channelName) {
+	(void) type;
+	(void) sourceName;
+
 	char *fields = NULL;
 	if (asprintf(&fields, "%s:%02X", channelName, source) <= 0) { return NULL; }
 	return fields;

@@ -21,4 +21,3 @@ int main(int argc, char *argv[]) {
 	log_error(&state, "Error message during shutdown");
 	return 0;
 }
-

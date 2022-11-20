@@ -80,7 +80,7 @@ void *dw_logging(void *ptargs) {
 		}
 
 		int ti = 0;
-		if (dw_hw < bufSize - 1) {
+		if (dw_hw < (ssize_t)(bufSize - 1)) {
 			errno = 0;
 			ti = read(dwInfo->handle, &(buf[dw_hw]), bufSize - dw_hw);
 			if (ti >= 0) {

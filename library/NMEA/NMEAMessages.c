@@ -31,7 +31,7 @@ void nmea_calc_checksum(const nmea_msg_t *msg, uint8_t *cs) {
 	if (msg->fields.entries > 0) {
 		for (int fi = 0; fi < msg->fields.entries; fi++) {
 			a ^= ',';
-			for (int ffi = 0; ffi < msg->fields.strings[fi].length; ffi++) {
+			for (unsigned int ffi = 0; ffi < msg->fields.strings[fi].length; ffi++) {
 				a ^= msg->fields.strings[fi].data[ffi];
 			}
 		}
@@ -120,7 +120,7 @@ size_t nmea_flat_array(const nmea_msg_t *msg, char **out) {
 	if (msg->fields.entries > 0) {
 		for (int fi = 0; fi < msg->fields.entries; fi++) {
 			outarray[ix++] = ',';
-			for (int ffi = 0; ffi < msg->fields.strings[fi].length; ffi++) {
+			for (unsigned int ffi = 0; ffi < msg->fields.strings[fi].length; ffi++) {
 				outarray[ix++] = msg->fields.strings[fi].data[ffi];
 			}
 		}

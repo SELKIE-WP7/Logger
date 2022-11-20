@@ -58,7 +58,7 @@ int ubx_openConnection(const char *port, const int initialBaud) {
 	{
 		struct termios check;
 		tcgetattr(handle, &check);
-		if (cfgetispeed(&check) != baud_to_flag(115200)) {
+		if (cfgetispeed(&check) != B115200) {
 			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", 115200,
 			        flag_to_baud(cfgetispeed(&check)));
 			return -1;

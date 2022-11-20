@@ -142,7 +142,7 @@ bool lpms_find_messages(int handle, size_t numtypes, const uint8_t types[], int 
 		bool rs = lpms_readMessage_buf(handle, &t, buf, index, hw);
 		if (rs) {
 			fprintf(stdout, "%02x: Command 0x%02x received while waiting\n", t.id, t.command);
-			for (int c = 0; c < numtypes; c++) {
+			for (unsigned int c = 0; c < numtypes; c++) {
 				if (t.command == types[c]) {
 					if (out) { (*out) = t; }
 					return true;
@@ -164,7 +164,7 @@ bool lpms_send_command(const int handle, lpms_message *m) {
 	size_t len = 0;
 	bool rs = lpms_to_bytes(m, &arr, &len);
 	if (!rs) { return false; }
-	rs = (write(handle, arr, len) == len);
+	rs = (write(handle, arr, len) == (ssize_t) len);
 	free(arr);
 	return rs;
 }

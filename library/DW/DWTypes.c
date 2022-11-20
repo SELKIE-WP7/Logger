@@ -73,7 +73,7 @@ bool dw_string_hxv(const char *in, size_t *end, dw_hxv *out) {
 	if (in == NULL || out == NULL || (*end) < 25) { return false; }
 
 	ssize_t le = -1; // Line end
-	for (int i = 0; i < (*end); ++i) {
+	for (unsigned int i = 0; i < (*end); ++i) {
 		if (in[i] == '\r') {
 			le = i;
 			break;

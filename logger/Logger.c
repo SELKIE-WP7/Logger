@@ -306,8 +306,9 @@ int main(int argc, char *argv[]) {
 	bool nextExit = false;
 
 	log_thread_args_t *ltargs = calloc(10, sizeof(log_thread_args_t));
-	size_t ltaSize = 10;
-	size_t nThreads = 0;
+	// Easier for these to be signed than explicitly use unsigned everywhere else
+	ssize_t ltaSize = 10;
+	ssize_t nThreads = 0;
 
 	if (!ltargs) {
 		log_error(&state, "Unable to allocate ltargs");

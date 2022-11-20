@@ -364,7 +364,7 @@ bool mp_writeMessage(int handle, const msg_t *out) {
 	if (!mp_packMessage(&sbuf, out)) { return false; }
 	int ret = write(handle, sbuf.data, sbuf.size);
 	msgpack_sbuffer_destroy(&sbuf);
-	return (ret == sbuf.size);
+	return (ret == (ssize_t) sbuf.size);
 }
 
 /*!
@@ -382,15 +382,15 @@ bool mp_writeData(int handle, const msg_t *out) {
 
 		case MSG_TIMESTAMP:
 			return (write(handle, &(out->data.timestamp), sizeof(out->data.timestamp)) ==
-			        sizeof(out->data.timestamp));
+			        (ssize_t) sizeof(out->data.timestamp));
 
 		case MSG_BYTES:
-			return (write(handle, out->data.bytes, out->length) == out->length);
+			return (write(handle, out->data.bytes, out->length) == (ssize_t) out->length);
 
 		case MSG_STRING:
 			sl = out->data.string.length;
 			if (strlen(out->data.string.data) < sl) { sl = strlen(out->data.string.data); }
-			return (write(handle, &(out->data.string.data), sl) == sl);
+			return (write(handle, &(out->data.string.data), sl) == (ssize_t) sl);
 
 		case MSG_STRARRAY:
 			for (int ix = 0; ix < out->data.names.entries; ix++) {
@@ -398,13 +398,13 @@ bool mp_writeData(int handle, const msg_t *out) {
 				if (sl > 0 && strlen(out->data.names.strings[ix].data) < sl) {
 					sl = strlen(out->data.names.strings[ix].data);
 				}
-				if (!(write(handle, out->data.names.strings[ix].data, sl) == sl)) { return false; }
+				if (!(write(handle, out->data.names.strings[ix].data, sl) == (ssize_t) sl)) { return false; }
 			}
 			return true;
 
 		case MSG_NUMARRAY:
-			return (write(handle, out->data.farray, sizeof(out->data.farray[0]) * out->length) ==
-			        sizeof(out->data.farray[0]) * out->length);
+			sl = sizeof(out->data.farray[0]) * out->length;
+			return (write(handle, out->data.farray, sl) == ((ssize_t) sl));
 
 		case MSG_ERROR:
 		case MSG_UNDEF:
@@ -445,7 +445,7 @@ void mp_pack_strarray(msgpack_packer *pack, const strarray *sa) {
  */
 void mp_pack_numarray(msgpack_packer *pack, const size_t entries, const float *fa) {
 	msgpack_pack_array(pack, entries);
-	for (int ix = 0; ix < entries; ix++) {
+	for (unsigned int ix = 0; ix < entries; ix++) {
 		msgpack_pack_float(pack, fa[ix]);
 	}
 }

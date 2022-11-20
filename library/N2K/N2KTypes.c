@@ -198,7 +198,7 @@ bool n2k_act_from_bytes(const uint8_t *in, const size_t len, n2k_act_message **m
 	uint8_t ee = in[(start + off++)];
 	uint8_t et = in[(start + off++)];
 	if (ee != ACT_ESC || et != ACT_EOT) {
-		if (et == ACT_ESC && (start + off) < remaining) {
+		if (et == ACT_ESC && (ssize_t)(start + off) < remaining) {
 			uint8_t next = in[(start + off)];
 			if (next == ACT_EOT) {
 				// Ended up with ACT_ESC, ACT_ESC, ACT_EOT - bad escaping?
@@ -257,7 +257,7 @@ void n2k_act_print(const n2k_act_message *msg) {
 	size_t len = 0;
 	if (n2k_act_to_bytes(msg, &tmp, &len)) {
 		fprintf(stdout, "N2k ACT Message: ");
-		for (int j = 0; j < len; ++j) {
+		for (unsigned int j = 0; j < len; ++j) {
 			fprintf(stdout, "%c%02x", j > 0 ? ':' : ' ', tmp[j]);
 		}
 		fprintf(stdout, "\n");

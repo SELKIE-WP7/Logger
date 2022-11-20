@@ -262,7 +262,7 @@ char *msg_data_narr_to_string(const msg_t *msg) {
 	char *out = calloc(alen, sizeof(char));
 	if (out == NULL) { return NULL; }
 	size_t pos = 0;
-	for (int i = 0; i < msg->length; i++) {
+	for (unsigned int i = 0; i < msg->length; i++) {
 		int l = snprintf(&(out[pos]), (alen - pos), "%.4f/", msg->data.farray[i]);
 		if (l < 0) {
 			// LCOV_EXCL_START

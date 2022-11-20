@@ -300,5 +300,5 @@ bool nmea_writeMessage(int handle, const nmea_msg_t *out) {
 	size_t size = nmea_flat_array(out, &buf);
 	int ret = write(handle, buf, size);
 	free(buf);
-	return (ret == size);
+	return (ret == (ssize_t) size);
 }

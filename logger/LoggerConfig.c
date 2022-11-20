@@ -30,7 +30,7 @@ int config_handler(void *user, const char *section, const char *name, const char
 
 	config_section *cs = NULL;
 	if (sectFound < 0) {
-		if (c->numsects < c->sectsize) {
+		if (c->numsects < (ssize_t) c->sectsize) {
 			cs = &(c->sects[c->numsects++]);
 			cs->name = strdup(section);
 		} else {
@@ -51,7 +51,7 @@ int config_handler(void *user, const char *section, const char *name, const char
 	}
 
 	config_kv *k = NULL;
-	if (cs->numopts < cs->optsize) {
+	if (cs->numopts < (ssize_t) cs->optsize) {
 		k = &(cs->opts[cs->numopts++]);
 	} else {
 		cs->optsize += 5;

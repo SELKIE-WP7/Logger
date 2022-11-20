@@ -198,7 +198,7 @@ mqtt_params mqtt_getParams() {
 		.keepalive_interval = 30,
 		.sysid = NULL,
 		.conn = NULL,
-		.qm = {{0}},
+		.qm = {{0}, 0, 0, {{0}}, false},
 	};
 	return mp;
 }

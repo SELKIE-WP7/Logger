@@ -15,11 +15,9 @@
 /*!
  * Test LEDS on a Pimoronoi Automation Hat
  *
- * @param[in] argc Argument count
- * @param[in] argv Arguments
  * @returns -1 on error, otherwise 0
  */
-int main(int argc, char *argv[]) {
+int main(void) {
 	int handle = i2c_openConnection("/dev/i2c-1");
 
 	if (handle < 0) {

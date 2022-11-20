@@ -18,11 +18,9 @@
 /*!
  * Check NMEA message checksumming
  *
- * @param[in] argc Argument count
- * @param[in] argv Arguments
  * @returns 0 (Pass), -1 (Fail)
  */
-int main(int argc, char *argv[]) {
+int main(void) {
 	bool passed = true;
 
 	//$IIXDR,C,,C,ENV_WATER_T,C,16.24,C,ENV_OUTAIR_T,P,101800,P,ENV_ATMOS_P*61

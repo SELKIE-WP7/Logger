@@ -45,11 +45,9 @@ bool test(const char *in, const uint8_t target) {
 /*!
  * Test hexpair_to_uint() for CTest
  *
- * @param[in] argc Argument count
- * @param[in] argv Arguments
  * @returns 1 on error, otherwise 0
  */
-int main(int argc, char *argv[]) {
+int main(void) {
 	const char *ts1 = "00";
 	const char *ts2 = "01";
 	const char *ts3 = "0a";

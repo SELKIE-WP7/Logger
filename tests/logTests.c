@@ -1,7 +1,23 @@
 
 #include "SELKIELoggerBase.h"
 
-int main(int argc, char *argv[]) {
+/*! @file logTests.c
+ *
+ * @brief Test logging functions
+ *
+ * @test Check that various combinations of log states and parameters are
+ * correctly handled for code coverage and memory checking purposes. Checks are
+ * carried out external to the program itself.
+ *
+ * @ingroup testing
+ */
+
+/*!
+ * Check log functions
+ *
+ * @returns 0 (Pass) unconditionally
+ * */
+int main(void) {
 	program_state state = {0};
 	state.verbose = 0;
 	state.log = fopen("/dev/null", "w");

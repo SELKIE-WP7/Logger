@@ -19,11 +19,9 @@
 /*!
  * Tests different creation, reading and writing of msg_t structures.
  *
- * @param[in] argc Argument count
- * @param[in] argv Arguments
  * @returns 0 (Pass), -1 (Fail), -2 (Failed to run / Error)
  */
-int main(int argc, char *argv[]) {
+int main(void) {
 	msg_t *msn = msg_new_string(SLSOURCE_TEST1, SLCHAN_NAME, 22, "Software Test Source 1");
 	assert(msn);
 

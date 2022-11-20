@@ -22,11 +22,9 @@
 /*!
  * Initialise, fill, drain, and destroy queue instance.
  *
- * @param[in] argc Argument count
- * @param[in] argv Arguments
  * @returns 0 (Pass), -1 (Fail)
  */
-int main(int argc, char *argv[]) {
+int main(void) {
 	msgqueue QT = {0};
 
 	if (!queue_init(&QT)) {

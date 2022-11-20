@@ -18,11 +18,9 @@
 /*!
  * Check UBX message checksumming
  *
- * @param[in] argc Argument count
- * @param[in] argv Arguments
  * @returns 0 (Pass), -1 (Fail)
  */
-int main(int argc, char *argv[]) {
+int main(void) {
 	bool passed = true;
 
 	ubx_message validCS = {0xB5, 0x62, 0x06, 0x02, 0x0001, {0x01}, 0x0A, 0x2A, 0x00};

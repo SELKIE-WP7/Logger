@@ -43,12 +43,10 @@ bool test(const char *in) {
 /*!
  * Test dw_string_hxv() for CTest
  *
- * @param[in] argc Argument count
- * @param[in] argv Arguments
  * @returns 1 on error, otherwise 0
  *
  */
-int main(int argc, char *argv[]) {
+int main(void) {
 	const char *l1 = "0618,B34D,8EE9,2DE4,2F4C\r";
 	const char *l2 = "0424,4CBA,2FC8,2F84,F09E\r";
 	const char *l3 = "001E,7FFF,80E0,0300,1689\r";

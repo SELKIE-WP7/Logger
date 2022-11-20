@@ -19,11 +19,9 @@
  * 0x40 to 0x43, and polls for current values. Identifies some out of range
  * conditions and will report an appropriate error message.
  *
- * @param[in] argc Argument count
- * @param[in] argv Arguments
  * @returns -1 on error, otherwise 0
  */
-int main(int argc, char *argv[]) {
+int main(void) {
 	int handle = i2c_openConnection("/dev/i2c-1");
 
 	if (handle < 0) {

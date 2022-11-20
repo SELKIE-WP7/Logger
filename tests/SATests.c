@@ -21,11 +21,9 @@
 /*!
  * Create and destroy strings and string arrays
  *
- * @param[in] argc Argument count
- * @param[in] argv Arguments
  * @returns 0 (Pass), -1 (Fail)
  */
-int main(int argc, char *argv[]) {
+int main(void) {
 	string *exA = str_new(20, "Testing String Lib.");
 	if (exA == NULL) {
 		// LCOV_EXCL_START

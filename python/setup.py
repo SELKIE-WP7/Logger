@@ -44,6 +44,7 @@ setup(
             "SLConvert = SELKIELogger.scripts.SLConvert:SLConvert",
             "SLExtract = SELKIELogger.scripts.SLExtract:SLExtract",
             "SLGPSWatch = SELKIELogger.scripts.SLGPSWatch:SLGPSWatch",
+            "SLVarWatch = SELKIELogger.scripts.SLVarWatch:SLVarWatch",
             "SLIcinga = SELKIELogger.scripts.SLIcinga:SLIcinga",
             "SLSerialLog = SELKIELogger.scripts.SLSerialLog:SLSerialLog[Serial]",
             "SLWebDev = SELKIELogger.WebInterface:run_dev_server[Web]",

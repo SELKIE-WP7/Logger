@@ -79,7 +79,7 @@ class LocatorSpec:
         Split string into components defining location warning settings.
         Values are validated to the extent possible without device
         and source specific information
-        String is a set of colon separated values in this order:
+        String is a set of comma separated values in this order:
          - Latitude ChannelSpec()
          - Longitude ChannelSpec()
          - Reference Latitude
@@ -165,6 +165,75 @@ class LocatorSpec:
     def __str__(self):
         """! @returns Correctly formatted string"""
         return f"{self.latChan},{self.lonChan},{self.refLat},{self.refLon},{self.threshold},{self.name}"
+
+    def __repr__(self):
+        """! @returns Parseable representation"""
+        return f"LocatorSpec('{self.__str__():s}')"
+
+
+class LimitSpec:
+    """!
+    LimitSpec: String representation of channel limit specification
+    """
+
+    def __init__(self, s):
+        """!
+        Split string into components defining channel and warning limits.
+        Values are validated to the extent possible without device
+        and source specific information
+        String is a set of comma separated values in this order:
+         - ChannelSpec()
+         - Low value threshold
+         - High value threshold
+         - [Optional] Name
+        @param s String in required format.
+        """
+        parts = s.split(",")
+        if len(parts) < 3 or len(parts) > 4:
+            raise ValueError(
+                f"Invalid limit specification ({parts}: {len(parts)} parts)"
+            )
+
+        ## ChannelSpec() identifying source of latitude data
+        self.channel = ChannelSpec(parts[0])
+
+        ## Lower limit
+        self.lowLim = float(parts[1])
+
+        ## Upper limit
+        self.highLim = float(parts[2])
+
+        if len(parts) == 4:
+            ## Name for this locator (used in reporting)
+            self.name = parts[3]
+        else:
+            self.name = f"{self.channel}"
+
+    def check(self, s):
+        """!
+        Check whether channel is within warning threshold or not, based on the
+        data in `s`
+
+        Returns true if value is unknown or outside limits
+
+        @param s State dataframe
+        @returns true/false
+        """
+        value = self.channel.getValue(s)
+
+        if isnan(value):
+            log.warning(f"{self.name} has invalid value")
+            return True
+
+        return (value < self.lowLim) or (value > self.highLim)
+
+    def getValue(self, s):
+        """! @returns Channel getValue result"""
+        return self.channel.getValue(s)
+
+    def __str__(self):
+        """! @returns Correctly formatted string"""
+        return f"{self.channel},{self.lowLim},{self.highLim},{self.name}"
 
     def __repr__(self):
         """! @returns Parseable representation"""

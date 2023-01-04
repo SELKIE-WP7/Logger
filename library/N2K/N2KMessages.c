@@ -412,7 +412,7 @@ bool n2k_129029_values(const n2k_act_message *n, uint8_t *seq, uint16_t *epochDa
 	if (rsid) { (*rsid) = (rsdetails & 0xFFF0) >> 4; }
 
 	if (dgnssa && n->datalen >= 45) {
-		(*dgnssa) = n2k_get_double(n, 4, 16) * 0.01;
+		(*dgnssa) = n2k_get_double(n, 43, 16) * 0.01;
 		success &= isfinite((*dgnssa));
 	}
 	return success;

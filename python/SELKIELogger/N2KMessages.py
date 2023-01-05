@@ -112,8 +112,8 @@ class ACTN2KMessage:
             datapos += 1
             remaining -= 1
             if c == ACTChar.ESC:
-                datapos += 1
                 nc = data[datapos]
+                datapos += 1
                 if nc == ACTChar.ESC:
                     msg.data.append(ACTChar.ESC)
                     continue

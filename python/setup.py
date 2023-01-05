@@ -39,6 +39,7 @@ setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
+            "N2KDump = SELKIELogger.scripts.N2KDump:N2KDump",
             "SLDump = SELKIELogger.scripts.SLDump:SLDump",
             "SLClassify = SELKIELogger.scripts.SLClassify:SLClassify",
             "SLConvert = SELKIELogger.scripts.SLConvert:SLConvert",

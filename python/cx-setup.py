@@ -53,6 +53,7 @@ executables = [
         "SELKIELogger/scripts/SLClassify.py", base=console, target_name="SLClassify"
     ),
     Executable("SELKIELogger/scripts/SLDump.py", base=console, target_name="SLDump"),
+    Executable("SELKIELogger/scripts/N2KDump.py", base=console, target_name="N2KDump"),
     Executable(
         "SELKIELogger/scripts/SLGPSWatch.py", base=console, target_name="SLGPSWatch"
     ),

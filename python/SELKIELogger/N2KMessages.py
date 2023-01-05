@@ -109,12 +109,13 @@ class ACTN2KMessage:
         remaining = msg.datalen
         while (len(data) - datapos) > 3 and remaining > 0:
             c = data[datapos]
+            datapos += 1
             remaining -= 1
             if c == ACTChar.ESC:
-                nc = data[datapos + 1]
+                datapos += 1
+                nc = data[datapos]
                 if nc == ACTChar.ESC:
                     msg.data.append(ACTChar.ESC)
-                    datapos += 1
                     continue
                 elif nc == ACTChar.EOT:
                     logging.debug("Message terminated early")
@@ -124,11 +125,11 @@ class ACTN2KMessage:
                     return (None, spos + datapos - 2)
                 else:
                     logging.debug(
-                        f"Invalid escape sequence found in input data (ESC + 0x{nc:02x}"
+                        f"Invalid escape sequence found in input data (ESC + 0x{nc:02x})"
                     )
                     return (None, spos + datapos)
-            msg.data.append(c)
-            datapos += 1
+            else:
+                msg.data.append(c)
 
         if remaining:
             logging.debug("Failed to read whole message?")
@@ -156,7 +157,7 @@ class ACTN2KMessage:
             if len(x) < 100 or msg[1] == 0:
                 d = file.read(1024 - len(x))
                 if d:
-                    x = x[msg[1] :] + d
+                    x = x + d
                 else:
                     break
         # Out of data, so process until unable to parse further

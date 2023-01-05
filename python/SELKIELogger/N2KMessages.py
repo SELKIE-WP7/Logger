@@ -3,6 +3,7 @@ from enum import IntEnum
 from struct import pack, unpack
 
 import logging
+import time
 
 N2K_TO_DEGREES = 0.0057295779513082332
 
@@ -50,12 +51,12 @@ def ConvertN2KMessage(msg):
 
 @dataclass
 class ACTN2KMessage:
-    length: int = 0
     priority: int = 0
-    PGN: int = 0
     dst: int = 0
     src: int = 0
     timestamp: int = 0
+    length: int = 0
+    PGN: int = 0
     datalen: int = 0
     data: bytearray = field(default_factory=bytearray)
     checksum: int = 0
@@ -228,8 +229,48 @@ class ACTN2KMessage:
         return float(value)
 
 
+class N2KBearingRef(IntEnum):
+    TRUE = 0
+    MAGNETIC = 1
+    INVALID = 2
+    UNKNOWN = 3
+
+
+class N2KWindDirs(IntEnum):
+    NORTHRELATIVE = 0
+    MAGNETIC = 1
+    APPARENT = 2
+    BOATRELATIVE = 3
+    INVALID4 = 4
+    INVALID5 = 5
+    INVALID6 = 6
+    UNKNOWN = 7
+
+
+class N2KTemperatureSource(IntEnum):
+    SEAWATER = 0
+    EXTERNAL = 1
+    INTERNAL = 2
+    ENGINEROOM = 3
+    CABIN = 4
+    UNKNOWN = 5
+
+
+class N2KHumiditySource(IntEnum):
+    INTERNAL = 0
+    EXTERNAL = 1
+    UNKNOWN = 2
+    UNAVAILABLE = 3
+
+
 @pgnclass(60928)
 class N2KPGN_60928:
+    """N2K Address Claim"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     id: int = 0
     mfr: int = 0
     inst: int = 0
@@ -243,6 +284,10 @@ class N2KPGN_60928:
     def fromMessage(msg):
         assert msg.PGN == 60928
         pgn = N2KPGN_60928()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
         pgn.id = msg.getUInt32(0) & 0x1FFFFF
         pgn.mfr = msg.getUInt16(2) >> 5
         pgn.inst = msg.getUInt8(4)
@@ -258,26 +303,42 @@ class N2KPGN_60928:
 
 @pgnclass(127250)
 class N2KPGN_127250:
+    """Heading"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     seq: int = 0
     heading: float = float("NaN")
     deviation: float = float("NaN")
     variation: float = float("NaN")
-    reference: int = -1
+    reference: N2KBearingRef = N2KBearingRef.UNKNOWN
 
     @staticmethod
     def fromMessage(msg):
         assert msg.PGN == 127250
         pgn = N2KPGN_127250()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
         pgn.seq = msg.getUInt8(0)
         pgn.heading = msg.getFloat(1, 16, False) * N2K_TO_DEGREES
         pgn.deviation = msg.getFloat(3, 16, True) * N2K_TO_DEGREES
         pgn.variation = msg.getFloat(5, 16, True) * N2K_TO_DEGREES
-        pgn.reference = msg.getUInt8(7) & 0x03
+        pgn.reference = N2KBearingRef(msg.getUInt8(7) & 0x03)
         return pgn
 
 
 @pgnclass(127251)
 class N2KPGN_127251:
+    """Rate of turn"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     seq: int = 0
     rate: float = float("NaN")
 
@@ -285,6 +346,10 @@ class N2KPGN_127251:
     def fromMessage(msg):
         assert msg.PGN == 127251
         pgn = N2KPGN_127251()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
         pgn.seq = msg.getUInt8(0)
         pgn.rate = msg.getFloat(1, 32, True) / 3200 * N2K_TO_DEGREES
         return pgn
@@ -292,6 +357,12 @@ class N2KPGN_127251:
 
 @pgnclass(127257)
 class N2KPGN_127257:
+    """Orientation"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     seq: int = 0
     yaw: float = float("NaN")
     pitch: float = float("NaN")
@@ -301,6 +372,10 @@ class N2KPGN_127257:
     def fromMessage(msg):
         assert msg.PGN == 127257
         pgn = N2KPGN_127257()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
         pgn.seq = msg.getUInt8(0)
         pgn.yaw = msg.getFloat(1, 16, True) * N2K_TO_DEGREES
         pgn.pitch = msg.getFloat(3, 16, True) * N2K_TO_DEGREES
@@ -310,6 +385,12 @@ class N2KPGN_127257:
 
 @pgnclass(128267)
 class N2KPGN_128267:
+    """Water depth"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     seq: int = 0
     depth: float = float("NaN")
     offset: float = float("NaN")
@@ -319,6 +400,10 @@ class N2KPGN_128267:
     def fromMessage(msg):
         assert msg.PGN == 128267
         pgn = N2KPGN_128267()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
         pgn.seq = msg.getUInt8(0)
         pgn.depth = msg.getFloat(1, 32) * 0.01
         pgn.offset = msg.getFloat(5, 16) * 0.01
@@ -328,6 +413,12 @@ class N2KPGN_128267:
 
 @pgnclass(129025)
 class N2KPGN_129025:
+    """GPS/GNSS Position"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     latitude: float = float("NaN")
     longitude: float = float("NaN")
 
@@ -335,6 +426,10 @@ class N2KPGN_129025:
     def fromMessage(msg):
         assert msg.PGN == 129025
         pgn = N2KPGN_129025()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
         pgn.latitude = msg.getFloat(0, 32) * 1e-7
         pgn.longitude = msg.getFloat(4, 32) * 1e-7
         return pgn
@@ -342,8 +437,14 @@ class N2KPGN_129025:
 
 @pgnclass(129026)
 class N2KPGN_129026:
+    """Speed and Course"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     seq: int = 0
-    magnetic: int = 0
+    magnetic: N2KBearingRef = N2KBearingRef.UNKNOWN
     course: float = float("NaN")
     speed: float = float("NaN")
 
@@ -351,8 +452,12 @@ class N2KPGN_129026:
     def fromMessage(msg):
         assert msg.PGN == 129026
         pgn = N2KPGN_129026()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
         pgn.seq = msg.getUInt8(0)
-        pgn.magnetic = msg.getUInt8(1) & 0x03
+        pgn.magnetic = N2KBearingRef(msg.getUInt8(1) & 0x03)
         pgn.course = msg.getFloat(2, 16, False) * N2K_TO_DEGREES
         pgn.speed = msg.getFloat(4, 16, True) * 0.01
         return pgn
@@ -360,6 +465,12 @@ class N2KPGN_129026:
 
 @pgnclass(129029)
 class N2KPGN_129029:
+    """Detailed GPS/GNSS Information"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     seq: int = 0
     epochDays: int = 0
     seconds: float = float("NaN")
@@ -372,7 +483,7 @@ class N2KPGN_129029:
     numsv: int = 0
     hdop: float = float("NaN")
     pdop: float = float("NaN")
-    geos: float = float("NaN")
+    geoidsep: float = float("NaN")
     rs: int = 0
     rst: int = 0
     rsid: int = 0
@@ -382,6 +493,10 @@ class N2KPGN_129029:
     def fromMessage(msg):
         assert msg.PGN == 129029
         pgn = N2KPGN_129029()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
         pgn.seq = msg.getUInt8(0)
         pgn.epochDays = msg.getUInt16(1)
         pgn.seconds = msg.getUInt32(3) * 0.0001
@@ -398,7 +513,7 @@ class N2KPGN_129029:
         pgn.numsv = msg.getUInt8(33)
         pgn.hdop = msg.getFloat(34, 16) * 0.01
         pgn.pdop = msg.getFloat(36, 16) * 0.01
-        pgn.geos = msg.getFloat(38, 16) * 0.01
+        pgn.geoidsep = msg.getFloat(38, 16) * 0.01
 
         pgn.rs = msg.getUInt8(40)
         rsd = msg.getUInt16(41)
@@ -412,26 +527,46 @@ class N2KPGN_129029:
 
 @pgnclass(129033)
 class N2KPGN_129033:
+    """Date/Time information"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     epochDays: int = 0
     seconds: float = float("NaN")
     utcMins: int = 0
+
+    def asTimestamp(self):
+        """Return an approximate epoch date/time"""
+        return 86400 * self.epochDays + self.seconds
 
     @staticmethod
     def fromMessage(msg):
         assert msg.PGN == 129033
         pgn = N2KPGN_129033()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
         pgn.epochDays = msg.getUInt16(0)
         pgn.seconds = msg.getUInt32(2) * 0.0001
         pgn.utcMins = msg.getInt16(6)
         if abs(pgn.utcMins) > 1440:
-            return None
+            pgn.utcMins = 0
         return pgn
 
 
 @pgnclass(130306)
 class N2KPGN_130306:
+    """Wind speed / direction"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     seq: int = 0
-    ref: int = 0
+    ref: N2KWindDirs = N2KWindDirs.UNKNOWN
     speed: float = float("NaN")
     angle: float = float("NaN")
 
@@ -439,19 +574,29 @@ class N2KPGN_130306:
     def fromMessage(msg):
         assert msg.PGN == 130306
         pgn = N2KPGN_130306()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
         pgn.seq = msg.getUInt8(0)
         pgn.speed = msg.getFloat(1, 16, True) * 0.01
         pgn.angle = msg.getFloat(3, 16, False) * N2K_TO_DEGREES
-        pgn.ref = msg.getUInt8(5) & 0x07
+        pgn.ref = N2KWindDirs(msg.getUInt8(5) & 0x07)
 
         return pgn
 
 
 @pgnclass(130311)
 class N2KPGN_130311:
+    """Environmental Data"""
+
+    priority: int = 0
+    dst: int = 0
+    src: int = 0
+    timestamp: int = 0
     seq: int = 0
-    tid: int = 0
-    hid: int = 0
+    tid: N2KTemperatureSource = N2KTemperatureSource.UNKNOWN
+    hid: N2KHumiditySource = N2KHumiditySource.UNKNOWN
     temperature: float = float("NaN")
     humidity: float = float("NaN")
     pressure: float = float("NaN")
@@ -460,6 +605,11 @@ class N2KPGN_130311:
     def fromMessage(msg):
         assert msg.PGN == 130311
         pgn = N2KPGN_130311()
+        pgn.priority = msg.priority
+        pgn.dst = msg.dst
+        pgn.src = msg.src
+        pgn.timestamp = msg.timestamp
+
         pgn.seq = msg.getUInt8(0)
 
         ids = msg.getUInt8(1)

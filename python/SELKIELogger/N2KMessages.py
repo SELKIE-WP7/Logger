@@ -49,6 +49,56 @@ def ConvertN2KMessage(msg):
     return None
 
 
+def SupportedPGNs():
+    return [k for k in _PGNRegistry]
+
+
+def Timeseries(msgsource, pgns=None):
+    """! Convert stream of N2K messages into a timeseries
+
+    msgsource is expected to be a generator yielding ACTN2KMessage instances
+    Will return a pandas DataFrame indexed by message timestamp (which are
+    assumed to be trusted)
+    """
+
+    if pgns is None:
+        exclude = [60928]
+        pgns = [x for x in SupportedPGNs() if not x in exclude]
+
+    from pandas import to_datetime, DataFrame as df
+
+    skipped = False
+    messages = {}
+    cgroup = 0
+    ctimestamp = None
+    for msg in msgsource:
+        # Break after two consecutive failures to read messages
+        if msg is None:
+            if skipped:
+                break
+            skipped = True
+            continue
+        skipped = False
+        if msg.PGN not in pgns:
+            continue
+        cm = ConvertN2KMessage(msg)
+        if cm:
+            row = {k: v for k, v in zip(cm.fieldnames(), cm.fieldvalues())}
+            row["_N2KTS"] = msg.timestamp
+            if msg.timestamp == ctimestamp:
+                messages[cgroup].update(row)
+            else:
+                cgroup += 1
+                ctimestamp = msg.timestamp
+                messages[cgroup] = row
+    dat = df.from_dict(messages, orient="index").sort_index()
+    del messages
+    timecols = [x for x in dat.columns if x.endswith("Timestamp")]
+    for t in timecols:
+        dat[t] = to_datetime(dat[t], unit="s")
+    return dat
+
+
 @dataclass
 class ACTN2KMessage:
     priority: int = 0
@@ -300,6 +350,22 @@ class N2KPGN_60928:
         pgn.sys = si & 0x0F
         return pgn
 
+    @staticmethod
+    def fieldnames():
+        return [
+            "ISO-ID",
+            "Manufacturer",
+            "Instance",
+            "Function",
+            "Class",
+            "System",
+            "Industry",
+            "Configurable",
+        ]
+
+    def fieldvalues(s):
+        return [s.id, s.mfr, s.inst, s.fn, s.cls, s.sys, s.ind, s.cfg]
+
 
 @pgnclass(127250)
 class N2KPGN_127250:
@@ -330,6 +396,13 @@ class N2KPGN_127250:
         pgn.reference = N2KBearingRef(msg.getUInt8(7) & 0x03)
         return pgn
 
+    @staticmethod
+    def fieldnames():
+        return ["Heading", "Deviation", "Variation", "Reference"]
+
+    def fieldvalues(s):
+        return [s.heading, s.deviation, s.variation, s.reference]
+
 
 @pgnclass(127251)
 class N2KPGN_127251:
@@ -353,6 +426,13 @@ class N2KPGN_127251:
         pgn.seq = msg.getUInt8(0)
         pgn.rate = msg.getFloat(1, 32, True) / 3200 * N2K_TO_DEGREES
         return pgn
+
+    @staticmethod
+    def fieldnames():
+        return ["RateOfTurn"]
+
+    def fieldvalues(s):
+        return [s.rate]
 
 
 @pgnclass(127257)
@@ -382,6 +462,13 @@ class N2KPGN_127257:
         pgn.roll = msg.getFloat(5, 16, True) * N2K_TO_DEGREES
         return pgn
 
+    @staticmethod
+    def fieldnames():
+        return ["Pitch", "Roll", "Yaw"]
+
+    def fieldvalues(s):
+        return [s.pitch, s.roll, s.yaw]
+
 
 @pgnclass(128267)
 class N2KPGN_128267:
@@ -410,6 +497,13 @@ class N2KPGN_128267:
         pgn.range = msg.getFloat(7, 8) * 10.0
         return pgn
 
+    @staticmethod
+    def fieldnames():
+        return ["Depth", "DepthOffset", "DepthRange"]
+
+    def fieldvalues(s):
+        return [s.depth, s.offset, s.range]
+
 
 @pgnclass(129025)
 class N2KPGN_129025:
@@ -433,6 +527,13 @@ class N2KPGN_129025:
         pgn.latitude = msg.getFloat(0, 32) * 1e-7
         pgn.longitude = msg.getFloat(4, 32) * 1e-7
         return pgn
+
+    @staticmethod
+    def fieldnames():
+        return ["Fast-Latitude", "Fast-Longitude"]
+
+    def fieldvalues(s):
+        return [s.latitude, s.longitude]
 
 
 @pgnclass(129026)
@@ -461,6 +562,13 @@ class N2KPGN_129026:
         pgn.course = msg.getFloat(2, 16, False) * N2K_TO_DEGREES
         pgn.speed = msg.getFloat(4, 16, True) * 0.01
         return pgn
+
+    @staticmethod
+    def fieldnames():
+        return ["Fast-CourseOverGround", "Fast-SpeedOverGround", "Fast-COGSOGReference"]
+
+    def fieldvalues(s):
+        return [s.course, s.speed, s.magnetic]
 
 
 @pgnclass(129029)
@@ -524,6 +632,37 @@ class N2KPGN_129029:
             pgn.dgnssa = msg.getFloat(43, 16) * 0.01
         return pgn
 
+    def asTimestamp(self):
+        """Return an approximate epoch date/time"""
+        return 86400 * self.epochDays + self.seconds
+
+    @staticmethod
+    def fieldnames():
+        return [
+            "Latitude",
+            "Longitude",
+            "Altitude",
+            "GNSS-System",
+            "GNSS-Type",
+            "HDOP",
+            "PDOP",
+            "GNSS-SVs",
+            "GNSS-Timestamp",
+        ]
+
+    def fieldvalues(s):
+        return [
+            s.latitude,
+            s.longitude,
+            s.alt,
+            s.type,
+            s.method,
+            s.hdop,
+            s.pdop,
+            s.numsv,
+            s.asTimestamp(),
+        ]
+
 
 @pgnclass(129033)
 class N2KPGN_129033:
@@ -556,6 +695,13 @@ class N2KPGN_129033:
             pgn.utcMins = 0
         return pgn
 
+    @staticmethod
+    def fieldnames():
+        return ["Timestamp"]
+
+    def fieldvalues(s):
+        return [s.asTimestamp()]
+
 
 @pgnclass(130306)
 class N2KPGN_130306:
@@ -584,6 +730,13 @@ class N2KPGN_130306:
         pgn.ref = N2KWindDirs(msg.getUInt8(5) & 0x07)
 
         return pgn
+
+    @staticmethod
+    def fieldnames():
+        return ["WindSpeed", "WindDirection", "WindReference"]
+
+    def fieldvalues(s):
+        return [s.speed, s.angle, s.ref]
 
 
 @pgnclass(130311)
@@ -621,3 +774,13 @@ class N2KPGN_130311:
         pgn.press = msg.getFloat(6, 16, False)
 
         return pgn
+
+    def fieldnames(s):
+        return [
+            f"Temperature-0x{s.src:02x}",
+            f"Humidity-0x{s.src:02x}",
+            f"Pressure-0x{s.src:02x}",
+        ]
+
+    def fieldvalues(s):
+        return [s.temperature, s.humidity, s.pressure]

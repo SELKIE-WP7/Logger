@@ -47,6 +47,9 @@ executables = [
         "SELKIELogger/scripts/SLConvert.py", base=console, target_name="SLConvert"
     ),
     Executable(
+        "SELKIELogger/scripts/N2KConvert.py", base=console, target_name="N2KConvert"
+    ),
+    Executable(
         "SELKIELogger/scripts/SLExtract.py", base=console, target_name="SLExtract"
     ),
     Executable(

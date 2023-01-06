@@ -957,11 +957,10 @@ bool write_state_file(char *sFName, channel_stats stats[128][128], uint32_t lTS,
 	char *dn = dirname(sfn);
 	if (asprintf(&tmptmp, "%s/stateXXXXXX", dn) < 0) {
 		perror("write_state_file:asprintf");
-		free(dn);
 		free(sfn);
 		return false;
 	}
-	free(dn);
+	// free(dn); - Don't free this, as  it points into sfn, which is why we strdup it to begin with
 	free(sfn);
 	sfn = NULL;
 	dn = NULL;

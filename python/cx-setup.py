@@ -30,6 +30,13 @@ console = "Console"
 
 executables = [
     Executable(
+        "SELKIELogger/scripts/GUI/N2KConvert.py",
+        base=gui,
+        target_name="N2KConvertGUI",
+        shortcut_name="N2KConvert",
+        shortcut_dir="ProgramMenuFolder",
+    ),
+    Executable(
         "SELKIELogger/scripts/GUI/SLConvert.py",
         base=gui,
         target_name="SLConvertGUI",

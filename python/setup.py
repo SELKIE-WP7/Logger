@@ -53,6 +53,7 @@ setup(
         ],
         "gui_scripts": [
             "SLView = SELKIELogger.scripts.SLView:SLView",
+            "N2KConvertGUI = SELKIELogger.scripts.GUI.apps:runN2KConvertGUI",
             "SLConvertGUI = SELKIELogger.scripts.GUI.apps:runSLConvertGUI",
             "SLExtractGUI = SELKIELogger.scripts.GUI.apps:runSLExtractGUI",
         ],

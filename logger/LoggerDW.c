@@ -154,14 +154,10 @@ void *dw_logging(void *ptargs) {
 				continue; // Continue main processing loop
 			}
 
-			if (cCount < 18) {
-				log_warning(args->pstate, "[DW:%s] Insufficient cyclic data (%u)",
-				            args->tag, cCount);
-			}
 			dw_spectrum ds = {0};
 			if (!dw_spectrum_from_array(cycdata, &ds)) {
-				log_info(args->pstate, 2, "[DW:%s] Invalid spectrum data\n",
-				         args->tag);
+				log_info(args->pstate, 1, "[DW:%s] Invalid spectrum data (cCount: %d)\n",
+				         args->tag, cCount);
 			} else {
 				sysdata[ds.sysseq] = ds.sysword;
 				sdset[ds.sysseq] = true;

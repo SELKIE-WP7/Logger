@@ -18,7 +18,7 @@
 bool n2k_act_to_bytes(const n2k_act_message *act, uint8_t **out, size_t *len) {
 	if (act == NULL || out == NULL || len == NULL) { return false; }
 
-	(*out) = calloc(act->length + 2 * act->datalen, sizeof(uint8_t));
+	(*out) = calloc(5 + act->length + 2 * act->datalen, sizeof(uint8_t));
 	if ((*out) == NULL) {
 		(*len) = 0;
 		return false;

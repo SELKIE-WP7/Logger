@@ -61,7 +61,7 @@ int ubx_openConnection(const char *port, const int initialBaud) {
 		if (cfgetispeed(&check) != B115200) {
 			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", 115200,
 			        flag_to_baud(cfgetispeed(&check)));
-			return -1;
+	//		return -1;
 		}
 	}
 

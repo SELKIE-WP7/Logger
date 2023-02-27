@@ -54,15 +54,16 @@ int openSerialConnection(const char *port, const int baudRate) {
 	options.c_cc[VTIME] = 1;
 	options.c_cc[VMIN] = 0;
 	if (tcsetattr(handle, TCSANOW, &options)) { fprintf(stderr, "tcsetattr() failed!\n"); }
-
+	tcdrain(handle);
+	usleep(100000);
 	{
 		struct termios check;
 		tcgetattr(handle, &check);
 		if (cfgetispeed(&check) != rate) {
 			fprintf(stderr, "Unable to set target baud. Wanted %d, got %d\n", baudRate,
 			        flag_to_baud(cfgetispeed(&check)));
-			close(handle); // Don't leave file descriptor dangling
-			return -1;
+			/*close(handle); // Don't leave file descriptor dangling
+			return -1; */
 		}
 	}
 

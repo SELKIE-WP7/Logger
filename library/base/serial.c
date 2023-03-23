@@ -38,13 +38,13 @@ int openSerialConnection(const char *port, const int baudRate) {
 	tcgetattr(handle, &options);
 
 	speed_t rate = baud_to_flag(baudRate);
-	if (rate == (speed_t) -1) {
+	if (rate == (speed_t)-1) {
 		fprintf(stderr, "Unsupported baud rate requested: %d\n", baudRate);
 		return -1;
 	}
 
-	cfsetispeed(&options, baud_to_flag(rate));
-	cfsetospeed(&options, baud_to_flag(rate));
+	cfsetispeed(&options, rate);
+	cfsetospeed(&options, rate);
 	options.c_oflag &= ~OPOST; // Disable any post processing
 	options.c_cflag &= ~(PARENB | CSTOPB | CSIZE);
 	options.c_cflag |= (CLOCAL | CREAD);
@@ -55,7 +55,6 @@ int openSerialConnection(const char *port, const int baudRate) {
 	options.c_cc[VMIN] = 0;
 	if (tcsetattr(handle, TCSANOW, &options)) { fprintf(stderr, "tcsetattr() failed!\n"); }
 	tcdrain(handle);
-	usleep(100000);
 	{
 		struct termios check;
 		tcgetattr(handle, &check);

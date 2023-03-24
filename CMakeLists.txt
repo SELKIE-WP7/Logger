@@ -49,6 +49,15 @@ else()
 	set(CODE_COVERAGE OFF)
 endif()
 
+include(CPackComponent)
+
+cpack_add_component_group(lib DISPLAY_NAME "Libraries")
+cpack_add_component_group(core DISPLAY_NAME "Core programs")
+cpack_add_component_group(dev DISPLAY_NAME "Development files")
+cpack_add_component_group(devdocs DISPLAY_NAME "Development documentation")
+cpack_add_component_group(utils DISPLAY_NAME "Utilities")
+cpack_add_component_group(extras DISPLAY_NAME "Test and development utilities")
+
 add_subdirectory(library)
 add_subdirectory(ext)
 add_subdirectory(logger)
@@ -66,6 +75,13 @@ set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 #set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENCE")
 #set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 
+set(CPACK_COMPONENTS_GROUPING ONE_PER_GROUP)
+set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
+
+set(CPACK_DEB_FILE_NAME DEB-DEFAULT)
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS YES)
+set(CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS YES)
+
 set(CPACK_GENERATOR "RPM;DEB;TGZ")
 set(CPACK_SOURCE_GENERATOR "TGZ")
 set(CPACK_SOURCE_IGNORE_FILES
@@ -75,6 +91,5 @@ set(CPACK_SOURCE_IGNORE_FILES
     /\\\\.DS_Store
 )
 
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS YES)
-set(CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS YES)
+
 include(CPack)

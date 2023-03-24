@@ -21,8 +21,5 @@ export(EXPORT SLPubLibs FILE "${CMAKE_CURRENT_BINARY_DIR}/SELKIELogger/SELKIELog
 configure_file(SELKIELoggerConfig.cmake "${CMAKE_CURRENT_BINARY_DIR}/SELKIELogger/SELKIELoggerConfig.cmake" COPYONLY)
 
 set(ConfigPackageLocation lib/cmake/SELKIELogger)
-install(EXPORT SLPubLibs FILE SELKIELoggerTargets.cmake NAMESPACE SELKIELogger:: DESTINATION ${ConfigPackageLocation})
+install(EXPORT SLPubLibs FILE SELKIELoggerTargets.cmake NAMESPACE SELKIELogger:: DESTINATION ${ConfigPackageLocation} COMPONENT Base)
 install(FILES SELKIELoggerConfig.cmake "${CMAKE_CURRENT_BINARY_DIR}/SELKIELogger/SELKIELoggerConfigVersion.cmake" DESTINATION ${ConfigPackageLocation} COMPONENT BaseDev)
-
-set(CPACK_COMPONENT_GROUP_LIBRARIES_DESCRIPTION "SELKIELogger Libraries")
-set(CPACK_COMPONENT_GROUP_HEADERS_DESCRIPTION "SELKIELogger Headers (for development)")

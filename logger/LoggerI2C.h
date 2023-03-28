@@ -34,8 +34,7 @@ typedef struct {
 	string message_name;  //!< Message name to report
 	uint8_t deviceAddr;   //!< I2C Device address
 	i2c_dev_read_fn func; //!< Pointer to device read function
-	float scale;          //!< Scale received value by this quantity
-	float offset;         //!< Add this amount to received value
+	void *ext;            //!< If not NULL, pointer to additional device data
 } i2c_msg_map;
 
 //! I2C Source device specific parameters
@@ -75,7 +74,8 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 
 //! Add ADS1015 single ended voltage measurements to channel map
 bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID,
-                             const float scale, const float offset);
+                             const float scale, const float offset, const float minV,
+                             const float maxV);
 
 //! Take a configuration section, parse parameters and register devices
 bool i2c_parseConfig(log_thread_args_t *lta, config_section *s);

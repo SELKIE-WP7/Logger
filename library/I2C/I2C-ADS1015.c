@@ -65,11 +65,27 @@ float i2c_ads1015_pga_to_scale_factor(const uint16_t config) {
  * @param[in] busHandle Handle from i2c_openConnection()
  * @param[in] devAddr I2C Address for an ADS1015 sensor
  * @param[in] mux ADS1015_CONFIG_MUX_ constant to select measurement to be performed
+ * @param[in] opts Pointer to i2c_ads1015_options structure
  * @param[in] pga ADS1015_CONFIG_PGA_ constant to determine measurement range
  * @returns MUX voltage value
  */
-float i2c_ads1015_read_mux(const int busHandle, const int devAddr, const uint16_t mux, const uint16_t pga) {
+float i2c_ads1015_read_mux(const int busHandle, const int devAddr, const uint16_t mux,
+                           const i2c_ads1015_options *opts) {
 	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) { return NAN; }
+
+	uint16_t pga = ADS1015_CONFIG_PGA_DEFAULT;
+	float min = -INFINITY;
+	float max = INFINITY;
+	float scale = 1.0;
+	float offset = 0;
+
+	if (opts) {
+		min = opts->min;
+		max = opts->max;
+		scale = opts->scale;
+		offset = opts->offset;
+		pga = opts->pga;
+	}
 
 	while (!(i2c_ads1015_read_configuration(busHandle, devAddr) & ADS1015_CONFIG_STATE_CONVERT)) {
 		usleep(100);
@@ -111,6 +127,9 @@ float i2c_ads1015_read_mux(const int busHandle, const int devAddr, const uint16_
 		adcV = (sres & 0x7FF) * sv;
 	}
 
+	adcV = scale * adcV + offset;
+	if ((adcV < min) || (adcV > max)) { adcV = NAN; }
+
 	return adcV;
 }
 
@@ -119,10 +138,13 @@ float i2c_ads1015_read_mux(const int busHandle, const int devAddr, const uint16_
  *
  * @param[in] busHandle Handle from i2c_openConnection()
  * @param[in] devAddr I2C Address for an ADS1015 ADC
+ * @param[in] opts Pointer to i2c_ads1015_options structure
  * @return ADC voltage in millivolts, or NAN on error
  */
-float i2c_ads1015_read_ch0(const int busHandle, const int devAddr) {
-	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_SINGLE_0, ADS1015_CONFIG_PGA_DEFAULT);
+float i2c_ads1015_read_ch0(const int busHandle, const int devAddr, const void *opts) {
+	i2c_ads1015_options *o = NULL;
+	if (opts) { o = (i2c_ads1015_options *)opts; }
+	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_SINGLE_0, o);
 }
 
 /*!
@@ -130,10 +152,13 @@ float i2c_ads1015_read_ch0(const int busHandle, const int devAddr) {
  *
  * @param[in] busHandle Handle from i2c_openConnection()
  * @param[in] devAddr I2C Address for an ADS1015 ADC
+ * @param[in] opts Pointer to i2c_ads1015_options structure
  * @return ADC voltage in millivolts, or NAN on error
  */
-float i2c_ads1015_read_ch1(const int busHandle, const int devAddr) {
-	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_SINGLE_1, ADS1015_CONFIG_PGA_DEFAULT);
+float i2c_ads1015_read_ch1(const int busHandle, const int devAddr, const void *opts) {
+	i2c_ads1015_options *o = NULL;
+	if (opts) { o = (i2c_ads1015_options *)opts; }
+	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_SINGLE_1, o);
 }
 
 /*!
@@ -141,10 +166,13 @@ float i2c_ads1015_read_ch1(const int busHandle, const int devAddr) {
  *
  * @param[in] busHandle Handle from i2c_openConnection()
  * @param[in] devAddr I2C Address for an ADS1015 ADC
+ * @param[in] opts Pointer to i2c_ads1015_options structure
  * @return ADC voltage in millivolts, or NAN on error
  */
-float i2c_ads1015_read_ch2(const int busHandle, const int devAddr) {
-	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_SINGLE_2, ADS1015_CONFIG_PGA_DEFAULT);
+float i2c_ads1015_read_ch2(const int busHandle, const int devAddr, const void *opts) {
+	i2c_ads1015_options *o = NULL;
+	if (opts) { o = (i2c_ads1015_options *)opts; }
+	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_SINGLE_2, o);
 }
 
 //! Get single-ended voltage measurement from channel 3
@@ -153,10 +181,13 @@ float i2c_ads1015_read_ch2(const int busHandle, const int devAddr) {
  *
  * @param[in] busHandle Handle from i2c_openConnection()
  * @param[in] devAddr I2C Address for an ADS1015 ADC
+ * @param[in] opts Pointer to i2c_ads1015_options structure
  * @return ADC voltage in millivolts, or NAN on error
  */
-float i2c_ads1015_read_ch3(const int busHandle, const int devAddr) {
-	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_SINGLE_3, ADS1015_CONFIG_PGA_DEFAULT);
+float i2c_ads1015_read_ch3(const int busHandle, const int devAddr, const void *opts) {
+	i2c_ads1015_options *o = NULL;
+	if (opts) { o = (i2c_ads1015_options *)opts; }
+	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_SINGLE_3, o);
 }
 
 /*!
@@ -164,10 +195,13 @@ float i2c_ads1015_read_ch3(const int busHandle, const int devAddr) {
  *
  * @param[in] busHandle Handle from i2c_openConnection()
  * @param[in] devAddr I2C Address for an ADS1015 ADC
+ * @param[in] opts Pointer to i2c_ads1015_options structure
  * @return ADC voltage in millivolts, or NAN on error
  */
-float i2c_ads1015_read_diff_ch0_ch1(const int busHandle, const int devAddr) {
-	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_DIFF_0_1, ADS1015_CONFIG_PGA_DEFAULT);
+float i2c_ads1015_read_diff_ch0_ch1(const int busHandle, const int devAddr, const void *opts) {
+	i2c_ads1015_options *o = NULL;
+	if (opts) { o = (i2c_ads1015_options *)opts; }
+	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_DIFF_0_1, o);
 }
 
 /*!
@@ -175,10 +209,13 @@ float i2c_ads1015_read_diff_ch0_ch1(const int busHandle, const int devAddr) {
  *
  * @param[in] busHandle Handle from i2c_openConnection()
  * @param[in] devAddr I2C Address for an ADS1015 ADC
+ * @param[in] opts Pointer to i2c_ads1015_options structure
  * @return ADC voltage in millivolts, or NAN on error
  */
-float i2c_ads1015_read_diff_ch0_ch3(const int busHandle, const int devAddr) {
-	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_DIFF_0_3, ADS1015_CONFIG_PGA_DEFAULT);
+float i2c_ads1015_read_diff_ch0_ch3(const int busHandle, const int devAddr, const void *opts) {
+	i2c_ads1015_options *o = NULL;
+	if (opts) { o = (i2c_ads1015_options *)opts; }
+	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_DIFF_0_3, o);
 }
 
 /*!
@@ -186,10 +223,13 @@ float i2c_ads1015_read_diff_ch0_ch3(const int busHandle, const int devAddr) {
  *
  * @param[in] busHandle Handle from i2c_openConnection()
  * @param[in] devAddr I2C Address for an ADS1015 ADC
+ * @param[in] opts Pointer to i2c_ads1015_options structure
  * @return ADC voltage in millivolts, or NAN on error
  */
-float i2c_ads1015_read_diff_ch1_ch3(const int busHandle, const int devAddr) {
-	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_DIFF_1_3, ADS1015_CONFIG_PGA_DEFAULT);
+float i2c_ads1015_read_diff_ch1_ch3(const int busHandle, const int devAddr, const void *opts) {
+	i2c_ads1015_options *o = NULL;
+	if (opts) { o = (i2c_ads1015_options *)opts; }
+	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_DIFF_1_3, o);
 }
 
 /*!
@@ -197,8 +237,11 @@ float i2c_ads1015_read_diff_ch1_ch3(const int busHandle, const int devAddr) {
  *
  * @param[in] busHandle Handle from i2c_openConnection()
  * @param[in] devAddr I2C Address for an ADS1015 ADC
+ * @param[in] opts Pointer to i2c_ads1015_options structure
  * @return ADC voltage in millivolts, or NAN on error
  */
-float i2c_ads1015_read_diff_ch2_ch3(const int busHandle, const int devAddr) {
-	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_DIFF_2_3, ADS1015_CONFIG_PGA_DEFAULT);
+float i2c_ads1015_read_diff_ch2_ch3(const int busHandle, const int devAddr, const void *opts) {
+	i2c_ads1015_options *o = NULL;
+	if (opts) { o = (i2c_ads1015_options *)opts; }
+	return i2c_ads1015_read_mux(busHandle, devAddr, ADS1015_CONFIG_MUX_DIFF_2_3, o);
 }

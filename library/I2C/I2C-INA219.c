@@ -54,7 +54,7 @@ uint16_t i2c_ina219_read_configuration(const int busHandle, const int devAddr) {
  * @param[in] devAddr I2C Address for an INA219 sensor
  * @return Shunt voltage in millivolts, or NAN on error
  */
-float i2c_ina219_read_shuntVoltage(const int busHandle, const int devAddr) {
+float i2c_ina219_read_shuntVoltage(const int busHandle, const int devAddr, const void *opts) {
 	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) { return NAN; }
 	if (!i2c_ina219_configure(busHandle, devAddr)) { return NAN; }
 
@@ -71,7 +71,13 @@ float i2c_ina219_read_shuntVoltage(const int busHandle, const int devAddr) {
 	}
 
 	if (shuntV > 320.0 || shuntV < -320.0) { return NAN; }
-	return shuntV;
+	if (opts) {
+		i2c_ina219_options *o = (i2c_ina219_options *)opts;
+		float t = shuntV * o->scale + o->offset;
+		if ((t < o->min) || (t > o->max)) { return NAN; }
+		return t;
+	}
+	return shuntV; // If no options supplied, return unscaled value
 }
 
 /*!
@@ -86,7 +92,7 @@ float i2c_ina219_read_shuntVoltage(const int busHandle, const int devAddr) {
  * @param[in] devAddr I2C Address for an INA219 sensor
  * @return Bus voltage in volts, or NAN in case of error
  */
-float i2c_ina219_read_busVoltage(const int busHandle, const int devAddr) {
+float i2c_ina219_read_busVoltage(const int busHandle, const int devAddr, const void *opts) {
 	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) { return NAN; }
 	if (!i2c_ina219_configure(busHandle, devAddr)) { return NAN; }
 
@@ -98,6 +104,12 @@ float i2c_ina219_read_busVoltage(const int busHandle, const int devAddr) {
 	if ((flags & 0x01) || !(flags & 0x02)) { return NAN; }
 
 	float busV = (sres >> 3) * 4E-3;
+	if (opts) {
+		i2c_ina219_options *o = (i2c_ina219_options *)opts;
+		float t = busV * o->scale + o->offset;
+		if ((t < o->min) || (t > o->max)) { return NAN; }
+		return t;
+	}
 	return busV;
 }
 
@@ -113,7 +125,7 @@ float i2c_ina219_read_busVoltage(const int busHandle, const int devAddr) {
  * @param[in] devAddr I2C Address for an INA219 sensor
  * @return Power consumption in watts, or NAN in case of error
  */
-float i2c_ina219_read_power(const int busHandle, const int devAddr) {
+float i2c_ina219_read_power(const int busHandle, const int devAddr, const void *opts) {
 	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) { return NAN; }
 	if (!i2c_ina219_configure(busHandle, devAddr)) { return NAN; }
 
@@ -121,6 +133,12 @@ float i2c_ina219_read_power(const int busHandle, const int devAddr) {
 	if (res < 0) { return NAN; }
 	uint16_t sres = i2c_swapbytes(res);
 	float power = sres * 2E-3;
+	if (opts) {
+		i2c_ina219_options *o = (i2c_ina219_options *)opts;
+		float t = power * o->scale + o->offset;
+		if ((t < o->min) || (t > o->max)) { return NAN; }
+		return t;
+	}
 	return power;
 }
 
@@ -132,7 +150,7 @@ float i2c_ina219_read_power(const int busHandle, const int devAddr) {
  * @param[in] devAddr I2C Address for an INA219 sensor
  * @return Measured current in amperes, or NAN in case of error
  */
-float i2c_ina219_read_current(const int busHandle, const int devAddr) {
+float i2c_ina219_read_current(const int busHandle, const int devAddr, const void *opts) {
 	if (ioctl(busHandle, I2C_SLAVE, devAddr) < 0) { return NAN; }
 	if (!i2c_ina219_configure(busHandle, devAddr)) { return NAN; }
 
@@ -145,6 +163,12 @@ float i2c_ina219_read_current(const int busHandle, const int devAddr) {
 		current = t * 1E-4;
 	} else {
 		current = (sres & 0x7FFF) * 1E-4;
+	}
+	if (opts) {
+		i2c_ina219_options *o = (i2c_ina219_options *)opts;
+		float t = current * o->scale + o->offset;
+		if ((t < o->min) || (t > o->max)) { return NAN; }
+		return t;
 	}
 	return current;
 }

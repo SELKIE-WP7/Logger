@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <math.h>
+
 /*!
  * @file I2C-ADS1015.h
  * @ingroup SELKIELoggerI2C
@@ -99,37 +101,47 @@
  * @{
  */
 
+typedef struct {
+	float scale;          //!< Scale received value by this quantity
+	float offset;         //!< Add this amount to received value
+	float min;            //!< If not NaN, smallest value considered valid
+	float max;            //!< If not NaN, largest value considered valid
+	uint16_t pga;         //!< PGA setting
+} i2c_ads1015_options;
+
+#define I2C_ADS1015_DEFAULTS {.scale = 1.0, .offset=0.0, .min=-INFINITY, .max=INFINITY}
+
 //! Read configuration from device
 uint16_t i2c_ads1015_read_configuration(const int busHandle, const int devAddr);
 
 //! Generic ADS1015 read function
-float i2c_ads1015_read_mux(const int busHandle, const int devAddr, const uint16_t mux, const uint16_t pga);
+float i2c_ads1015_read_mux(const int busHandle, const int devAddr, const uint16_t mux, const i2c_ads1015_options *opts);
 
 //! Get number of millivolts represented by LSB at a given PGA value
 float i2c_ads1015_pga_to_scale_factor(const uint16_t config);
 
 //! Get single-ended voltage measurement from channel 0
-float i2c_ads1015_read_ch0(const int busHandle, const int devAddr);
+float i2c_ads1015_read_ch0(const int busHandle, const int devAddr, const void *opts);
 
 //! Get single-ended voltage measurement from channel 1
-float i2c_ads1015_read_ch1(const int busHandle, const int devAddr);
+float i2c_ads1015_read_ch1(const int busHandle, const int devAddr, const void *opts);
 
 //! Get single-ended voltage measurement from channel 2
-float i2c_ads1015_read_ch2(const int busHandle, const int devAddr);
+float i2c_ads1015_read_ch2(const int busHandle, const int devAddr, const void *opts);
 
 //! Get single-ended voltage measurement from channel 3
-float i2c_ads1015_read_ch3(const int busHandle, const int devAddr);
+float i2c_ads1015_read_ch3(const int busHandle, const int devAddr, const void *opts);
 
 //! Get differential voltage measurement between channels 0 and 1
-float i2c_ads1015_read_diff_ch0_ch1(const int busHandle, const int devAddr);
+float i2c_ads1015_read_diff_ch0_ch1(const int busHandle, const int devAddr, const void *opts);
 
 //! Get differential voltage measurement between channels 0 and 3
-float i2c_ads1015_read_diff_ch0_ch3(const int busHandle, const int devAddr);
+float i2c_ads1015_read_diff_ch0_ch3(const int busHandle, const int devAddr, const void *opts);
 
 //! Get differential voltage measurement between channels 1 and 3
-float i2c_ads1015_read_diff_ch1_ch3(const int busHandle, const int devAddr);
+float i2c_ads1015_read_diff_ch1_ch3(const int busHandle, const int devAddr, const void *opts);
 
 //! Get differential voltage measurement between channels 2 and 3
-float i2c_ads1015_read_diff_ch2_ch3(const int busHandle, const int devAddr);
+float i2c_ads1015_read_diff_ch2_ch3(const int busHandle, const int devAddr, const void *opts);
 //! @}
 #endif

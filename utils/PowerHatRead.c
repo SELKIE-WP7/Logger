@@ -32,10 +32,10 @@ int main(void) {
 	for (int i2cc = 0x40; i2cc < 0x44; i2cc++) {
 		i2c_ina219_configure(handle, i2cc);
 		fprintf(stdout, "Input %02x\n", i2cc - 0x40 + 1);
-		float shuntVolts = i2c_ina219_read_shuntVoltage(handle, i2cc);
-		float busVolts = i2c_ina219_read_busVoltage(handle, i2cc);
-		float current = i2c_ina219_read_current(handle, i2cc);
-		float power = i2c_ina219_read_power(handle, i2cc);
+		float shuntVolts = i2c_ina219_read_shuntVoltage(handle, i2cc, NULL);
+		float busVolts = i2c_ina219_read_busVoltage(handle, i2cc, NULL);
+		float current = i2c_ina219_read_current(handle, i2cc, NULL);
+		float power = i2c_ina219_read_power(handle, i2cc, NULL);
 		if (isfinite(shuntVolts) && isfinite(busVolts)) {
 			fprintf(stdout, "\tShunt Voltage: %+.3f mV\n", shuntVolts);
 			fprintf(stdout, "\tBus Voltage: %+.6f V\n", busVolts);

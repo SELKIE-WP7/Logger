@@ -57,10 +57,7 @@ void *i2c_logging(void *ptargs) {
 	while (!shutdownFlag) {
 		for (int mm = 0; mm < i2cInfo->en_count; mm++) {
 			i2c_msg_map *map = &(i2cInfo->chanmap[mm]);
-			float value = map->func(i2cInfo->handle, map->deviceAddr);
-			if (map->scale) { value *= map->scale; }
-
-			if (map->offset) { value += map->offset; }
+			float value = map->func(i2cInfo->handle, map->deviceAddr, map->ext);
 
 			msg_t *msg = msg_new_float(i2cInfo->sourceNum, map->messageID, value);
 			if (!queue_push(args->logQ, msg)) {
@@ -271,8 +268,6 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 18, tmpS);
 	ip->chanmap[ip->en_count].deviceAddr = devAddr;
-	ip->chanmap[ip->en_count].scale = 0;
-	ip->chanmap[ip->en_count].offset = 0;
 	ip->chanmap[ip->en_count].func = &i2c_ina219_read_shuntVoltage;
 	ip->en_count++;
 
@@ -282,8 +277,6 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 16, tmpS);
 	ip->chanmap[ip->en_count].deviceAddr = devAddr;
-	ip->chanmap[ip->en_count].scale = 0;
-	ip->chanmap[ip->en_count].offset = 0;
 	ip->chanmap[ip->en_count].func = &i2c_ina219_read_busVoltage;
 	ip->en_count++;
 
@@ -293,8 +286,6 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 16, tmpS);
 	ip->chanmap[ip->en_count].deviceAddr = devAddr;
-	ip->chanmap[ip->en_count].scale = 0;
-	ip->chanmap[ip->en_count].offset = 0;
 	ip->chanmap[ip->en_count].func = &i2c_ina219_read_current;
 	ip->en_count++;
 
@@ -315,17 +306,32 @@ bool i2c_chanmap_add_ina219(i2c_params *ip, const uint8_t devAddr, const uint8_t
  * @param[in] baseID Message ID for first channel (A0)
  * @param[in] scale Multiply received values by this quantity
  * @param[in] offset Add this amount to received values
+ * @param[in] minV Minimum valid value
+ * @param[in] maxV Maximum valid value
  * @return True on success, false otherwise
  */
 bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_t baseID,
-                             const float scale, const float offset) {
+                             const float scale, const float offset, const float minV,
+                             const float maxV) {
 	if (!ip) { return false; }
 	if (baseID < 4 || baseID > 121) { return false; }
 	i2c_msg_map *tmp = realloc(ip->chanmap, sizeof(i2c_msg_map) * (ip->en_count + 4));
 	if (!tmp) { return false; }
+	if ((minV == maxV) || (maxV < minV)) { return false; }
+
 	ip->chanmap = tmp;
 
 	char tmpS[50] = {0};
+	i2c_ads1015_options *adsopts = calloc(1, sizeof(i2c_ads1015_options));
+	if (adsopts == NULL) {
+		perror("_add_ads1015");
+		return false;
+	}
+
+	adsopts->min = minV;
+	adsopts->max = maxV;
+	adsopts->scale = scale;
+	adsopts->offset = offset;
 
 	snprintf(tmpS, 8, "0x%02x:A0", devAddr);
 	ip->chanmap[ip->en_count].messageID = baseID;
@@ -334,9 +340,8 @@ bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 8, tmpS);
 	ip->chanmap[ip->en_count].deviceAddr = devAddr;
-	ip->chanmap[ip->en_count].scale = scale;
-	ip->chanmap[ip->en_count].offset = offset;
 	ip->chanmap[ip->en_count].func = &i2c_ads1015_read_ch0;
+	ip->chanmap[ip->en_count].ext = adsopts;
 	ip->en_count++;
 
 	snprintf(tmpS, 8, "0x%02x:A1", devAddr);
@@ -345,9 +350,8 @@ bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 8, tmpS);
 	ip->chanmap[ip->en_count].deviceAddr = devAddr;
-	ip->chanmap[ip->en_count].scale = scale;
-	ip->chanmap[ip->en_count].offset = offset;
 	ip->chanmap[ip->en_count].func = &i2c_ads1015_read_ch1;
+	ip->chanmap[ip->en_count].ext = adsopts;
 	ip->en_count++;
 
 	snprintf(tmpS, 8, "0x%02x:A2", devAddr);
@@ -356,9 +360,8 @@ bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 8, tmpS);
 	ip->chanmap[ip->en_count].deviceAddr = devAddr;
-	ip->chanmap[ip->en_count].scale = scale;
-	ip->chanmap[ip->en_count].offset = offset;
 	ip->chanmap[ip->en_count].func = &i2c_ads1015_read_ch2;
+	ip->chanmap[ip->en_count].ext = adsopts;
 	ip->en_count++;
 
 	snprintf(tmpS, 8, "0x%02x:A3", devAddr);
@@ -367,9 +370,8 @@ bool i2c_chanmap_add_ads1015(i2c_params *ip, const uint8_t devAddr, const uint8_
 	ip->chanmap[ip->en_count].message_name.data = NULL;
 	str_update(&(ip->chanmap[ip->en_count].message_name), 8, tmpS);
 	ip->chanmap[ip->en_count].deviceAddr = devAddr;
-	ip->chanmap[ip->en_count].scale = scale;
-	ip->chanmap[ip->en_count].offset = offset;
 	ip->chanmap[ip->en_count].func = &i2c_ads1015_read_ch3;
+	ip->chanmap[ip->en_count].ext = adsopts;
 	ip->en_count++;
 
 	return true;
@@ -511,8 +513,10 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 					return false;
 				}
 
-				float scale = 0;
+				float scale = 1;
 				float offset = 0;
+				float min = -INFINITY;
+				float max = INFINITY;
 				char *tt = strtok_r(NULL, ":", &strtsp);
 				if (tt) {
 					scale = strtof(tt, NULL);
@@ -537,10 +541,37 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 							free(ip);
 							return false;
 						}
+						tt = strtok_r(NULL, ":", &strtsp);
+						if (tt) {
+							errno = 0;
+							min = strtof(tt, NULL);
+							if (errno) {
+								log_error(
+									lta->pstate,
+									"[I2C:%s] Error parsing minimum value in configuration",
+									lta->tag);
+								free(ip);
+								return false;
+							}
+							tt = strtok_r(NULL, ":", &strtsp);
+							if (tt) {
+								errno = 0;
+								max = strtof(tt, NULL);
+								if (errno) {
+									log_error(
+										lta->pstate,
+										"[I2C:%s] Error parsing maximum value in configuration",
+										lta->tag);
+									free(ip);
+									return false;
+								}
+							}
+						}
 					}
 				}
 
-				if (!i2c_chanmap_add_ads1015(ip, baddr, msgid, scale, offset)) {
+				if (!i2c_chanmap_add_ads1015(ip, baddr, msgid, scale, offset, min,
+				                             max)) {
 					log_error(
 						lta->pstate,
 						"[I2C:%s] Failed to register ADS1015 device at address 0x%02x and base message ID 0x%02x",
@@ -553,7 +584,8 @@ bool i2c_parseConfig(log_thread_args_t *lta, config_section *s) {
 				// No base message ID, so start from next available
 				errno = 0;
 				int baddr = strtol(t->value, NULL, 16);
-				if (!i2c_chanmap_add_ads1015(ip, baddr, baseMsgID, 0, 0)) {
+				if (!i2c_chanmap_add_ads1015(ip, baddr, baseMsgID, 1, 0, -INFINITY,
+				                             INFINITY)) {
 					log_error(
 						lta->pstate,
 						"[I2C:%s] Failed to register ADS1015 device at address 0x%02x and base message ID 0x%02x",

@@ -62,6 +62,15 @@
  */
 #define INA219_CONFIG_RESET    0x8000
 
+typedef struct {
+	float scale;  //!< Scale received value by this quantity
+	float offset; //!< Add this amount to received value
+	float min;    //!< If not NaN, smallest value considered valid
+	float max;    //!< If not NaN, largest value considered valid
+} i2c_ina219_options;
+
+#define I2C_INA219_DEFAULTS \
+	{ .scale = 1.0, .offset = 0.0, .min = -INFINITY, .max = INFINITY }
 //! @}
 
 /*!
@@ -76,16 +85,16 @@ bool i2c_ina219_configure(const int busHandle, const int devAddr);
 uint16_t i2c_ina219_read_configuration(const int busHandle, const int devAddr);
 
 //! Get voltage across the shunt resistor in millivolts
-float i2c_ina219_read_shuntVoltage(const int busHandle, const int devAddr);
+float i2c_ina219_read_shuntVoltage(const int busHandle, const int devAddr, const void *opts);
 
 //! Get bus voltage (at V- terminal) in volts
-float i2c_ina219_read_busVoltage(const int busHandle, const int devAddr);
+float i2c_ina219_read_busVoltage(const int busHandle, const int devAddr, const void *opts);
 
 //! Get power consumption in watts
-float i2c_ina219_read_power(const int busHandle, const int devAddr);
+float i2c_ina219_read_power(const int busHandle, const int devAddr, const void *opts);
 
 //! Get current flow through shunt resistor in amps
-float i2c_ina219_read_current(const int busHandle, const int devAddr);
+float i2c_ina219_read_current(const int busHandle, const int devAddr, const void *opts);
 
 //! @}
 #endif

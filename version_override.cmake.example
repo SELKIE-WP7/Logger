@@ -1,0 +1,4 @@
+project(${PROJECT_NAME} VERSION 0.9.1)
+set(GIT_VERSION "v0.9-1-g94d6456")
+set(GIT_BRANCH "debian" CACHE STRING "Git branch this version is built from" FORCE)
+set(VERSION_STRING "v0.9-1-g94d6456" CACHE STRING "Project version information" FORCE)

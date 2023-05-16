@@ -1,4 +1,4 @@
-# General Test Utilities {#TestUtils}
+# General Test Utilities {#programs-test}
 
 ## Pimoroni Automation HAT Support
 These utilities are designed to test functions related to the [Pimoroni Automation HAT](https://shop.pimoroni.com/products/automation-hat) and probably don't have other uses.

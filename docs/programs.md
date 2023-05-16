@@ -1,10 +1,12 @@
-# User facing programs and utilities
+# Program manuals and user guides {#programs}
 
-## Core data logger tools
+\subpage programs-core ""
+
 - [Logger](@ref Logger)
 - [SLGPSWatch](@ref SLGPSWatch)
 
-## Data processing and conversion
+\subpage programs-dproc ""
+
 - [SLConvert](@ref SLConvert) and [SLConvertGUI](@ref SLConvertGUI)
 - [SLExtract](@ref SLExtract) and [SLExtractGUI](@ref SLExtractGUI)
 
@@ -17,14 +19,13 @@
 
 - [dat2csv](@ref dat2csv)
 
-### N2K specific tools
 - [N2KRead](@ref N2KRead)
 - [N2KClassify](@ref N2KClassify)
 
-### Datawell specific tools
 - [DWRead](@ref DWRead)
 
-## Test and debugging tools
+\subpage programs-test ""
+
 - [PowerHatRead](@ref PowerHatRead)
 - [AutomationHatRead](@ref AutomationHatRead)
 - [AutomationHatLEDTest](@ref AutomationHatLEDTest)

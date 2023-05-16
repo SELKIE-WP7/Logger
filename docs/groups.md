@@ -1,4 +1,4 @@
-# Code structure / layout
+# Code structure / layout {#CodeGroups}
 
 
 The repository contains the following top level directories:

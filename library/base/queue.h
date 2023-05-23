@@ -36,8 +36,6 @@ typedef struct msgqueue {
 } msgqueue;
 
 /*!
- * @copybrief queueitem
- *
  * If *next is NULL, it will be assumed that this item is the end of the queue.
  *
  * Messages pointed to by queueitem.item "belong" to the queue until popped,

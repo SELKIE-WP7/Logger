@@ -6,7 +6,7 @@ Each data source provides a number of different **channels** - some of these are
 Data is received from each source as **messages** containing the source and channel ID number as well as one or more values to be stored.
 Groups of these messages are separated by **timestamps**, establishing the relative ordering of events and the precision to which the timing of events can be reconstructed later.
 
-See [Core concepts](@ref Logger-Concepts) for more technical details and examples of how these concepts are used in practice.
+See [Core concepts](@ref LoggerConcepts) for more technical details and examples of how these concepts are used in practice.
 
 - \subpage LoggerConcepts "Core concepts"
 - \subpage LoggerHardware "Hardware"

@@ -4,6 +4,7 @@
 
 - [Logger](@ref Logger)
 - [SLGPSWatch](@ref SLGPSWatch)
+- [SLVarWatch](@ref SLVarWatch)
 
 \subpage programs-dproc ""
 

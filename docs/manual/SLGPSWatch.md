@@ -1,11 +1,19 @@
 # SLGPSWatch {#SLGPSWatch}
 
-Watch a logger state file for GPS positions and warn if positions move outside a configured perimeter.
+## NAME
+SLGPSWatch - Watch GPS information in state file and warn if position exceeds limits
+
+## SYNOPSIS
+**SLGPSWatch**  **-h**
+
+**SLGPSWatch** [**-v**] [**-t** *N*] [**-P**] *STATEFILE* *locator* [*locator* ...]
+
+
+## DESCRIPTION
+Taking a logger state file, this utility will poll the file for changes and issue a warning if the position defined by a pair of Latitude and Longitude values exceeds a preset distance from a given reference point.
 
 ### Locators
-Each position to be watched needs to be specified on the command line to specify the logger channels to use as Latitude and Longitude, the reference point and warning distance.
-
-The format of this locator is as a comma separated series of parameters:
+Each position to be watched needs to be specified on the command line to specify the logger channels to use as Latitude and Longitude, the reference point and warning distance. These positions are defined on the command line using a set of comma separated series of parameters:
 ~~~
 LatitudeChannel,LongitudeChannel,ReferenceLatitude,ReferenceLonitude,WarningThreshold[,Name]
 ~~~
@@ -23,7 +31,6 @@ The Index parameter is only required for data sources providing position informa
 ```
 Creates a location called "Marker", using channel 8 from source 98 (0x62) as the Latitude and channel 9 from the same source as the Longitude. The reference point is given as 51.62007N, 3.8761W and will generate warnings if the sensor reports positions more than 1000m from the reference point.
 
-
 ```
 0x61:0x04,0x61:0x05,51.89348,-8.49207,800,Buoy
 ```
@@ -35,18 +42,24 @@ As well as printing warnings to the console or system log, notifications can als
 
 Configuration options will be read from `/etc/pushover/pushover-config` and are expected to be in `key=value` form as described for the [pushover-bash](https://github.com/akusei/pushover-bash) script.
 
-### Command line options
-```
-usage: SLGPSWatch [-h] [-v] [-t N] [-P] STATEFILE locator [locator ...]
-```
+## OPTIONS
+**-h**, **--help**
+:  Show brief help message
 
-- `STATEFILE`
-  - State file name
-- locator
-  - One or more locator strings - see full description above
-- -v or --verbose
-  - Increase output verbosity
-- -t or --interval
-  - Poll state file every N seconds
-- -P or --disable-pushover
-  - Disable pushover notifications (print warnings to console only)
+**-v**, **--verbose**
+:  Output additional messages during processing
+
+**-t** *N*, **--interval** *N*
+:  Poll state file every N seconds
+
+**-P**, **--disable-pushover**
+:  Disable pushover notifications (print warnings to console only)
+
+*STATEFILE*
+:  State file name and path
+
+*locator*
+:  One or more location definitions  - see full description above.
+
+## SEE ALSO
+SLVarWatch(1)

@@ -158,12 +158,52 @@ Note that this would be applied to all four channels.
 The resulting values would be replaced with NaN if the results are below -15 or above +30.
 
 ### NMEA Source Options
-\todo NMEA0183 configuration
-\todo N2K configuration
+#### NMEA 0183
+**type = NMEA**
 
-- Source Name (name)
-- Serial port (port)
-- Baud rate (baud)
+This source type allows messages broadcast in NMEA0183 format to be captured, with some messages interpreted for more convenient use and analysis.
+The connected device can either be a single serial device that outputs messages in this format, or a serial interface to an NMEA0183 bus.
+
+~~~{.py}
+[NM03]
+type = NMEA         # Mandatory
+port = /dev/ttyUSB3 # Path to serial device
+baud = 115200       # Baud rate
+~~~
+
+Currently, the following messages are parsed into their own channels:
+
+| Talker | Message | Description | Channel Number |
+| :----: | :-----: | :---------- | :------------: |
+|   II   |   ZDA   | Date / Time |       4        |
+
+All other messages are stored in channel 3 for later extraction and analysis.
+
+#### NMEA 2000
+**type = N2K **
+
+The newer NMEA 2000 format is a binary encoded message format, similar to CAN messages in the automotive sector.
+Support for this communications format is currently limited to the Actisense NGT-1 interface, which receives encoded messages from an NMEA 2000 bus and rebroadcasts them via serial or USB to a connected computer.
+
+~~~{.py}
+[N2K]
+type = n2k          # Mandatory
+port = /dev/ttyUSB6 # Path to serial device
+baud = 115200       # Baud rate
+~~~
+
+- `port`: Serial port name or path. See also [device names](@ref devicenames).
+- `baud`: Serial data baud rate - must match configuration on the Actisense device
+
+The `sourcenum` and `name` parameters should also be provided to make later analysis more consistent.
+
+Currently, the following messages are parsed into their own channels:
+
+|   PGN   |     Description     |   Channel Number  |
+| :-----: | :------------------ | :---------------: |
+|  129025 | Position (Lat/Lon)  | 4 (Lat) / 5 (Lon) |
+
+All other messages are stored in channel 3 for later extraction and analysis.
 
 ### Datawell Source Options
 \todo Datawell configuration

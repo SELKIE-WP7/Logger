@@ -9,5 +9,5 @@ Configuration options within the file can be split into two categories:
 
 ## Further reading
 * Up: [Logger user guide](@ref Logger)
-* Prev: [Hardware](@ref LoggerHardware)
+* Prev: [Hardware and Installation](@ref LoggerHardware)
 * Next: [File formats](@ref LoggerFiles)

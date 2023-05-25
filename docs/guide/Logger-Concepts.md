@@ -69,4 +69,4 @@ As a general rule:
 
 ## Further reading
 * Up: [Logger user guide](@ref Logger)
-* Next: [Hardware](@ref LoggerHardware)
+* Next: [Hardware and Installation](@ref LoggerHardware)

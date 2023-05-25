@@ -129,7 +129,33 @@ ina219 = 0x43:13
 ~~~
 
 #### ADS1015 ADC (ads1015) {#LoggerSource-ADS1015}
-\todo ADS1015 configuration explanation
+The ADS101x series of analog-digital conversion chips measure analog voltage levels and output that information digitally over I2C.
+These chips are used in several ADC implementations that can be connected to single board computers (such as a Raspberry Pi) or to microcontrollers (including the Arduino family of devices).
+
+The current implementation assumes that the chip used is an ADS1015 device, which provides 4 inputs.
+These are assigned channel numbers `n` to `n+3`, where `n` is the base channel ID.
+Adding an ADS1015 chip as a source requires its I2C address, and optionally the base channel number can be provided as described above for INA219 chips.
+~~~{.py}
+ads1015 = 0x48
+ads1015 = 0x47:5
+~~~
+
+Additionally, scaling, offset, and limit values can be provided as colon separated values in order.
+In this case, the base channel ID must also be supplied.
+Scaling is applied linearly to each channel, multiplying the original value by the scaling factor and then adding the offset.
+Values that then lie outside any configured limits will be replaced with NaN values.
+
+The default values are a scale of 1.0, offset of 0 and limits of \f$-\infty,+\infty\f$.
+
+~~~{.py}
+# ads1015 = addr:base:scale:offset:min:max
+ads1015 = 0x47:5:3.22:-17.75:-15:+30
+ads1015 = 0x48:9:1.0:-5
+~~~
+
+In the first of these examples, data from the chip at address 0x47 would be multiplied by 3.22 and offset by -17.75.
+Note that this would be applied to all four channels.
+The resulting values would be replaced with NaN if the results are below -15 or above +30.
 
 ### NMEA Source Options
 \todo NMEA0183 configuration

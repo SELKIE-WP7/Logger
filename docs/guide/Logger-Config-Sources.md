@@ -235,7 +235,26 @@ port = "/dev/ttyUSB0"
 ~~~
 
 ## Device Names {#devicenames}
-\todo Explain about device naming on Linux and udev
+Most external devices are represented on a Linux machine by named files in the `/dev` directory (e.g. `/dev/ttyUSB0` for a USB serial adapter, `/dev/i2c-1` for an I2C interface).
+The names of many of these files are dynamic, and are assigned when devices are connected or when they are discovered during start up.
+This means that the numbered suffix may change if a device is unplugged and reconnected, and may change when the computer is rebooted.
+This is a particular problem for USB serial devices that may be used as data sources (i.e. anything starting `/dev/tty`).
+
+Rather than use the short dynamically assigned names in configuration files, a stable name should be used.
+On Debian (and therefore Raspberry Pi OS) based devices, stable names can be found in `/dev/serial/by-id/` with file names based on the make, model, and serial number of the serial interface (which may differ from the equipment serial number).
+
+As a modified example from a real system:
+~~~
+tom@local:~ $ ls -l /dev/serial/by-id/
+lrwxrwxrwx 1 root root 13 May 25 13:29 usb-Actisense_NGT-1 -> ../../ttyUSB0
+lrwxrwxrwx 1 root root 13 May 25 13:29 usb-Silicon_Labs__LPMSCU30006 -> ../../ttyUSB1
+lrwxrwxrwx 1 root root 13 May 25 20:44 usb-u-blox_AG_-_GPS_GNSS_Receiver -> ../../ttyACM1
+~~~
+
+The short names at the time this list was generated are shown at the end of the line.
+
+Another option is to write udev rules to create custom names for each connected device.
+How to write these rules is outside the scope of this documentation.
 
 ## Further reading
 * Up: [Logger configuration](@ref LoggerConfig)

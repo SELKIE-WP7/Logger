@@ -350,18 +350,6 @@ bool net_parseConfig(log_thread_args_t *lta, config_section *s) {
 		}
 	}
 
-	if ((t = config_get_key(s, "port"))) {
-		errno = 0;
-		net->port = strtol(t->value, NULL, 0);
-		if (errno) {
-			log_error(lta->pstate, "[Network:%s] Error parsing port number: %s",
-			          lta->tag, strerror(errno));
-			free(net);
-			return false;
-		}
-	}
-	t = NULL;
-
 	if ((t = config_get_key(s, "minbytes"))) {
 		errno = 0;
 		net->minBytes = strtol(t->value, NULL, 0);

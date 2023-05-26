@@ -310,9 +310,56 @@ This does require a specific message to be published to keep the connection acti
 - `keepalive_interval` - Messages will be sent at this interval, which must be less than the timeout on the Victron device.
 
 
-\todo Timer configuration
-\todo Network source configuration
-\todo Generic serial source configuration
+### Timer source options
+**type=timer** or **type=tick**
+~~~{.py}
+[TICK]
+type=timer    # Mandatory
+frequency=1   # Marker frequency in Hz
+~~~
+
+In addition to the default timer, additional time sources can be defined to create timestamps at other intervals.
+The minimum frequency is 1Hz and values are currently limited to integers.
+
+### Record only sources
+The last two data sources are provided to allow capture and storage of arbitrary data without parsing or interpretation.
+
+#### Network / TCP sources
+~~~{.py}
+type = net                # Mandatory
+host = "172.16.104.12"    # Source IP address or host name
+port = 2800               # TCP port to connect to
+timeout = 100             # Max. seconds to wait for data
+minbytes = 100            # Minimum byte count per message
+maxbytes = 1024           # Maximum byte count per message
+~~~
+
+- `host` - IP address or host name to connect to
+- `port` - TCP port to connect to
+- `timeout` - Consider the connection lost if no data is received after this period (in seconds).
+- `minbytes` - Only generate a message to be logged when at least this many bytes are available
+- `maxbytes` - Maximum number of bytes to be included in a single message
+
+In the absence of more details about the data being recorded, the `minbytes` and `maxbytes` parameters should be set to generate no more than [`frequency`](@ref LoggerConfigCore) messages per second.
+It is also recommended to keep `minbytes` above 10 to avoid inflating the file size with excess message headers (~5 bytes per message).
+
+
+#### Serial sources
+~~~{.py}
+type = serial             # Mandatory
+port = "/dev/ttyACM2"     # Serial port to monitor
+baud = 9600               # Baud rate
+minbytes = 100            # Minimum byte count per message
+maxbytes = 1024           # Maximum byte count per message
+~~~
+
+- `port`: Serial port name or path. See also [device names](@ref devicenames).
+- `baud`: Serial data baud rate
+- `minbytes` - Only generate a message to be logged when at least this many bytes are available
+- `maxbytes` - Maximum number of bytes to be included in a single message
+
+As with the generic network source,  the `minbytes` and `maxbytes` parameters should be set to generate no more than [`frequency`](@ref LoggerConfigCore) messages per second.
+It is also recommended to keep `minbytes` above 10 to avoid inflating the file size with excess message headers (~5 bytes per message).
 
 ## Example Configuration
 
@@ -330,6 +377,12 @@ type = GPS
 # N.B. Can't assume this will always be the same device
 # Consider using udev rules to give devices permanent names
 port = "/dev/ttyUSB0"
+
+[AutomationHat]
+type = I2C
+bus = /dev/i2c-1
+ads1015=0x48:4:0.00788842:0.002
+frequency = 2
 ~~~
 
 ## Device Names {#devicenames}

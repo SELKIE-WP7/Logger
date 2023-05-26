@@ -258,7 +258,7 @@ Channels 17-23 are only output if the `spectrum` option is enabled.
 ### MQTT Source Options
 **type=MQTT**
 
-It is possible to read topics from a MQTT server and convert the values found into channels to be recorded by the logging software. 
+It is possible to read topics from a MQTT server and convert the values found into channels to be recorded by the logging software.
 This can be useful to interface with existing data collection software where duplicate instrumentation may not be viable.
 It should be noted that additional latency will be introduced by both the network connection, MQTT server, and the software used to feed data to it.
 This may need to be adjusted for when analysing the data after recording.
@@ -273,7 +273,7 @@ port = 1883         # TCP port number
 dumpall = false     # Record unrequested / unexpected messages
 ~~~
 
-The general configuration for a MQTT source is shown above, and requi the following parameters
+The general configuration for a MQTT source is shown above, and uses the following parameters:
 - `host` - IP address or DNS name of the server
 - `port` - TCP port number. A default (1883) will be used if not provided.
 - `dumpall` - Record unknown messages to file (see below)

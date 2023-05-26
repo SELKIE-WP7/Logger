@@ -180,7 +180,7 @@ Currently, the following messages are parsed into their own channels:
 All other messages are stored in channel 3 for later extraction and analysis.
 
 #### NMEA 2000
-**type = N2K **
+**type = N2K**
 
 The newer NMEA 2000 format is a binary encoded message format, similar to CAN messages in the automotive sector.
 Support for this communications format is currently limited to the Actisense NGT-1 interface, which receives encoded messages from an NMEA 2000 bus and rebroadcasts them via serial or USB to a connected computer.
@@ -206,10 +206,54 @@ Currently, the following messages are parsed into their own channels:
 All other messages are stored in channel 3 for later extraction and analysis.
 
 ### Datawell Source Options
-\todo Datawell configuration
 
-- Serial port, *or*
-- Network address and port
+**type = DW**
+
+This source type allows data to be recorded from a Datawell Waverider via an RF receiver connected to the local network.
+
+~~~{.py}
+[BoB]
+type = DW             # Mandatory
+host = "172.16.104.1" # Receiver IP address
+timeout = 3600        # Max. seconds to wait for data
+raw = true            # Record raw messages received
+spectrum = false      # Parse spectral data
+~~~
+
+- `host` - IP address or DNS name for the RF receiver. The port number is fixed at 1180
+- `timeout` - Consider the connection lost if no data is received after this period (in seconds).
+- `raw` - Record raw message data from the receiver in addition to parsed data. Recommended.
+- `spectrum` - Parse spectral information into data file.
+  - This is not recommended, as much of the structure of the spectral data is not preserved in the output file in this format.
+  - It is recommended to record raw messages and then extract the data for analysis later.
+
+This source generates several channels of data, the full details of which are documented in the source code for dw_channels().
+
+| Description                  | Channel Number |
+| :----------------------------| :------------: |
+| Raw Data                     |        3       |
+| Signal                       |        4       |
+| Displacement N               |        5       |
+| Displacement W               |        6       |
+| Displacement V               |        7       |
+| Latitude                     |        8       |
+| Longitude                    |        9       |
+| Orientation                  |       10       |
+| Inclination                  |       11       |
+| GPS Status                   |       12       |
+| RMS Height                   |       13       |
+| Reference Temperature        |       14       |
+| Water Temperature            |       15       |
+| Weeks of battery remaining   |       16       |
+| Spectrum: FrequencyBin       |       17       |
+| Spectrum: Direction          |       18       |
+| Spectrum: Spread             |       19       |
+| Spectrum: m2                 |       20       |
+| Spectrum: n2                 |       21       |
+| Spectrum: RPSD               |       22       |
+| Spectrum: K                  |       23       |
+
+Channels 17-23 are only output if the `spectrum` option is enabled.
 
 \todo Timer configuration
 \todo Network source configuration

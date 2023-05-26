@@ -255,10 +255,63 @@ This source generates several channels of data, the full details of which are do
 
 Channels 17-23 are only output if the `spectrum` option is enabled.
 
+### MQTT Source Options
+**type=MQTT**
+
+It is possible to read topics from a MQTT server and convert the values found into channels to be recorded by the logging software. 
+This can be useful to interface with existing data collection software where duplicate instrumentation may not be viable.
+It should be noted that additional latency will be introduced by both the network connection, MQTT server, and the software used to feed data to it.
+This may need to be adjusted for when analysing the data after recording.
+
+The MQTT system allows a server to mediate between multiple clients. Messages are exchanged between clients publishing messages to a named topic and other clients subscribing to that same topic. Topics are arranged in a hierarchy, and it is possible to subscribe to a given topic and all others that fall underneath it in that hierarchy. The format of the individual messages is arbitrary, and this logging software supports only a limited number of formats.
+
+~~~{.py}
+[Buzz]
+type = MQTT         # Mandatory
+host = 172.16.105.1 # Server IP or host name
+port = 1883         # TCP port number
+dumpall = false     # Record unrequested / unexpected messages
+~~~
+
+The general configuration for a MQTT source is shown above, and requi the following parameters
+- `host` - IP address or DNS name of the server
+- `port` - TCP port number. A default (1883) will be used if not provided.
+- `dumpall` - Record unknown messages to file (see below)
+
+In the default configuration, the logging software will subscribe to specific topics and map messages sent to those topics to individual channels. Any messages received for other topics will be discarded.
+If the `dumpall` option is enabled then any messages not listed in the configuration will be recorded to channel 3 (the raw data channel) as strings with the format "topic: value". This would be required if using wildcards to receive messages for a group of topics, as no channel number would be allocated to them.
+
+~~~{.py}
+# topic = <topic>[:<channel name>[:<text mode>]]
+topic = 
+~~~
+
+Each topic to be recorded needs to be added to the source definition using the `topic` option.
+Optionally, a channel name and text mode flag can be set, each separated by a colon as shown in the examples above.
+Channel numbers are allocated dynamically, but would normally be allocated in the order listed in the configuration.
+
+If specified, the channel name given will be added to the channel mapping file to allow data from each topic to be identified. If no channel name is specified then the topic will be used instead.
+
+The `text mode` flag will cause that topic to be stored in the recorded data as text. If not set, non-numeric data will be discarded or may generate errors.
+
+#### Victron Energy devices
+~~~{.py}
+victron_keepalives = false # Enable Victron specific keepalives (see below)
+sysid = "AXBYCZ"           # Victron System ID (required for keepalives)
+keepalive_interval = 20   # Keepalive time in seconds
+~~~
+
+Some Victron Energy systems allow data to be retrieved over MQTT locally, as described [on their GitHub page](https://github.com/victronenergy/dbus-mqtt/blob/master/README.md).
+This does require a specific message to be published to keep the connection active, which can be enabled using these additional options.
+
+- `victron_keepalives` - Enable or disable these messages
+- `sysid` - The Victron device's ID needs to be incorporated into the keepalive request
+- `keepalive_interval` - Messages will be sent at this interval, which must be less than the timeout on the Victron device.
+
+
 \todo Timer configuration
 \todo Network source configuration
 \todo Generic serial source configuration
-\todo MQTT configuration (generic / victron)
 
 ## Example Configuration
 

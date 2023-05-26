@@ -209,7 +209,7 @@ All other messages are stored in channel 3 for later extraction and analysis.
 
 **type = DW**
 
-This source type allows data to be recorded from a Datawell Waverider via an RF receiver connected to the local network.
+This source type allows data to be recorded from a Datawell Waverider via a [RX-C reciever](https://datawell.nl/products/receiver-rx-c/) connected to the local network.
 
 ~~~{.py}
 [BoB]

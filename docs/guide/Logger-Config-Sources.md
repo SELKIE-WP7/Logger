@@ -283,7 +283,8 @@ If the `dumpall` option is enabled then any messages not listed in the configura
 
 ~~~{.py}
 # topic = <topic>[:<channel name>[:<text mode>]]
-topic = 
+topic = /top/DC/Source:Source Name:true
+topic = /top/AC/Voltage:Mains Voltage
 ~~~
 
 Each topic to be recorded needs to be added to the source definition using the `topic` option.

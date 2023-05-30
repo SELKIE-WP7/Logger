@@ -1,0 +1,53 @@
+name: Build and deploy doxygen pages
+
+on:
+  push:
+    branches: [ "trunk" ]
+
+permissions:
+    contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libmsgpack-dev libmosquitto-dev libi2c-dev
+        sudo apt-get install doxygen graphviz
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_DOCUMENTATION=ON -DENABLE_VALGRIND_CTEST=OFF
+
+    - name: Build documentation
+      run: |
+        make -C ${{github.workspace}}/build doxygen
+        touch build/doxygen/html/.nojekyll
+
+    - name: Push to pages
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: build/doxygen/html/
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy pages
+      uses: actions/deploy-pages@v2

@@ -4,6 +4,8 @@ This software has been developed as part of the SELKIE project, with the specifi
 
 See the user guide at docs/guide/Logger.md for more information, or BUILDING.txt for basic compilation instructions.
 
+Packages are available from the Releases page.
+
 This software is licensed under version 3 of the GNU General Public License with the following exceptions:
 
 - External projects referenced in the ext/ directory which are licensed under their own terms.

@@ -1,0 +1,25 @@
+<map id="dmap" name="dmap">
+<area shape="rect" id="node1" title="Device map entry." alt="" coords="387,796,445,823"/>
+<area shape="rect" id="node2" href="$structdevice__callbacks.html" title="Device specific function information." alt="" coords="5,617,139,644"/>
+<area shape="rect" id="node4" href="$structlog__thread__args__t.html" title="Logging thread information." alt="" coords="347,707,485,733"/>
+<area shape="rect" id="node3" title=" " alt="" coords="9,484,135,511"/>
+<area shape="rect" id="node5" title=" " alt="" coords="564,5,615,32"/>
+<area shape="rect" id="node11" href="$structstring.html" title="Simple string type." alt="" coords="227,95,285,121"/>
+<area shape="rect" id="node6" title=" " alt="" coords="313,95,351,121"/>
+<area shape="rect" id="node14" href="$structstrarray.html" title="Array of strings." alt="" coords="215,184,289,211"/>
+<area shape="rect" id="node20" href="$structprogram__state.html" title="Program state and logging information." alt="" coords="493,617,611,644"/>
+<area shape="rect" id="node7" href="$structmsgqueue.html" title="Represent a simple FIFO message queue." alt="" coords="371,617,461,644"/>
+<area shape="rect" id="node8" href="$structqueueitem.html" title=" " alt="" coords="371,484,463,511"/>
+<area shape="rect" id="node9" href="$structmsg__t.html" title="Queuable message." alt="" coords="446,395,509,421"/>
+<area shape="rect" id="node10" href="$unionmsg__data__t.html" title=" " alt="" coords="308,289,407,316"/>
+<area shape="rect" id="node12" title=" " alt="" coords="446,5,506,32"/>
+<area shape="rect" id="node13" title=" " alt="" coords="313,184,364,211"/>
+<area shape="rect" id="node15" title=" " alt="" coords="388,184,463,211"/>
+<area shape="rect" id="node16" title=" " alt="" coords="515,184,581,211"/>
+<area shape="rect" id="node17" title=" " alt="" coords="549,289,656,316"/>
+<area shape="rect" id="node18" title=" " alt="" coords="213,484,347,511"/>
+<area shape="rect" id="node19" title=" " alt="" coords="545,484,596,511"/>
+<area shape="rect" id="node21" title=" " alt="" coords="621,484,681,511"/>
+<area shape="rect" id="node22" title=" " alt="" coords="635,617,696,644"/>
+<area shape="rect" id="node23" title=" " alt="" coords="509,707,571,733"/>
+</map>

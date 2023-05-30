@@ -1,0 +1,6 @@
+<map id="nmea_params" name="nmea_params">
+<area shape="rect" id="node1" title="NMEA Device specific parameters." alt="" coords="87,109,201,136"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,5,56,32"/>
+<area shape="rect" id="node3" title=" " alt="" coords="125,5,163,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="208,5,275,32"/>
+</map>

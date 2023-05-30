@@ -1,0 +1,27 @@
+var group__loggerDWChannels =
+[
+    [ "DWCHAN_DN", "group__loggerDWChannels.html#ga19b89b31efb78648a8ffb589ed3aa09f", null ],
+    [ "DWCHAN_DV", "group__loggerDWChannels.html#ga0a2c7e84db62f74e9ce4e0f1ab1e4803", null ],
+    [ "DWCHAN_DW", "group__loggerDWChannels.html#ga9ad5249acc8760a9ba21e80e0b5c0154", null ],
+    [ "DWCHAN_GPSFIX", "group__loggerDWChannels.html#ga8a558f10767a009ed5b8692d7df8e070", null ],
+    [ "DWCHAN_HRMS", "group__loggerDWChannels.html#gadc8a07a74612f924372a9fe2d971b6e1", null ],
+    [ "DWCHAN_INCLIN", "group__loggerDWChannels.html#gaa512b1695292b98579aed7ea07ae8893", null ],
+    [ "DWCHAN_LAT", "group__loggerDWChannels.html#ga7d53726309c3337fcca6386aa17f5b77", null ],
+    [ "DWCHAN_LON", "group__loggerDWChannels.html#ga620f552e4b456ffd16d88c9b0d7427e8", null ],
+    [ "DWCHAN_MAP", "group__loggerDWChannels.html#gad2632af7789189c791039b522c7b0d09", null ],
+    [ "DWCHAN_NAME", "group__loggerDWChannels.html#ga3ffe070c69eeee4d304116b916a06fff", null ],
+    [ "DWCHAN_ORIENT", "group__loggerDWChannels.html#gad750100310e6f5afefe137d9554c1b53", null ],
+    [ "DWCHAN_RAW", "group__loggerDWChannels.html#ga21b784cb7c02b33f8f05d44240a87584", null ],
+    [ "DWCHAN_SIG", "group__loggerDWChannels.html#ga6fb0197b03ec7e8176fa77861fb3991f", null ],
+    [ "DWCHAN_SPD", "group__loggerDWChannels.html#ga688fe5aa2d9eec83a29578d60ef81a39", null ],
+    [ "DWCHAN_SPF", "group__loggerDWChannels.html#gab52d3784c231ee8657fde996aa5e391f", null ],
+    [ "DWCHAN_SPK", "group__loggerDWChannels.html#gab5ed5d0f5bf2c4f06582f5d310e398b1", null ],
+    [ "DWCHAN_SPM", "group__loggerDWChannels.html#ga16e7af1d574076dc729a17005c770905", null ],
+    [ "DWCHAN_SPN", "group__loggerDWChannels.html#gacc7c42f7a0c5e1b5e2a35af1136094cc", null ],
+    [ "DWCHAN_SPR", "group__loggerDWChannels.html#gad7c7cd3fe60e49afcbe9b1da8ee31f5a", null ],
+    [ "DWCHAN_SPS", "group__loggerDWChannels.html#ga25666f14c6aae38b04888c2f5f55bf98", null ],
+    [ "DWCHAN_TREF", "group__loggerDWChannels.html#gadd3159ae08fdebae9c0f275b53465568", null ],
+    [ "DWCHAN_TSTAMP", "group__loggerDWChannels.html#ga3b44550e76b2d5c5486c8bd92e46afc3", null ],
+    [ "DWCHAN_TWTR", "group__loggerDWChannels.html#ga142efd71efc096918122d7e05c617db9", null ],
+    [ "DWCHAN_WEEKS", "group__loggerDWChannels.html#gafed613101d5b2eed42956751991383a9", null ]
+];

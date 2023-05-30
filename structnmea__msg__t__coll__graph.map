@@ -1,0 +1,10 @@
+<map id="nmea_msg_t" name="nmea_msg_t">
+<area shape="rect" id="node1" title="Generic NMEA message structure." alt="" coords="107,317,213,344"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,5,56,32"/>
+<area shape="rect" id="node4" href="$structstring.html" title="Simple string type." alt="" coords="81,95,140,121"/>
+<area shape="rect" id="node3" href="$structstrarray.html" title="Array of strings." alt="" coords="74,199,147,225"/>
+<area shape="rect" id="node5" title=" " alt="" coords="94,5,154,32"/>
+<area shape="rect" id="node6" title=" " alt="" coords="171,95,210,121"/>
+<area shape="rect" id="node7" title=" " alt="" coords="172,199,239,225"/>
+<area shape="rect" id="node8" title=" " alt="" coords="272,199,323,225"/>
+</map>

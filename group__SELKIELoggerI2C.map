@@ -1,0 +1,10 @@
+<map id="I2C Device communication" name="I2C Device communication">
+<area shape="rect" id="node1" title=" " alt="" coords="212,149,409,174"/>
+<area shape="rect" id="node2" href="$group__ads1015.html" title=" " alt="" coords="477,5,639,45"/>
+<area shape="rect" id="node3" href="$group__ina219.html" title=" " alt="" coords="459,70,657,95"/>
+<area shape="rect" id="node4" href="$group__SN3218Control.html" title=" " alt="" coords="463,119,653,145"/>
+<area shape="rect" id="node5" href="$group__ina219conf.html" title=" " alt="" coords="476,169,640,209"/>
+<area shape="rect" id="node6" href="$group__SN3218REG.html" title=" " alt="" coords="457,234,659,259"/>
+<area shape="rect" id="node8" href="$group__ina219reg.html" title=" " alt="" coords="457,283,659,309"/>
+<area shape="rect" id="node7" href="$group__Library.html" title=" " alt="" coords="5,149,164,174"/>
+</map>

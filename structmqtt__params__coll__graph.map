@@ -1,0 +1,21 @@
+<map id="mqtt_params" name="mqtt_params">
+<area shape="rect" id="node1" title="MQTT source specific parameters." alt="" coords="216,784,325,811"/>
+<area shape="rect" id="node2" title=" " alt="" coords="271,5,321,32"/>
+<area shape="rect" id="node11" href="$structstring.html" title="Simple string type." alt="" coords="537,95,596,121"/>
+<area shape="rect" id="node18" href="$structmqtt__topic__config.html" title="MQTT Topic mapping." alt="" coords="340,605,479,632"/>
+<area shape="rect" id="node3" href="$structmqtt__queue__map.html" title=" " alt="" coords="427,695,563,721"/>
+<area shape="rect" id="node4" title=" " alt="" coords="163,95,202,121"/>
+<area shape="rect" id="node14" href="$structstrarray.html" title="Array of strings." alt="" coords="326,184,399,211"/>
+<area shape="rect" id="node5" title=" " alt="" coords="469,501,520,528"/>
+<area shape="rect" id="node7" href="$structmsgqueue.html" title="Represent a simple FIFO message queue." alt="" coords="659,605,749,632"/>
+<area shape="rect" id="node6" title=" " alt="" coords="724,184,791,211"/>
+<area shape="rect" id="node9" href="$structmsg__t.html" title="Queuable message." alt="" coords="717,389,779,415"/>
+<area shape="rect" id="node10" href="$unionmsg__data__t.html" title=" " alt="" coords="425,289,524,316"/>
+<area shape="rect" id="node8" href="$structqueueitem.html" title=" " alt="" coords="702,501,794,528"/>
+<area shape="rect" id="node12" title=" " alt="" coords="817,5,877,32"/>
+<area shape="rect" id="node13" title=" " alt="" coords="424,184,475,211"/>
+<area shape="rect" id="node15" title=" " alt="" coords="499,184,573,211"/>
+<area shape="rect" id="node16" title=" " alt="" coords="649,289,756,316"/>
+<area shape="rect" id="node17" title=" " alt="" coords="544,501,677,528"/>
+<area shape="rect" id="node19" title=" " alt="" coords="673,695,775,721"/>
+</map>

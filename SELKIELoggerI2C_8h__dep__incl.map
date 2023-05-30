@@ -1,0 +1,9 @@
+<map id="/home/runner/work/Logger/Logger/library/I2C/SELKIELoggerI2C.h" name="/home/runner/work/Logger/Logger/library/I2C/SELKIELoggerI2C.h">
+<area shape="rect" id="node1" title=" " alt="" coords="361,5,627,47"/>
+<area shape="rect" id="node2" href="$Logger_8h_8in_source.html" title=" " alt="" coords="5,184,199,225"/>
+<area shape="rect" id="node3" href="$LoggerI2C_8h.html" title=" " alt="" coords="140,95,336,136"/>
+<area shape="rect" id="node5" href="$AutomationHatLEDTest_8c.html" title="Test LEDS on a Pimoronoi Automation Hat." alt="" coords="361,95,627,136"/>
+<area shape="rect" id="node6" href="$AutomationHatRead_8c.html" title="Read values from a Pimoronoi Automation Hat." alt="" coords="652,95,901,136"/>
+<area shape="rect" id="node7" href="$PowerHatRead_8c.html" title="Read values from a Raspberry Pi power hat (or compatible sensors)" alt="" coords="926,95,1139,136"/>
+<area shape="rect" id="node4" href="$LoggerI2C_8c_source.html" title=" " alt="" coords="223,184,418,225"/>
+</map>

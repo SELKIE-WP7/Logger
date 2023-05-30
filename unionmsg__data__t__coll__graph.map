@@ -1,0 +1,11 @@
+<map id="msg_data_t" name="msg_data_t">
+<area shape="rect" id="node1" title=" " alt="" coords="215,288,314,315"/>
+<area shape="rect" id="node2" href="$structstring.html" title="Simple string type." alt="" coords="110,95,169,121"/>
+<area shape="rect" id="node6" href="$structstrarray.html" title="Array of strings." alt="" coords="52,184,125,211"/>
+<area shape="rect" id="node3" title=" " alt="" coords="74,5,125,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="149,5,209,32"/>
+<area shape="rect" id="node5" title=" " alt="" coords="239,184,290,211"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,95,44,121"/>
+<area shape="rect" id="node8" title=" " alt="" coords="314,184,389,211"/>
+<area shape="rect" id="node9" title=" " alt="" coords="418,184,485,211"/>
+</map>

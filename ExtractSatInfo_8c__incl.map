@@ -1,0 +1,25 @@
+<map id="/home/runner/work/Logger/Logger/utils/ExtractSatInfo.c" name="/home/runner/work/Logger/Logger/utils/ExtractSatInfo.c">
+<area shape="rect" id="node1" title="Extract satellite information from .dat file." alt="" coords="288,5,497,47"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,95,73,121"/>
+<area shape="rect" id="node3" title=" " alt="" coords="98,95,173,121"/>
+<area shape="rect" id="node4" title=" " alt="" coords="355,617,438,644"/>
+<area shape="rect" id="node5" title=" " alt="" coords="247,468,314,495"/>
+<area shape="rect" id="node6" title=" " alt="" coords="298,95,383,121"/>
+<area shape="rect" id="node7" title=" " alt="" coords="407,95,482,121"/>
+<area shape="rect" id="node8" title=" " alt="" coords="507,95,564,121"/>
+<area shape="rect" id="node9" href="$SELKIELoggerBase_8h.html" title=" " alt="" coords="575,319,730,345"/>
+<area shape="rect" id="node19" href="$SELKIELoggerMP_8h.html" title=" " alt="" coords="652,95,792,121"/>
+<area shape="rect" id="node23" title=" " alt="" coords="817,95,899,121"/>
+<area shape="rect" id="node10" href="$logging_8h.html" title=" " alt="" coords="333,393,450,420"/>
+<area shape="rect" id="node12" href="$messages_8h.html" title=" " alt="" coords="488,468,623,495"/>
+<area shape="rect" id="node15" href="$queue_8h.html" title=" " alt="" coords="595,393,705,420"/>
+<area shape="rect" id="node17" href="$serial_8h.html" title=" " alt="" coords="729,393,835,420"/>
+<area shape="rect" id="node18" href="$sources_8h.html" title=" " alt="" coords="859,393,977,420"/>
+<area shape="rect" id="node11" title=" " alt="" coords="389,468,463,495"/>
+<area shape="rect" id="node13" href="$strarray_8h.html" title=" " alt="" coords="401,543,483,569"/>
+<area shape="rect" id="node14" title=" " alt="" coords="520,543,591,569"/>
+<area shape="rect" id="node16" title=" " alt="" coords="699,468,783,495"/>
+<area shape="rect" id="node20" href="$MPSerial_8h.html" title=" " alt="" coords="670,169,785,196"/>
+<area shape="rect" id="node22" href="$MPTypes_8h.html" title=" " alt="" coords="807,244,898,271"/>
+<area shape="rect" id="node21" title=" " alt="" coords="690,244,783,271"/>
+</map>

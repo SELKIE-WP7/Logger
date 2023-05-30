@@ -1,0 +1,18 @@
+<map id="/home/runner/work/Logger/Logger/library/MP/MPSerial.h" name="/home/runner/work/Logger/Logger/library/MP/MPSerial.h">
+<area shape="rect" id="node1" title=" " alt="" coords="874,5,1087,47"/>
+<area shape="rect" id="node2" href="$MPSerial_8c_source.html" title=" " alt="" coords="744,95,956,136"/>
+<area shape="rect" id="node3" href="$SELKIELoggerMP_8h.html" title=" " alt="" coords="980,95,1243,136"/>
+<area shape="rect" id="node4" href="$LoggerI2C_8h.html" title=" " alt="" coords="563,184,759,225"/>
+<area shape="rect" id="node7" href="$LoggerMP_8h.html" title=" " alt="" coords="112,184,305,225"/>
+<area shape="rect" id="node9" href="$LoggerTime_8h.html" title=" " alt="" coords="330,184,538,225"/>
+<area shape="rect" id="node11" href="$dat2csv_8c.html" title="Simple CSV conversion utility." alt="" coords="783,184,976,225"/>
+<area shape="rect" id="node12" href="$DumpMessages_8c.html" title="Print messages in a .dat file." alt="" coords="1001,184,1222,225"/>
+<area shape="rect" id="node13" href="$ExtractSatInfo_8c.html" title="Extract satellite information from .dat file." alt="" coords="1247,184,1456,225"/>
+<area shape="rect" id="node14" href="$ExtractSource_8c.html" title="Extract subset of messages from .dat file." alt="" coords="1480,184,1687,225"/>
+<area shape="rect" id="node15" href="$MPMessagesFromFile_8c.html" title="Test reading MessagePacked data from a file." alt="" coords="1711,184,1973,225"/>
+<area shape="rect" id="node16" href="$MPTests_8c.html" title="Test message creation and destruction." alt="" coords="1997,184,2191,225"/>
+<area shape="rect" id="node5" href="$Logger_8h_8in_source.html" title=" " alt="" coords="223,273,416,315"/>
+<area shape="rect" id="node6" href="$LoggerI2C_8c_source.html" title=" " alt="" coords="671,273,866,315"/>
+<area shape="rect" id="node8" href="$LoggerMP_8c_source.html" title=" " alt="" coords="5,273,199,315"/>
+<area shape="rect" id="node10" href="$LoggerTime_8c_source.html" title=" " alt="" coords="440,273,647,315"/>
+</map>

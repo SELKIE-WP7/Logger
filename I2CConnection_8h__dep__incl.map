@@ -1,0 +1,13 @@
+<map id="/home/runner/work/Logger/Logger/library/I2C/I2CConnection.h" name="/home/runner/work/Logger/Logger/library/I2C/I2CConnection.h">
+<area shape="rect" id="node1" title=" " alt="" coords="317,5,567,47"/>
+<area shape="rect" id="node2" href="$I2C-ADS1015_8c_source.html" title=" " alt="" coords="5,95,199,151"/>
+<area shape="rect" id="node3" href="$I2C-INA219_8c_source.html" title=" " alt="" coords="223,95,416,151"/>
+<area shape="rect" id="node4" href="$I2CConnection_8c_source.html" title=" " alt="" coords="441,102,691,143"/>
+<area shape="rect" id="node5" href="$SELKIELoggerI2C_8h.html" title=" " alt="" coords="715,102,982,143"/>
+<area shape="rect" id="node6" href="$Logger_8h_8in_source.html" title=" " alt="" coords="360,288,553,329"/>
+<area shape="rect" id="node7" href="$LoggerI2C_8h.html" title=" " alt="" coords="495,199,691,240"/>
+<area shape="rect" id="node9" href="$AutomationHatLEDTest_8c.html" title="Test LEDS on a Pimoronoi Automation Hat." alt="" coords="715,199,982,240"/>
+<area shape="rect" id="node10" href="$AutomationHatRead_8c.html" title="Read values from a Pimoronoi Automation Hat." alt="" coords="1007,199,1256,240"/>
+<area shape="rect" id="node11" href="$PowerHatRead_8c.html" title="Read values from a Raspberry Pi power hat (or compatible sensors)" alt="" coords="1281,199,1494,240"/>
+<area shape="rect" id="node8" href="$LoggerI2C_8c_source.html" title=" " alt="" coords="578,288,773,329"/>
+</map>

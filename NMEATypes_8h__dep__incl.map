@@ -1,0 +1,13 @@
+<map id="/home/runner/work/Logger/Logger/library/NMEA/NMEATypes.h" name="/home/runner/work/Logger/Logger/library/NMEA/NMEATypes.h">
+<area shape="rect" id="node1" title=" " alt="" coords="170,5,421,47"/>
+<area shape="rect" id="node2" href="$NMEAMessages_8h.html" title=" " alt="" coords="301,95,580,136"/>
+<area shape="rect" id="node4" href="$NMEASerial_8c_source.html" title=" " alt="" coords="26,191,277,233"/>
+<area shape="rect" id="node5" href="$SELKIELoggerNMEA_8h.html" title=" " alt="" coords="307,184,558,240"/>
+<area shape="rect" id="node11" href="$NMEASerial_8h.html" title=" " alt="" coords="26,95,277,136"/>
+<area shape="rect" id="node3" href="$NMEAMessages_8c_source.html" title=" " alt="" coords="583,191,861,233"/>
+<area shape="rect" id="node6" href="$Logger_8h_8in_source.html" title=" " alt="" coords="61,392,255,433"/>
+<area shape="rect" id="node7" href="$LoggerNMEA_8h.html" title=" " alt="" coords="196,295,411,337"/>
+<area shape="rect" id="node9" href="$NMEAChecksumTest_8c.html" title="Test NMEA Checksum functions." alt="" coords="435,295,689,337"/>
+<area shape="rect" id="node10" href="$NMEAMessagesFromFile_8c.html" title="Test reading NMEA data from a file." alt="" coords="713,288,960,344"/>
+<area shape="rect" id="node8" href="$LoggerNMEA_8c_source.html" title=" " alt="" coords="279,392,493,433"/>
+</map>

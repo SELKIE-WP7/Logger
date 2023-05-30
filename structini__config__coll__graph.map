@@ -1,0 +1,8 @@
+<map id="ini_config" name="ini_config">
+<area shape="rect" id="node1" title="Representation of a parsed .ini file." alt="" coords="85,288,169,315"/>
+<area shape="rect" id="node2" title=" " alt="" coords="124,109,184,136"/>
+<area shape="rect" id="node4" href="$structconfig__section.html" title="Configuration file section." alt="" coords="209,199,323,225"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,109,44,136"/>
+<area shape="rect" id="node5" href="$structconfig__kv.html" title="Represent a key=value pair." alt="" coords="325,109,409,136"/>
+<area shape="rect" id="node6" title=" " alt="" coords="250,5,311,32"/>
+</map>

@@ -1,0 +1,23 @@
+<map id="log_thread_args_t" name="log_thread_args_t">
+<area shape="rect" id="node1" title="Logging thread information." alt="" coords="445,707,584,733"/>
+<area shape="rect" id="node2" href="$structdevice__callbacks.html" title="Device specific function information." alt="" coords="5,617,139,644"/>
+<area shape="rect" id="node3" title=" " alt="" coords="9,484,135,511"/>
+<area shape="rect" id="node4" title=" " alt="" coords="279,5,329,32"/>
+<area shape="rect" id="node10" href="$structstring.html" title="Simple string type." alt="" coords="455,95,513,121"/>
+<area shape="rect" id="node5" title=" " alt="" coords="771,95,810,121"/>
+<area shape="rect" id="node13" href="$structstrarray.html" title="Array of strings." alt="" coords="679,184,753,211"/>
+<area shape="rect" id="node19" href="$structprogram__state.html" title="Program state and logging information." alt="" coords="575,617,692,644"/>
+<area shape="rect" id="node6" href="$structmsgqueue.html" title="Represent a simple FIFO message queue." alt="" coords="400,617,491,644"/>
+<area shape="rect" id="node7" href="$structqueueitem.html" title=" " alt="" coords="385,484,477,511"/>
+<area shape="rect" id="node8" href="$structmsg__t.html" title="Queuable message." alt="" coords="390,395,453,421"/>
+<area shape="rect" id="node9" href="$unionmsg__data__t.html" title=" " alt="" coords="493,289,592,316"/>
+<area shape="rect" id="node11" title=" " alt="" coords="414,5,474,32"/>
+<area shape="rect" id="node12" title=" " alt="" coords="416,184,467,211"/>
+<area shape="rect" id="node14" title=" " alt="" coords="580,184,655,211"/>
+<area shape="rect" id="node15" title=" " alt="" coords="325,184,392,211"/>
+<area shape="rect" id="node16" title=" " alt="" coords="267,289,373,316"/>
+<area shape="rect" id="node17" title=" " alt="" coords="227,484,360,511"/>
+<area shape="rect" id="node18" title=" " alt="" coords="559,484,609,511"/>
+<area shape="rect" id="node20" title=" " alt="" coords="653,484,713,511"/>
+<area shape="rect" id="node21" title=" " alt="" coords="888,617,949,644"/>
+</map>

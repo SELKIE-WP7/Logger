@@ -1,0 +1,9 @@
+<map id="mp_params" name="mp_params">
+<area shape="rect" id="node1" title="MP Source device specific parameters." alt="" coords="181,291,280,317"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,5,56,32"/>
+<area shape="rect" id="node4" href="$structstring.html" title="Simple string type." alt="" coords="83,95,141,121"/>
+<area shape="rect" id="node3" href="$structstrarray.html" title="Array of strings." alt="" coords="139,200,213,227"/>
+<area shape="rect" id="node5" title=" " alt="" coords="94,5,154,32"/>
+<area shape="rect" id="node6" title=" " alt="" coords="207,95,246,121"/>
+<area shape="rect" id="node7" title=" " alt="" coords="352,200,419,227"/>
+</map>

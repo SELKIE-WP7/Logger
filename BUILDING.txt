@@ -1,0 +1,10 @@
+The software needs to be built using CMake, and it is strongly recommended to use a separate build directory:
+
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+
+The software can then be run directly from the build tree, or packages generated using CPack.
+
+See docs/guide/Logger-Hardware.md for more details.
